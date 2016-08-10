@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class to wrap Entrez Gene ID, HUGO Gene Symbols,etc.
@@ -188,4 +190,27 @@ public class CanonicalGene extends Gene {
     public int hashCode() {
         return (int) entrezGeneId;
     }
+    
+    public String getChromosome() {
+        if (cytoband == null) {
+            return null;
+        }
+        
+        if (cytoband.toUpperCase().startsWith("X")) {
+            return "23";
+        }
+        
+        if (cytoband.toUpperCase().startsWith("Y")) {
+            return "24";
+        }
+        
+        Pattern p = Pattern.compile("([0-9]+).*");
+        Matcher m = p.matcher(cytoband);
+        if (m.find()) {
+            return m.group(1);
+        }
+        
+        return null;
+    }
+
 }
