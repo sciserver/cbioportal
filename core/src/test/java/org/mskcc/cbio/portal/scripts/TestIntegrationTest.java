@@ -37,6 +37,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.cbioportal.model.Mutation;
+import org.cbioportal.service.MutationService;
+import org.cbioportal.service.impl.MutationServiceImpl;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -50,7 +53,6 @@ import org.mskcc.cbio.portal.dao.DaoGeneOptimized;
 import org.mskcc.cbio.portal.dao.MySQLbulkLoader;
 import org.mskcc.cbio.portal.model.CanonicalGene;
 import org.mskcc.cbio.portal.model.DBClinicalField;
-import org.mskcc.cbio.portal.model.DBProfileData;
 import org.mskcc.cbio.portal.model.DBSimpleProfileData;
 import org.mskcc.cbio.portal.service.ApiService;
 import org.mskcc.cbio.portal.util.ConsoleUtil;
@@ -123,9 +125,10 @@ public class TestIntegrationTest {
     		//we want to query via the same service layer as the one used by the web API here.
     		
     		//===== Check MUTATION data ========
+    		MutationService mutationService = applicationContext.getBean(MutationServiceImpl.class);
     		List<String> geneticProfileStableIds = new ArrayList<String>();
     		geneticProfileStableIds.add("study_es_0_mutations");
-    		List<DBProfileData> mutations = apiService.getGeneticProfileData(geneticProfileStableIds,null,null,null);
+    		List<Mutation> mutations = mutationService.getMutationsDetailed(geneticProfileStableIds,null,null,null);
     		//there are 13 records in the mutation file, but 3 are filtered, 
     		//so we expect 10 in DB:
     		assertEquals(10, mutations.size());
@@ -134,7 +137,7 @@ public class TestIntegrationTest {
     		geneticProfileStableIds = new ArrayList<String>();
             geneticProfileStableIds.add("study_es_0_gistic");
             List<String> hugoGeneSymbols = new ArrayList<String>(Arrays.asList("ACAP3","AGRN","ATAD3A","ATAD3B","ATAD3C","AURKAIP1","ERCC5"));
-    		List<DBProfileData> cnaProfileData = apiService.getGeneticProfileData(geneticProfileStableIds, hugoGeneSymbols, null, null);
+    		List<Serializable> cnaProfileData = apiService.getGeneticProfileData(geneticProfileStableIds, hugoGeneSymbols, null, null);
     		//there is data for 7 genes x 778 samples:
     		assertEquals(7*778, cnaProfileData.size());
     		//there are 63 CNA entries that have value == 2 or value == -2;
@@ -159,7 +162,7 @@ public class TestIntegrationTest {
             geneticProfileStableIds = new ArrayList<String>();
             geneticProfileStableIds.add("study_es_0_mrna");
             hugoGeneSymbols = new ArrayList<String>(Arrays.asList("CREB3L1","RPS11","PNMA1","MMP2","ZHX3","ERCC5"));
-            List<DBProfileData> expressionData = apiService.getGeneticProfileData(geneticProfileStableIds, hugoGeneSymbols, null, null);
+            List<Serializable> expressionData = apiService.getGeneticProfileData(geneticProfileStableIds, hugoGeneSymbols, null, null);
             //there is data for 6 genes x 526 samples:
             assertEquals(6*526, expressionData.size());
             //there are 50 entries with value between 2.0 and 3.0

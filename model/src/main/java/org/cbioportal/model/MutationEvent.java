@@ -6,18 +6,19 @@ public class MutationEvent implements Serializable {
 
     private Integer mutationEventId;
     private Integer entrezGeneId;
+    private Gene gene;
     private String chr;
     private Long startPosition;
     private Long endPosition;
     private String referenceAllele;
-    private String tumorSeqAllele;
-    private String proteinChange;
+    private String variantAllele;
+    private String aminoAcidChange;
     private String mutationType;
     private String functionalImpactScore;
     private Float fisValue;
-    private String linkXvar;
-    private String linkPdb;
-    private String linkMsa;
+    private String xvarLink;
+    private String xvarLinkPdb;
+    private String xvarLinkMsa;
     private String ncbiBuild;
     private String strand;
     private String variantType;
@@ -28,8 +29,8 @@ public class MutationEvent implements Serializable {
     private String oncotatorCodonChange;
     private String oncotatorUniprotEntryName;
     private String oncotatorUniprotAccession;
-    private Integer oncotatorProteinPosStart;
-    private Integer oncotatorProteinPosEnd;
+    private Integer proteinStartPosition;
+    private Integer proteinEndPosition;
     private Boolean canonicalTranscript;
     private String keyword;
 
@@ -47,6 +48,14 @@ public class MutationEvent implements Serializable {
 
     public void setEntrezGeneId(Integer entrezGeneId) {
         this.entrezGeneId = entrezGeneId;
+    }
+
+    public Gene getGene() {
+        return gene;
+    }
+
+    public void setGene(Gene gene) {
+        this.gene = gene;
     }
 
     public String getChr() {
@@ -81,20 +90,20 @@ public class MutationEvent implements Serializable {
         this.referenceAllele = referenceAllele;
     }
 
-    public String getTumorSeqAllele() {
-        return tumorSeqAllele;
+    public String getVariantAllele() {
+        return variantAllele;
     }
 
-    public void setTumorSeqAllele(String tumorSeqAllele) {
-        this.tumorSeqAllele = tumorSeqAllele;
+    public void setVariantAllele(String variantAllele) {
+        this.variantAllele = variantAllele;
     }
 
-    public String getProteinChange() {
-        return proteinChange;
+    public String getAminoAcidChange() {
+        return aminoAcidChange;
     }
 
-    public void setProteinChange(String proteinChange) {
-        this.proteinChange = proteinChange;
+    public void setAminoAcidChange(String aminoAcidChange) {
+        this.aminoAcidChange = aminoAcidChange;
     }
 
     public String getMutationType() {
@@ -121,28 +130,28 @@ public class MutationEvent implements Serializable {
         this.fisValue = fisValue;
     }
 
-    public String getLinkXvar() {
-        return linkXvar;
+    public String getXvarLink() {
+        return xvarLink;
     }
 
-    public void setLinkXvar(String linkXvar) {
-        this.linkXvar = linkXvar;
+    public void setXvarLink(String xvarLink) {
+        this.xvarLink = xvarLink;
     }
 
-    public String getLinkPdb() {
-        return linkPdb;
+    public String getXvarLinkPdb() {
+        return xvarLinkPdb;
     }
 
-    public void setLinkPdb(String linkPdb) {
-        this.linkPdb = linkPdb;
+    public void setXvarLinkPdb(String xvarLinkPdb) {
+        this.xvarLinkPdb = xvarLinkPdb;
     }
 
-    public String getLinkMsa() {
-        return linkMsa;
+    public String getXvarLinkMsa() {
+        return xvarLinkMsa;
     }
 
-    public void setLinkMsa(String linkMsa) {
-        this.linkMsa = linkMsa;
+    public void setXvarLinkMsa(String xvarLinkMsa) {
+        this.xvarLinkMsa = xvarLinkMsa;
     }
 
     public String getNcbiBuild() {
@@ -225,20 +234,20 @@ public class MutationEvent implements Serializable {
         this.oncotatorUniprotAccession = oncotatorUniprotAccession;
     }
 
-    public Integer getOncotatorProteinPosStart() {
-        return oncotatorProteinPosStart;
+    public Integer getProteinStartPosition() {
+        return proteinStartPosition;
     }
 
-    public void setOncotatorProteinPosStart(Integer oncotatorProteinPosStart) {
-        this.oncotatorProteinPosStart = oncotatorProteinPosStart;
+    public void setProteinStartPosition(Integer proteinStartPosition) {
+        this.proteinStartPosition = proteinStartPosition;
     }
 
-    public Integer getOncotatorProteinPosEnd() {
-        return oncotatorProteinPosEnd;
+    public Integer getProteinEndPosition() {
+        return proteinEndPosition;
     }
 
-    public void setOncotatorProteinPosEnd(Integer oncotatorProteinPosEnd) {
-        this.oncotatorProteinPosEnd = oncotatorProteinPosEnd;
+    public void setProteinEndPosition(Integer proteinEndPosition) {
+        this.proteinEndPosition = proteinEndPosition;
     }
 
     public Boolean getCanonicalTranscript() {
