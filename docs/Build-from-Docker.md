@@ -81,8 +81,11 @@ Please note that the Seed Database import can take some time.
 MySQL logs can easily be monitored by executing the following command on a terminal with docker.
 
 ```bash
-	docker logs cbioDB
+	docker logs {CONTAINER_NAME}
 ```
+
+Where:    
+- **{CONTAINER_NAME}**: The name of your container instance i.e cbio_DB
 
 - Learn more on [docker logs](https://docs.docker.com/engine/reference/commandline/logs/).
 
@@ -142,14 +145,14 @@ coming soon ...
 ### 4.1 Prepare Configuration files (Pending)
 
 Coming soon...
-- portal.properties (Placed in cbio_config)
-- log4j.properties (Placed in cbio_config)
-- context.xml (Placed in cbio_config)
-- settings.xml (Placed in cbio_config)
-- gene_sets.txt (optional) (Placed in cbio_config)
-- Logos (optional)
+- [portal.properties](docs/Pre-Build-Steps.md#prepare-property-files)
+- [log4j.properties](docs/Pre-Build-Steps.md#prepare-the-log4jproperties-file)
+- [settings.xml](docs/Pre-Build-Steps.md#create-a-maven-settings-file)
+- [context.xml](docs/Deploying.md#set-up-the-database-connection-pool)
+- gene_sets.txt (optional) | Pending
+- Logos (optional) | Pending
 
-### 4.2 Run the cBioPortal docker container (Pending)
+### 4.2 Run the cBioPortal docker container 
 
 ```bash
 docker run -d --name "{CONTAINER_NAME}" \
