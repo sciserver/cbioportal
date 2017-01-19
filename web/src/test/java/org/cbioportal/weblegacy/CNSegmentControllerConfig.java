@@ -31,28 +31,19 @@
 */
 package org.cbioportal.weblegacy;
 
-import java.util.List;
-import org.cbioportal.web.config.CustomObjectMapper;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-import org.cbioportal.service.CNSegmentService;
+import org.mskcc.cbio.portal.service.CNSegmentService;
 
 @Configuration
 @EnableWebMvc
 @ComponentScan(basePackages = {"org.cbioportal.weblegacy"}, resourcePattern = "**/*CNSegmentController.class")
 public class CNSegmentControllerConfig extends WebMvcConfigurerAdapter {
-    @Override
-    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-        MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter = new MappingJackson2HttpMessageConverter();
-        mappingJackson2HttpMessageConverter.setObjectMapper(new CustomObjectMapper());
-        converters.add(mappingJackson2HttpMessageConverter);
-    }
+
     @Bean
     public CNSegmentService cNSegmentService() {
         return Mockito.mock(CNSegmentService.class);

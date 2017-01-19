@@ -12,7 +12,8 @@
             sample.SAMPLE_TYPE AS "${prefix}sampleType",
             sample.PATIENT_ID AS "${prefix}patientId",
             patient.STABLE_ID AS "${prefix}patientStableId",
-            sample.TYPE_OF_CANCER_ID AS "${prefix}typeOfCancerId"
+            sample.TYPE_OF_CANCER_ID AS "${prefix}typeOfCancerId",
+            cancer_study.CANCER_STUDY_IDENTIFIER AS "${prefix}cancerStudyIdentifier"
         </if>
         <if test="projection == 'DETAILED'">
             ,
@@ -77,5 +78,30 @@
         <include refid="from"/>
         WHERE sample.STABLE_ID = #{sampleId}
         AND cancer_study.CANCER_STUDY_IDENTIFIER = #{studyId}
+    </select>
+
+    <select id="getSampleByInternalId" resultType="org.cbioportal.model.Sample">
+        SELECT
+        <include refid="select">
+            <property name="prefix" value=""/>
+        </include>
+        FROM sample
+        WHERE sample.INTERNAL_ID = #{internalId}
+    </select>
+
+    <select id="getSamplesByInternalIds" resultType="org.cbioportal.model.Sample">
+        SELECT
+        <include refid="select">
+            <property name="prefix" value=""/>
+        </include>
+        FROM sample
+        <where>
+            <if test="internalIds != null and !internalIds.isEmpty()">
+                sample.INTERNAL_ID IN
+                <foreach item="item" collection="internalIds" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
     </select>
 </mapper>
