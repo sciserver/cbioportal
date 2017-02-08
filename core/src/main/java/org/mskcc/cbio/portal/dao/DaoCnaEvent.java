@@ -146,14 +146,16 @@ public final class DaoCnaEvent {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCnaEvent.class);
-            pstmt = con.prepareStatement
-		("SELECT sample_cna_event.CNA_EVENT_ID, SAMPLE_ID, GENETIC_PROFILE_ID,"
-                    + " ENTREZ_GENE_ID, ALTERATION FROM sample_cna_event, cna_event"
-                    + " WHERE `GENETIC_PROFILE_ID`=?"
-                    + " AND sample_cna_event.CNA_EVENT_ID=cna_event.CNA_EVENT_ID"
-                    + (entrezGeneIds==null?"":" AND ENTREZ_GENE_ID IN(" + StringUtils.join(entrezGeneIds,",") + ")")
-                    + " AND ALTERATION IN (" + StringUtils.join(cnaLevels,",") + ")"
-                    + " AND SAMPLE_ID in ('"+StringUtils.join(sampleIds, "','")+"')");
+            // GL added test on entrezGeneIds.size()==0, as in that case incorrect SQL is generated
+            String sql="SELECT sample_cna_event.CNA_EVENT_ID, SAMPLE_ID, GENETIC_PROFILE_ID,"
+                + " ENTREZ_GENE_ID, ALTERATION FROM sample_cna_event, cna_event"
+                + " WHERE `GENETIC_PROFILE_ID`=?"
+                + " AND sample_cna_event.CNA_EVENT_ID=cna_event.CNA_EVENT_ID"
+                + (entrezGeneIds==null||entrezGeneIds.size() == 0?"":" AND ENTREZ_GENE_ID IN(" + StringUtils.join(entrezGeneIds,",") + ")")
+                + " AND ALTERATION IN (" + StringUtils.join(cnaLevels,",") + ")"
+                + " AND SAMPLE_ID in ('"+StringUtils.join(sampleIds, "','")+"')";
+            
+            pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, profileId);
             rs = pstmt.executeQuery();
             List<CnaEvent> events = new ArrayList<CnaEvent>();
