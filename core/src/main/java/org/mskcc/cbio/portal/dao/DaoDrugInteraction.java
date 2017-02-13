@@ -47,6 +47,8 @@ import org.mskcc.cbio.portal.model.CanonicalGene;
 import org.mskcc.cbio.portal.model.Drug;
 import org.mskcc.cbio.portal.model.DrugInteraction;
 
+import edu.jhu.u01.DBProperties;
+
 public class DaoDrugInteraction {
     private static DaoDrugInteraction daoDrugInteraction;
     private static final String NA = "NA";
@@ -83,7 +85,7 @@ public class DaoDrugInteraction {
             pmids = NA;
         }
         
-        if (MySQLbulkLoader.isBulkLoad()) {
+        if (MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
             MySQLbulkLoader.getMySQLbulkLoader("drug_interaction").insertRecord(
                     drug.getId(),
                     Long.toString(targetGene.getEntrezGeneId()),
@@ -101,10 +103,24 @@ public class DaoDrugInteraction {
         
         try {
             con = JdbcUtil.getDbConnection(DaoDrugInteraction.class);
-            pstmt = con.prepareStatement
-                    ("INSERT INTO drug_interaction (`DRUG`,`TARGET`, `INTERACTION_TYPE`," +
-                            "`DATA_SOURCE`, `EXPERIMENT_TYPES`, `PMIDS`)"
-                            + "VALUES (?,?,?,?,?,?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO drug_interaction ([DRUG],[TARGET], [INTERACTION_TYPE]," +
+                        "[DATA_SOURCE], [EXPERIMENT_TYPES], [PMIDS])"
+                        + "VALUES (?,?,?,?,?,?)");
+                
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO drug_interaction (`DRUG`,`TARGET`, `INTERACTION_TYPE`," +
+                        "`DATA_SOURCE`, `EXPERIMENT_TYPES`, `PMIDS`)"
+                        + "VALUES (?,?,?,?,?,?)");
+              
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setString(1, drug.getId());
             pstmt.setLong(2, targetGene.getEntrezGeneId());
             pstmt.setString(3, interactionType);

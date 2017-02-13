@@ -35,6 +35,9 @@ package org.mskcc.cbio.portal.dao;
 import org.mskcc.cbio.portal.model.*;
 
 import com.google.inject.internal.Join;
+
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
@@ -54,16 +57,33 @@ public class DaoClinicalAttributeMeta {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoClinicalAttributeMeta.class);
-            pstmt = con.prepareStatement
-                    ("INSERT INTO clinical_attribute_meta(" +
-                            "`ATTR_ID`," +
-                            "`DISPLAY_NAME`," +
-                            "`DESCRIPTION`," +
-                            "`DATATYPE`," +
-                            "`PATIENT_ATTRIBUTE`," +
-                            "`PRIORITY`," +
-                            "`CANCER_STUDY_ID`)" +
-                            " VALUES(?,?,?,?,?,?,?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO clinical_attribute_meta(" +
+                        "[ATTR_ID]," +
+                        "[DISPLAY_NAME]," +
+                        "[DESCRIPTION]," +
+                        "[DATATYPE]," +
+                        "[PATIENT_ATTRIBUTE]," +
+                        "[PRIORITY]," +
+                        "[CANCER_STUDY_ID])" +
+                        " VALUES(?,?,?,?,?,?,?)");
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO clinical_attribute_meta(" +
+                        "`ATTR_ID`," +
+                        "`DISPLAY_NAME`," +
+                        "`DESCRIPTION`," +
+                        "`DATATYPE`," +
+                        "`PATIENT_ATTRIBUTE`," +
+                        "`PRIORITY`," +
+                        "`CANCER_STUDY_ID`)" +
+                        " VALUES(?,?,?,?,?,?,?)");
+            	break;
+            }//JK-UPDATED
+
             pstmt.setString(1, attr.getAttrId());
             pstmt.setString(2, attr.getDisplayName());
             pstmt.setString(3, attr.getDescription());
@@ -86,7 +106,7 @@ public class DaoClinicalAttributeMeta {
             rs.getString("DATATYPE"),
             rs.getBoolean("PATIENT_ATTRIBUTE"),
             rs.getString("PRIORITY"),
-            rs.getInt("CANCER_STUDY_ID"));
+            rs.getInt("CANCER_STUDY_ID"));//JK-UPDATED
     }
     
     public static ClinicalAttribute getDatum(String attrId, Integer cancerStudyId) throws DaoException {
@@ -109,7 +129,7 @@ public class DaoClinicalAttributeMeta {
             con = JdbcUtil.getDbConnection(DaoClinicalAttributeMeta.class);
 
             pstmt = con.prepareStatement("SELECT * FROM clinical_attribute_meta WHERE ATTR_ID IN ('"
-                    + StringUtils.join(attrIds,"','")+"')  AND CANCER_STUDY_ID=" + String.valueOf(cancerStudyId));
+                    + StringUtils.join(attrIds,"','")+"')  AND CANCER_STUDY_ID=" + String.valueOf(cancerStudyId));//JK-UPDATED
 
             rs = pstmt.executeQuery();
 
@@ -137,7 +157,7 @@ public class DaoClinicalAttributeMeta {
             con = JdbcUtil.getDbConnection(DaoClinicalAttributeMeta.class);
 
             pstmt = con.prepareStatement("SELECT * FROM clinical_attribute_meta WHERE ATTR_ID IN ('"
-                    + StringUtils.join(attrIds,"','")+"')");
+                    + StringUtils.join(attrIds,"','")+"')");//JK-UPDATED
 
             rs = pstmt.executeQuery();
 
@@ -178,7 +198,7 @@ public class DaoClinicalAttributeMeta {
 		PreparedStatement pstmt = null;
 
         String sql = ("SELECT DISTINCT ATTR_ID FROM clinical_attribute_meta"
-                + " WHERE CANCER_STUDY_ID = " + String.valueOf(cancerStudyId));
+                + " WHERE CANCER_STUDY_ID = " + String.valueOf(cancerStudyId));//JK-UPDATED
 
         Set<String> attrIds = new HashSet<String>();
         try {

@@ -43,6 +43,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.mskcc.cbio.portal.model.ClinicalEvent;
 
+import edu.jhu.u01.DBProperties;
+
 /**
  *
  * @author gaoj
@@ -146,8 +148,18 @@ public final class DaoClinicalEvent {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoClinicalEvent.class);
-            pstmt = con.prepareStatement
-                    ("SELECT MAX(`CLINICAL_EVENT_ID`) FROM `clinical_event`");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("SELECT MAX(CLINICAL_EVENT_ID) FROM clinical_event");
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("SELECT MAX(`CLINICAL_EVENT_ID`) FROM `clinical_event`");
+            	break;
+            }//JK-UPDATED
+
+
             rs = pstmt.executeQuery();
             return rs.next() ? rs.getLong(1) : 0;
         } catch (SQLException e) {
@@ -170,7 +182,16 @@ public final class DaoClinicalEvent {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCopyNumberSegment.class);
-            pstmt = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `clinical_event` WHERE `PATIENT_ID`=?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement("SELECT TOP 1 1 FROM clinical_event WHERE PATIENT_ID=?)");
+                break;
+            default:
+                pstmt = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `clinical_event` WHERE `PATIENT_ID`=?)");
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setInt(1, patientId);
             rs = pstmt.executeQuery();
             return rs.next() && rs.getInt(1)==1;

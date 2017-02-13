@@ -34,6 +34,8 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.model.*;
 
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
@@ -71,7 +73,7 @@ public final class DaoCopyNumberSegment {
         try {
             con = JdbcUtil.getDbConnection(DaoMutation.class);
             pstmt = con.prepareStatement
-                    ("SELECT MAX(`SEG_ID`) FROM `copy_number_seg`");
+                    ("SELECT MAX(SEG_ID) FROM copy_number_seg");//JK-UPDATED
             rs = pstmt.executeQuery();
             return rs.next() ? rs.getLong(1) : 0;
         } catch (SQLException e) {
@@ -101,8 +103,8 @@ public final class DaoCopyNumberSegment {
             con = JdbcUtil.getDbConnection(DaoCopyNumberSegment.class);
             pstmt = con.prepareStatement
                     ("SELECT * FROM copy_number_seg"
-                    + " WHERE `SAMPLE_ID` IN "+ concatSampleIds
-                    + " AND `CANCER_STUDY_ID`="+cancerStudyId);
+                    + " WHERE SAMPLE_ID IN "+ concatSampleIds
+                    + " AND CANCER_STUDY_ID="+cancerStudyId);//JK-UPDATED
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 CopyNumberSegment seg = new CopyNumberSegment(
@@ -161,20 +163,41 @@ public final class DaoCopyNumberSegment {
         String sql;
         try {
             con = JdbcUtil.getDbConnection(DaoCopyNumberSegment.class);
-            if (cutoff>0) {
-                sql = "SELECT  `SAMPLE_ID`, SUM(`END`-`START`)"
-                    + " FROM `copy_number_seg`"
-                    + " WHERE `CANCER_STUDY_ID`="+cancerStudyId
-                    + " AND ABS(`SEGMENT_MEAN`)>=" + cutoff
-                    + " AND `SAMPLE_ID` IN ('" + StringUtils.join(sampleIds,"','") +"')"
-                    + " GROUP BY `SAMPLE_ID`";
-            } else {
-                sql = "SELECT  `SAMPLE_ID`, SUM(`END`-`START`)"
-                    + " FROM `copy_number_seg`"
-                    + " WHERE `CANCER_STUDY_ID`="+cancerStudyId
-                    + " AND `SAMPLE_ID` IN ('" + StringUtils.join(sampleIds,"','") +"')"
-                    + " GROUP BY `SAMPLE_ID`";
-            }
+            switch(DBProperties.getDBVendor()){
+            case mssql://JK-FUTURE-TODO
+                if (cutoff>0) {
+                    sql = "SELECT  SAMPLE_ID, SUM(END-START)"
+                        + " FROM copy_number_seg"
+                        + " WHERE CANCER_STUDY_ID="+cancerStudyId
+                        + " AND ABS(SEGMENT_MEAN)>=" + cutoff
+                        + " AND SAMPLE_ID IN ('" + StringUtils.join(sampleIds,"','") +"')"
+                        + " GROUP BY SAMPLE_ID";
+                } else {
+                    sql = "SELECT  SAMPLE_ID, SUM(END-START)"
+                        + " FROM copy_number_seg"
+                        + " WHERE CANCER_STUDY_ID="+cancerStudyId
+                        + " AND SAMPLE_ID IN ('" + StringUtils.join(sampleIds,"','") +"')"
+                        + " GROUP BY SAMPLE_ID";
+                }
+                break;
+            default:
+                if (cutoff>0) {
+                    sql = "SELECT  `SAMPLE_ID`, SUM(`END`-`START`)"
+                        + " FROM `copy_number_seg`"
+                        + " WHERE `CANCER_STUDY_ID`="+cancerStudyId
+                        + " AND ABS(`SEGMENT_MEAN`)>=" + cutoff
+                        + " AND `SAMPLE_ID` IN ('" + StringUtils.join(sampleIds,"','") +"')"
+                        + " GROUP BY `SAMPLE_ID`";
+                } else {
+                    sql = "SELECT  `SAMPLE_ID`, SUM(`END`-`START`)"
+                        + " FROM `copy_number_seg`"
+                        + " WHERE `CANCER_STUDY_ID`="+cancerStudyId
+                        + " AND `SAMPLE_ID` IN ('" + StringUtils.join(sampleIds,"','") +"')"
+                        + " GROUP BY `SAMPLE_ID`";
+                }
+            	break;
+            }//JK-UPDATED
+
             
             pstmt = con.prepareStatement(sql);
             rs = pstmt.executeQuery();
@@ -204,7 +227,17 @@ public final class DaoCopyNumberSegment {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCopyNumberSegment.class);
-            pstmt = con.prepareStatement("SELECT EXISTS (SELECT 1 FROM `copy_number_seg` WHERE `CANCER_STUDY_ID`=?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement("SELECT TOP 1 1 FROM copy_number_seg"
+                        + " WHERE CANCER_STUDY_ID=?");
+                break;
+            default:
+            	pstmt = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `copy_number_seg`"
+            			+ " WHERE `CANCER_STUDY_ID`=?)");
+            	break;
+            }//JK-UPDATED
+            
             pstmt.setInt(1, cancerStudyId);
             rs = pstmt.executeQuery();
             return rs.next() && rs.getInt(1)==1;
@@ -228,8 +261,16 @@ public final class DaoCopyNumberSegment {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCopyNumberSegment.class);
-            pstmt = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `copy_number_seg`"
-                + " WHERE `CANCER_STUDY_ID`=? AND `SAMPLE_ID`=?");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement("SELECT TOP 1 1 FROM copy_number_seg"
+                        + " WHERE CANCER_STUDY_ID=? AND SAMPLE_ID=?");
+                break;
+            default:
+            	pstmt = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `copy_number_seg`"
+            			+ " WHERE `CANCER_STUDY_ID`=? AND `SAMPLE_ID`=?)");
+            	break;
+            }//JK-UPDATED
             pstmt.setInt(1, cancerStudyId);
             pstmt.setInt(2, sampleId);
             rs = pstmt.executeQuery();

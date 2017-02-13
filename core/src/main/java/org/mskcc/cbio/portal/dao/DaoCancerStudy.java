@@ -33,6 +33,9 @@
 package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.util.*;
+
+import edu.jhu.u01.DBProperties;
+
 import org.mskcc.cbio.portal.model.*;
 
 import org.apache.commons.lang.StringUtils;
@@ -322,11 +325,26 @@ public final class DaoCancerStudy {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCancerStudy.class);
-            pstmt = con.prepareStatement("INSERT INTO cancer_study " +
-                    "( `CANCER_STUDY_IDENTIFIER`, `NAME`, "
-                    + "`DESCRIPTION`, `PUBLIC`, `TYPE_OF_CANCER_ID`, "
-                    + "`PMID`, `CITATION`, `GROUPS`, `SHORT_NAME`, `STATUS` ) VALUES (?,?,?,?,?,?,?,?,?,?)",
-                    Statement.RETURN_GENERATED_KEYS);
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement("INSERT INTO cancer_study " +
+                        "( [CANCER_STUDY_IDENTIFIER], [NAME], "
+                        + "[DESCRIPTION], [PUBLIC], [TYPE_OF_CANCER_ID], "
+                        + "[PMID], [CITATION], [GROUPS], [SHORT_NAME], [STATUS] ) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                        Statement.RETURN_GENERATED_KEYS);
+                
+                break;
+            default:
+                pstmt = con.prepareStatement("INSERT INTO cancer_study " +
+                        "( `CANCER_STUDY_IDENTIFIER`, `NAME`, "
+                        + "`DESCRIPTION`, `PUBLIC`, `TYPE_OF_CANCER_ID`, "
+                        + "`PMID`, `CITATION`, `GROUPS`, `SHORT_NAME`, `STATUS` ) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                        Statement.RETURN_GENERATED_KEYS);
+              
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setString(1, stableId);
             pstmt.setString(2, cancerStudy.getName());
             pstmt.setString(3, cancerStudy.getDescription());

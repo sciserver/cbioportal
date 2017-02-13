@@ -47,7 +47,7 @@ import org.mskcc.cbio.portal.model.Coexpression;
  */
 public class DaoCoexpression {
     public static int addCoexpression(Coexpression coexpression) throws DaoException {
-            if (!MySQLbulkLoader.isBulkLoad()) {
+            if (!MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
                 throw new DaoException("You have to turn on MySQLbulkLoader in order to insert Coexpression data");
             } else {
                     // use this code if bulk loading

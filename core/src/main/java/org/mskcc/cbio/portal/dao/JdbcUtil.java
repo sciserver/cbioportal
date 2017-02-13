@@ -34,6 +34,9 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.util.*;
 
+import edu.jhu.u01.DBVendor;
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.logging.*;
 
 import java.sql.*;
@@ -70,6 +73,15 @@ public class JdbcUtil {
     }
     
     private static DataSource initDataSource() {
+    	DBVendor vendor = DBProperties.getDBVendor();
+    	switch(vendor){
+    	case mssql:
+    		return initMSSQLDataSource();
+    	default :
+    		return initMySQLDataSource();
+    	}
+    }
+    private static DataSource initMySQLDataSource(){
         DatabaseProperties dbProperties = DatabaseProperties.getInstance();
         String host = dbProperties.getDbHost();
         String userName = dbProperties.getDbUser();
@@ -83,6 +95,31 @@ public class JdbcUtil {
         //  Set up poolable data source
         BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName("com.mysql.jdbc.Driver");
+        ds.setUsername(userName);
+        ds.setPassword(password);
+        ds.setUrl(url);
+
+        //  By pooling/reusing PreparedStatements, we get a major performance gain
+        ds.setPoolPreparedStatements(true);
+        ds.setMaxActive(100);
+        
+        activeConnectionCount = new HashMap<String,Integer>();
+        
+        return ds;
+    }
+    private static DataSource initMSSQLDataSource(){
+        DatabaseProperties dbProperties = DatabaseProperties.getInstance();
+        String host = dbProperties.getDbHost();
+        String userName = dbProperties.getDbUser();
+        String password = dbProperties.getDbPassword();
+        String database = dbProperties.getDbName();
+
+        String url ="jdbc:sqlserver://" + host + ":1433;DatabaseName=" + database +
+                        ";user=" + userName + ";password=" + password;
+        
+        //  Set up poolable data source
+        BasicDataSource ds = new BasicDataSource();
+        ds.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         ds.setUsername(userName);
         ds.setPassword(password);
         ds.setUrl(url);

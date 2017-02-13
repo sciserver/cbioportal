@@ -36,6 +36,8 @@ import org.apache.commons.lang.StringUtils;
 import org.mskcc.cbio.portal.model.CnaEvent;
 import org.mskcc.cbio.portal.model.Sample;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.*;
 import java.util.*;
 
@@ -47,7 +49,7 @@ public final class DaoCnaEvent {
     private DaoCnaEvent() {}
     
     public static void addCaseCnaEvent(CnaEvent cnaEvent, boolean newCnaEvent) throws DaoException {
-        if (!MySQLbulkLoader.isBulkLoad()) {
+        if (!MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
             throw new DaoException("You have to turn on MySQLbulkLoader in order to insert sample_cna_event");
         }
         else {
@@ -79,11 +81,24 @@ public final class DaoCnaEvent {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCnaEvent.class);
-            pstmt = con.prepareStatement
-                    ("INSERT INTO cna_event (" +
-                            "`ENTREZ_GENE_ID`," +
-                            "`ALTERATION` )" +
-                            " VALUES(?,?)", Statement.RETURN_GENERATED_KEYS);
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO cna_event (" +
+                        "[ENTREZ_GENE_ID]," +
+                        "[ALTERATION] )" +
+                        " VALUES(?,?)", Statement.RETURN_GENERATED_KEYS);
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO cna_event (" +
+                        "`ENTREZ_GENE_ID`," +
+                        "`ALTERATION` )" +
+                        " VALUES(?,?)", Statement.RETURN_GENERATED_KEYS);
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setLong(1, cnaEvent.getEntrezGeneId());
             pstmt.setShort(2, cnaEvent.getAlteration().getCode());
             pstmt.executeUpdate();
@@ -113,9 +128,21 @@ public final class DaoCnaEvent {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCnaEvent.class);
-            String sql = "SELECT * FROM sample_cna_event"
-                    + " WHERE `CNA_EVENT_ID` IN ("
-                    + concatEventIds + ")";
+            String sql = null;
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+            	sql = "SELECT * FROM sample_cna_event"
+                        + " WHERE [CNA_EVENT_ID] IN ("
+                        + concatEventIds + ")";
+                break;
+            default:
+            	sql = "SELECT * FROM sample_cna_event"
+                        + " WHERE `CNA_EVENT_ID` IN ("
+                        + concatEventIds + ")";
+            	break;
+            }//JK-UPDATED
+
+
             pstmt = con.prepareStatement(sql);
             
             Map<Sample, Set<Long>>  map = new HashMap<Sample, Set<Long>> ();
@@ -149,11 +176,11 @@ public final class DaoCnaEvent {
             // GL added test on entrezGeneIds.size()==0, as in that case incorrect SQL is generated
             String sql="SELECT sample_cna_event.CNA_EVENT_ID, SAMPLE_ID, GENETIC_PROFILE_ID,"
                 + " ENTREZ_GENE_ID, ALTERATION FROM sample_cna_event, cna_event"
-                + " WHERE `GENETIC_PROFILE_ID`=?"
+                + " WHERE GENETIC_PROFILE_ID=?"
                 + " AND sample_cna_event.CNA_EVENT_ID=cna_event.CNA_EVENT_ID"
                 + (entrezGeneIds==null||entrezGeneIds.size() == 0?"":" AND ENTREZ_GENE_ID IN(" + StringUtils.join(entrezGeneIds,",") + ")")
                 + " AND ALTERATION IN (" + StringUtils.join(cnaLevels,",") + ")"
-                + " AND SAMPLE_ID in ('"+StringUtils.join(sampleIds, "','")+"')";
+                + " AND SAMPLE_ID in ('"+StringUtils.join(sampleIds, "','")+"')";//JK-UPDATED
             
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, profileId);
@@ -225,13 +252,29 @@ public final class DaoCnaEvent {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCnaEvent.class);
-            String sql = "SELECT `ENTREZ_GENE_ID`, `ALTERATION`, count(*)"
-                    + " FROM sample_cna_event, cna_event"
-                    + " WHERE `GENETIC_PROFILE_ID`=" + profileId
-                    + " and sample_cna_event.`CNA_EVENT_ID`=cna_event.`CNA_EVENT_ID`"
-                    + " and `ENTREZ_GENE_ID` IN ("
-                    + concatEntrezGeneIds
-                    + ") GROUP BY `ENTREZ_GENE_ID`, `ALTERATION`";
+            String sql = null;
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                sql = "SELECT [ENTREZ_GENE_ID], [ALTERATION], count(*)"
+                        + " FROM sample_cna_event, cna_event"
+                        + " WHERE [GENETIC_PROFILE_ID]=" + profileId
+                        + " and sample_cna_event.[CNA_EVENT_ID]=cna_event.[CNA_EVENT_ID]"
+                        + " and [ENTREZ_GENE_ID] IN ("
+                        + concatEntrezGeneIds
+                        + ") GROUP BY [ENTREZ_GENE_ID], [ALTERATION]";
+                break;
+            default:
+                sql = "SELECT `ENTREZ_GENE_ID`, `ALTERATION`, count(*)"
+                        + " FROM sample_cna_event, cna_event"
+                        + " WHERE `GENETIC_PROFILE_ID`=" + profileId
+                        + " and sample_cna_event.`CNA_EVENT_ID`=cna_event.`CNA_EVENT_ID`"
+                        + " and `ENTREZ_GENE_ID` IN ("
+                        + concatEntrezGeneIds
+                        + ") GROUP BY `ENTREZ_GENE_ID`, `ALTERATION`";
+            	break;
+            }//JK-UPDATED
+
+
             pstmt = con.prepareStatement(sql);
             
             Map<Long, Map<Integer, Integer>> map = new HashMap<Long, Map<Integer, Integer>>();
@@ -270,11 +313,25 @@ public final class DaoCnaEvent {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCnaEvent.class);
-            String sql = "SELECT `CNA_EVENT_ID`, count(*) FROM sample_cna_event"
-                    + " WHERE `GENETIC_PROFILE_ID`=" + profileId
-                    + " and `CNA_EVENT_ID` IN ("
-                    + concatEventIds
-                    + ") GROUP BY `CNA_EVENT_ID`";
+            String sql = null;
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+            	sql = "SELECT [CNA_EVENT_ID], count(*) FROM sample_cna_event"
+                        + " WHERE [GENETIC_PROFILE_ID]=" + profileId
+                        + " and [CNA_EVENT_ID] IN ("
+                        + concatEventIds
+                        + ") GROUP BY [CNA_EVENT_ID]";
+                break;
+            default:
+            	sql = "SELECT `CNA_EVENT_ID`, count(*) FROM sample_cna_event"
+                        + " WHERE `GENETIC_PROFILE_ID`=" + profileId
+                        + " and `CNA_EVENT_ID` IN ("
+                        + concatEventIds
+                        + ") GROUP BY `CNA_EVENT_ID`";
+            	break;
+            }//JK-UPDATED
+
+
             pstmt = con.prepareStatement(sql);
             
             Map<Long, Integer> map = new HashMap<Long, Integer>();

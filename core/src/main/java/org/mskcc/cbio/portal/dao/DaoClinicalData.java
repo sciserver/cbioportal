@@ -35,6 +35,8 @@ package org.mskcc.cbio.portal.dao;
 import org.mskcc.cbio.portal.model.*;
 import org.mskcc.cbio.portal.util.InternalIdUtil;
 
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
@@ -50,8 +52,8 @@ public final class DaoClinicalData {
     public static final String SAMPLE_TABLE = "clinical_sample";
     public static final String PATIENT_TABLE = "clinical_patient";
 
-    private static final String SAMPLE_INSERT = "INSERT INTO " + SAMPLE_TABLE + "(`INTERAL_ID`,`ATTR_ID`,`ATTR_VALUE` VALUES(?,?,?)";
-    private static final String PATIENT_INSERT = "INSERT INTO " + PATIENT_TABLE + "(`INTERNAL_ID`,`ATTR_ID`,`ATTR_VALUE` VALUES(?,?,?)";
+    private static final String SAMPLE_INSERT = "INSERT INTO " + SAMPLE_TABLE + "(INTERAL_ID,ATTR_ID,ATTR_VALUE VALUES(?,?,?)";//JK-UPDATED
+    private static final String PATIENT_INSERT = "INSERT INTO " + PATIENT_TABLE + "(INTERNAL_ID,ATTR_ID,ATTR_VALUE VALUES(?,?,?)";//JK-UPDATED
 
     private static final Map<String, String> sampleAttributes = new HashMap<String, String>();
     private static final Map<String, String> patientAttributes = new HashMap<String, String>();
@@ -219,8 +221,21 @@ public final class DaoClinicalData {
         ResultSet rs = null;
 
         List<ClinicalData> clinicals = new ArrayList<ClinicalData>();
-        String sql = ("SELECT * FROM " + table + " WHERE `INTERNAL_ID` IN " +
-                      "(" + generateIdsSql(internalIds) + ")");
+        String sql= null;
+        switch(DBProperties.getDBVendor()){
+        case mssql:
+        	sql = ("SELECT * FROM " + table + " WHERE INTERNAL_ID IN " +
+                    "(" + generateIdsSql(internalIds) + ")");
+            
+            break;
+        default:
+        	sql = ("SELECT * FROM " + table + " WHERE `INTERNAL_ID` IN " +
+                    "(" + generateIdsSql(internalIds) + ")");
+
+        	break;
+        }//JK-UPDATED
+
+
                       
         try {
             con = JdbcUtil.getDbConnection(DaoClinicalData.class);
@@ -389,9 +404,20 @@ public final class DaoClinicalData {
 
         List<ClinicalData> clinicals = new ArrayList<ClinicalData>();
 
-        String sql = ("SELECT * FROM " + table + " WHERE `INTERNAL_ID` IN " +
-                      "(" + generateIdsSql(internalIds) + ") " +
-                      " AND ATTR_ID IN ('"+ StringUtils.join(attributeIds, "','")+"') ");
+        String sql = null;
+        switch(DBProperties.getDBVendor()){
+        case mssql:
+        	sql = ("SELECT * FROM " + table + " WHERE INTERNAL_ID IN " +
+                    "(" + generateIdsSql(internalIds) + ") " +
+                    " AND ATTR_ID IN ('"+ StringUtils.join(attributeIds, "','")+"') ");
+            break;
+        default:
+        	sql = ("SELECT * FROM " + table + " WHERE `INTERNAL_ID` IN " +
+                    "(" + generateIdsSql(internalIds) + ") " +
+                    " AND ATTR_ID IN ('"+ StringUtils.join(attributeIds, "','")+"') ");
+        	break;
+        }//JK-UPDATED
+
 
         try {
             con = JdbcUtil.getDbConnection(DaoClinicalData.class);
@@ -601,8 +627,20 @@ public final class DaoClinicalData {
 
         try{
             con = JdbcUtil.getDbConnection(DaoClinicalData.class);
-            pstmt = con.prepareStatement ("SELECT INTERNAL_ID FROM `" + tableName + "`"
-                                          + " WHERE ATTR_ID=? AND ATTR_VALUE=?");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement ("SELECT INTERNAL_ID FROM " + tableName + ""
+                        + " WHERE ATTR_ID=? AND ATTR_VALUE=?");
+                
+                break;
+            default:
+                pstmt = con.prepareStatement ("SELECT INTERNAL_ID FROM `" + tableName + "`"
+                        + " WHERE ATTR_ID=? AND ATTR_VALUE=?");
+              
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setString(1, paramName);
             pstmt.setString(2, paramValue);
             rs = pstmt.executeQuery();
