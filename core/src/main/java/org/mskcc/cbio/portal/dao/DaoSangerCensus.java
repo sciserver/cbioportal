@@ -41,6 +41,8 @@ import java.util.HashMap;
 import org.mskcc.cbio.portal.model.CanonicalGene;
 import org.mskcc.cbio.portal.model.SangerCancerGene;
 
+import edu.jhu.u01.DBProperties;
+
 /**
  * Data access object for Sanger Cancer Gene Census Table.
  */
@@ -68,11 +70,24 @@ public class DaoSangerCensus {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoSangerCensus.class);
-            pstmt = con.prepareStatement ("INSERT INTO sanger_cancer_census ("
-                 + "`ENTREZ_GENE_ID`, `CANCER_SOMATIC_MUT`, `CANCER_GERMLINE_MUT`,"
-                 + "`TUMOR_TYPES_SOMATIC_MUT`, `TUMOR_TYPES_GERMLINE_MUT`, `CANCER_SYNDROME`,"
-                 + "`TISSUE_TYPE`, `MUTATION_TYPE`, `TRANSLOCATION_PARTNER`, `OTHER_GERMLINE_MUT`,"
-                 + "`OTHER_DISEASE`) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement ("INSERT INTO sanger_cancer_census ("
+                        + "[ENTREZ_GENE_ID], [CANCER_SOMATIC_MUT], [CANCER_GERMLINE_MUT],"
+                        + "[TUMOR_TYPES_SOMATIC_MUT], [TUMOR_TYPES_GERMLINE_MUT], [CANCER_SYNDROME],"
+                        + "[TISSUE_TYPE], [MUTATION_TYPE], [TRANSLOCATION_PARTNER], [OTHER_GERMLINE_MUT],"
+                        + "[OTHER_DISEASE]) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+                break;
+            default:
+                pstmt = con.prepareStatement ("INSERT INTO sanger_cancer_census ("
+                        + "`ENTREZ_GENE_ID`, `CANCER_SOMATIC_MUT`, `CANCER_GERMLINE_MUT`,"
+                        + "`TUMOR_TYPES_SOMATIC_MUT`, `TUMOR_TYPES_GERMLINE_MUT`, `CANCER_SYNDROME`,"
+                        + "`TISSUE_TYPE`, `MUTATION_TYPE`, `TRANSLOCATION_PARTNER`, `OTHER_GERMLINE_MUT`,"
+                        + "`OTHER_DISEASE`) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setLong(1, gene.getEntrezGeneId());
             pstmt.setBoolean(2, cancerSomaticMutation);
             pstmt.setBoolean(3, cancerGermlineMutation);

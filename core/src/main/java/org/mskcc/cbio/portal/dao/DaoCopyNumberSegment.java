@@ -166,14 +166,14 @@ public final class DaoCopyNumberSegment {
             switch(DBProperties.getDBVendor()){
             case mssql://JK-FUTURE-TODO
                 if (cutoff>0) {
-                    sql = "SELECT  SAMPLE_ID, SUM(END-START)"
+                    sql = "SELECT  SAMPLE_ID, SUM([END]-[START])"
                         + " FROM copy_number_seg"
                         + " WHERE CANCER_STUDY_ID="+cancerStudyId
                         + " AND ABS(SEGMENT_MEAN)>=" + cutoff
                         + " AND SAMPLE_ID IN ('" + StringUtils.join(sampleIds,"','") +"')"
                         + " GROUP BY SAMPLE_ID";
                 } else {
-                    sql = "SELECT  SAMPLE_ID, SUM(END-START)"
+                    sql = "SELECT  SAMPLE_ID, SUM([END]-[START])"
                         + " FROM copy_number_seg"
                         + " WHERE CANCER_STUDY_ID="+cancerStudyId
                         + " AND SAMPLE_ID IN ('" + StringUtils.join(sampleIds,"','") +"')"
@@ -182,7 +182,7 @@ public final class DaoCopyNumberSegment {
                 break;
             default:
                 if (cutoff>0) {
-                    sql = "SELECT  `SAMPLE_ID`, SUM(`END`-`START`)"
+                    sql = "SELECT  `SAMPLE_ID`, SUM(`switch to eclipse`-`START`)"
                         + " FROM `copy_number_seg`"
                         + " WHERE `CANCER_STUDY_ID`="+cancerStudyId
                         + " AND ABS(`SEGMENT_MEAN`)>=" + cutoff

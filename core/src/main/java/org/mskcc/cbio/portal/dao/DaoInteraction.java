@@ -35,6 +35,8 @@ package org.mskcc.cbio.portal.dao;
 import org.mskcc.cbio.portal.model.CanonicalGene;
 import org.mskcc.cbio.portal.model.Interaction;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -108,7 +110,7 @@ public class DaoInteraction {
             pmids = NA;
         }
         
-        if (MySQLbulkLoader.isBulkLoad()) {
+        if (MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
             //  write to the temp file maintained by the MySQLbulkLoader
             MySQLbulkLoader.getMySQLbulkLoader("interaction").insertRecord(Long.toString(geneA.getEntrezGeneId()),
                     Long.toString(geneB.getEntrezGeneId()), interactionType,
@@ -120,10 +122,22 @@ public class DaoInteraction {
 
         try {
             con = JdbcUtil.getDbConnection(DaoInteraction.class);
-            pstmt = con.prepareStatement
-                    ("INSERT INTO interaction (`GENE_A`,`GENE_B`, `INTERACTION_TYPE`," +
-                            "`DATA_SOURCE`, `EXPERIMENT_TYPES`, `PMIDS`)"
-                            + "VALUES (?,?,?,?,?,?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO interaction ([GENE_A],[GENE_B], [INTERACTION_TYPE]," +
+                        "[DATA_SOURCE], [EXPERIMENT_TYPES], [PMIDS])"
+                        + "VALUES (?,?,?,?,?,?)");
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO interaction (`GENE_A`,`GENE_B`, `INTERACTION_TYPE`," +
+                        "`DATA_SOURCE`, `EXPERIMENT_TYPES`, `PMIDS`)"
+                        + "VALUES (?,?,?,?,?,?)");
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setLong(1, geneA.getEntrezGeneId());
             pstmt.setLong(2, geneB.getEntrezGeneId());
             pstmt.setString(3, interactionType);

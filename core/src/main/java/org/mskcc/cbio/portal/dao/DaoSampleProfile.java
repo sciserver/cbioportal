@@ -34,6 +34,8 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.model.*;
 
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
@@ -56,9 +58,20 @@ public final class DaoSampleProfile {
         try {
             if (!sampleExistsInGeneticProfile(sampleId, geneticProfileId)) {
                 con = JdbcUtil.getDbConnection(DaoSampleProfile.class);
-                pstmt = con.prepareStatement
-                        ("INSERT INTO sample_profile (`SAMPLE_ID`, `GENETIC_PROFILE_ID`, `PANEL_ID`) "
-                                + "VALUES (?,?,?)");
+                switch(DBProperties.getDBVendor()){
+                case mssql:
+                    pstmt = con.prepareStatement
+                    ("INSERT INTO sample_profile ([SAMPLE_ID], [GENETIC_PROFILE_ID], [PANEL_ID]) "
+                            + "VALUES (?,?,?)");
+                    break;
+                default:
+                    pstmt = con.prepareStatement
+                    ("INSERT INTO sample_profile (`SAMPLE_ID`, `GENETIC_PROFILE_ID`, `PANEL_ID`) "
+                            + "VALUES (?,?,?)");
+                	break;
+                }//JK-UPDATED
+
+
                 pstmt.setInt(1, sampleId);
                 pstmt.setInt(2, geneticProfileId);
                 if (panelId != null) {
@@ -225,10 +238,21 @@ public final class DaoSampleProfile {
         List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
         try {
             con = JdbcUtil.getDbConnection(DaoMutation.class);
+            String sql = null;
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                sql = "select [GENETIC_PROFILE_ID], count([SAMPLE_ID]) from sample_profile " +
+                        " where [GENETIC_PROFILE_ID] in ("+ StringUtils.join(id2MutationProfile.keySet(), ",") + ")" +
+                        " group by [GENETIC_PROFILE_ID]";
+                break;
+            default:
+                sql = "select `GENETIC_PROFILE_ID`, count(`SAMPLE_ID`) from sample_profile " +
+                        " where `GENETIC_PROFILE_ID` in ("+ StringUtils.join(id2MutationProfile.keySet(), ",") + ")" +
+                        " group by `GENETIC_PROFILE_ID`";
+            	break;
+            }//JK-UPDATED
 
-            String sql = "select `GENETIC_PROFILE_ID`, count(`SAMPLE_ID`) from sample_profile " +
-                    " where `GENETIC_PROFILE_ID` in ("+ StringUtils.join(id2MutationProfile.keySet(), ",") + ")" +
-                    " group by `GENETIC_PROFILE_ID`";
+
 
             pstmt = con.prepareStatement(sql);
             rs = pstmt.executeQuery();

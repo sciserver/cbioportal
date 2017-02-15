@@ -36,6 +36,8 @@ package org.mskcc.cbio.portal.dao;
 import org.mskcc.cbio.portal.model.User;
 import org.mskcc.cbio.portal.model.UserAuthorities;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -58,7 +60,15 @@ public class DaoUserAuthorities {
 			con = JdbcUtil.getDbConnection(DaoUserAuthorities.class);
 			String email = userAuthorities.getEmail();
 			for (String authority : userAuthorities.getAuthorities()) {
-                pstmt = con.prepareStatement("INSERT INTO authorities (`EMAIL`, `AUTHORITY`) VALUES (?,?)");
+	            switch(DBProperties.getDBVendor()){
+	            case mssql:
+	            	pstmt = con.prepareStatement("INSERT INTO authorities ([EMAIL], [AUTHORITY]) VALUES (?,?)");
+	                break;
+	            default:
+	            	pstmt = con.prepareStatement("INSERT INTO authorities (`EMAIL`, `AUTHORITY`) VALUES (?,?)");
+	            	break;
+	            }//JK-UPDATED
+
                 pstmt.setString(1, email);
 				pstmt.setString(2, authority);
 				toReturn += pstmt.executeUpdate();

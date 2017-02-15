@@ -35,6 +35,8 @@ package org.mskcc.cbio.portal.dao;
 import org.codehaus.jackson.node.ObjectNode;
 import org.mskcc.cbio.portal.model.CanonicalGene;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -101,7 +103,7 @@ public class DaoGeneticAlteration {
             valueBuffer.append(value).append(DELIM);
         }
         
-       if (MySQLbulkLoader.isBulkLoad() ) {
+       if (MySQLbulkLoader.isBulkLoad() ) {//JK-FUTURE-TODO
           //  write to the temp file maintained by the MySQLbulkLoader
           MySQLbulkLoader.getMySQLbulkLoader("genetic_alteration").insertRecord(Integer.toString( geneticProfileId ),
                   Long.toString( entrezGeneId ), valueBuffer.toString());
@@ -115,11 +117,23 @@ public class DaoGeneticAlteration {
         
         try {
             con = JdbcUtil.getDbConnection(DaoGeneticAlteration.class);
-            pstmt = con.prepareStatement
-                    ("INSERT INTO genetic_alteration (GENETIC_PROFILE_ID, " +
-                            " ENTREZ_GENE_ID," +
-                            " `VALUES`) "
-                            + "VALUES (?,?,?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO genetic_alteration (GENETIC_PROFILE_ID, " +
+                        " ENTREZ_GENE_ID," +
+                        " [VALUES]) "
+                        + "VALUES (?,?,?)");
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO genetic_alteration (GENETIC_PROFILE_ID, " +
+                        " ENTREZ_GENE_ID," +
+                        " `VALUES`) "
+                        + "VALUES (?,?,?)");
+            	break;
+            }//JK-UPDATED
+
             pstmt.setInt(1, geneticProfileId);
             pstmt.setLong(2, entrezGeneId);
             pstmt.setString(3, valueBuffer.toString());
@@ -247,7 +261,7 @@ public class DaoGeneticAlteration {
 
             pstmt = con.prepareStatement("SELECT * FROM genetic_alteration WHERE"
                     + " GENETIC_PROFILE_ID = " + geneticProfileId
-                    + " LIMIT 3000 OFFSET " + offSet);
+                    + " LIMIT 3000 OFFSET " + offSet);//JK-FUTURE-TODO
 
             rs = pstmt.executeQuery();
             while (rs.next()) {

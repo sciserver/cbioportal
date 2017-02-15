@@ -37,6 +37,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import edu.jhu.u01.DBProperties;
+
 /**
  * Dao for the pfam graphics cache.
  *
@@ -60,8 +62,18 @@ public class DaoPfamGraphics
 		try
 		{
 			con = JdbcUtil.getDbConnection(DaoTextCache.class);
-			pstmt = con.prepareStatement(
-				"INSERT INTO pfam_graphics (`UNIPROT_ACC`, `JSON_DATA`) VALUES (?,?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+    			pstmt = con.prepareStatement(
+    					"INSERT INTO pfam_graphics ([UNIPROT_ACC], [JSON_DATA]) VALUES (?,?)");
+                break;
+            default:
+    			pstmt = con.prepareStatement(
+    					"INSERT INTO pfam_graphics (`UNIPROT_ACC`, `JSON_DATA`) VALUES (?,?)");
+            	break;
+            }//JK-UPDATED
+
+
 			pstmt.setString(1, uniprotAcc);
 			pstmt.setString(2, jsonData);
 

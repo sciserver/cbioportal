@@ -35,6 +35,8 @@ package org.mskcc.cbio.portal.dao;
 import org.mskcc.cbio.portal.model.PdbUniprotAlignment;
 import org.mskcc.cbio.portal.model.PdbUniprotResidueMapping;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -49,7 +51,7 @@ public final class DaoPdbUniprotResidueMapping {
     private DaoPdbUniprotResidueMapping() {}
     
     public static int addPdbUniprotAlignment(PdbUniprotAlignment alignment) {
-        if (!MySQLbulkLoader.isBulkLoad()) {
+        if (!MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
             throw new IllegalStateException("only bulk load is supported");
         }
         
@@ -72,7 +74,7 @@ public final class DaoPdbUniprotResidueMapping {
     }
     
     public static int addPdbUniprotResidueMapping(PdbUniprotResidueMapping mapping) throws DaoException {
-        if (!MySQLbulkLoader.isBulkLoad()) {
+        if (!MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
             throw new IllegalStateException("only bulk load is supported");
         }
         //  write to the temp file maintained by the MySQLbulkLoader
@@ -95,8 +97,18 @@ public final class DaoPdbUniprotResidueMapping {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoPdbUniprotResidueMapping.class);
-            pstmt = con.prepareStatement
-                    ("SELECT MAX(`ALIGNMENT_ID`) FROM `pdb_uniprot_alignment`");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("SELECT MAX([ALIGNMENT_ID]) FROM [pdb_uniprot_alignment]");
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("SELECT MAX(`ALIGNMENT_ID`) FROM `pdb_uniprot_alignment`");
+            	break;
+            }//JK-UPDATED
+
+
             rs = pstmt.executeQuery();
             return rs.next() ? rs.getInt(1) : 0;
         } catch (SQLException e) {

@@ -34,6 +34,8 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.model.CanonicalGene;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -88,9 +90,20 @@ final class DaoGene {
             CanonicalGene existingGene = getGene(gene.getEntrezGeneId());
             if (existingGene == null) {
                 con = JdbcUtil.getDbConnection(DaoGene.class);
-                pstmt = con.prepareStatement
-                        ("INSERT INTO gene (`ENTREZ_GENE_ID`,`HUGO_GENE_SYMBOL`,`TYPE`,`CYTOBAND`,`LENGTH`) "
-                                + "VALUES (?,?,?,?,?)");
+                switch(DBProperties.getDBVendor()){
+                case mssql:
+                    pstmt = con.prepareStatement
+                    ("INSERT INTO gene ([ENTREZ_GENE_ID],[HUGO_GENE_SYMBOL],[TYPE],[CYTOBAND],[LENGTH]) "
+                            + "VALUES (?,?,?,?,?)");
+                    break;
+                default:
+                    pstmt = con.prepareStatement
+                    ("INSERT INTO gene (`ENTREZ_GENE_ID`,`HUGO_GENE_SYMBOL`,`TYPE`,`CYTOBAND`,`LENGTH`) "
+                            + "VALUES (?,?,?,?,?)");               
+                	break;
+                }//JK-UPDATED
+
+                
                 pstmt.setLong(1, gene.getEntrezGeneId());
                 pstmt.setString(2, gene.getHugoGeneSymbolAllCaps());
                 pstmt.setString(3, gene.getType());
@@ -141,7 +154,7 @@ final class DaoGene {
             for (String alias : aliases) {
                 if (!existingAliases.contains(alias)) {
                     pstmt = con.prepareStatement("INSERT INTO gene_alias "
-                            + "(`ENTREZ_GENE_ID`,`GENE_ALIAS`) VALUES (?,?)");
+                            + "([ENTREZ_GENE_ID],[GENE_ALIAS]) VALUES (?,?)");//JK-UPDATED
                     pstmt.setLong(1, gene.getEntrezGeneId());
                     pstmt.setString(2, alias);
                     rows += pstmt.executeUpdate();

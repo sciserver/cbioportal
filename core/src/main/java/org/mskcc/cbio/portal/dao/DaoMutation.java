@@ -35,6 +35,8 @@ package org.mskcc.cbio.portal.dao;
 import org.mskcc.cbio.portal.model.*;
 import org.mskcc.cbio.portal.util.MutationKeywordUtils;
 
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
@@ -48,7 +50,7 @@ public final class DaoMutation {
     public static final String NAN = "NaN";
 
     public static int addMutation(ExtendedMutation mutation, boolean newMutationEvent) throws DaoException {
-        if (!MySQLbulkLoader.isBulkLoad()) {
+        if (!MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
             throw new DaoException("You have to turn on MySQLbulkLoader in order to insert mutations");
         } else {
         	int result = 1;
@@ -92,7 +94,7 @@ public final class DaoMutation {
         // use this code if bulk loading
         // write to the temp file maintained by the MySQLbulkLoader
         String keyword = MutationKeywordUtils.guessOncotatorMutationKeyword(event.getProteinChange(), event.getMutationType());
-        MySQLbulkLoader.getMySQLbulkLoader("mutation_event").insertRecord(
+        MySQLbulkLoader.getMySQLbulkLoader("mutation_event").insertRecord(//JK-FUTURE-TODO
                 Long.toString(event.getMutationEventId()),
                 Long.toString(event.getGene().getEntrezGeneId()),
                 event.getChr(),
@@ -130,13 +132,28 @@ public final class DaoMutation {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoMutation.class);
-            pstmt = con.prepareStatement(
-                    "INSERT INTO mutation_count " +
-                    "SELECT genetic_profile.`GENETIC_PROFILE_ID`, `SAMPLE_ID`, COUNT(*) AS MUTATION_COUNT " +
-                    "FROM `mutation` , `genetic_profile` " +
-                    "WHERE mutation.`GENETIC_PROFILE_ID` = genetic_profile.`GENETIC_PROFILE_ID` " +
-                    "AND genetic_profile.`GENETIC_PROFILE_ID`=? " +
-                    "GROUP BY genetic_profile.`GENETIC_PROFILE_ID` , `SAMPLE_ID`;");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement(
+                        "INSERT INTO mutation_count " +
+                        "SELECT genetic_profile.[GENETIC_PROFILE_ID], [SAMPLE_ID], COUNT(*) AS MUTATION_COUNT " +
+                        "FROM [mutation] , [genetic_profile] " +
+                        "WHERE mutation.[GENETIC_PROFILE_ID] = genetic_profile.[GENETIC_PROFILE_ID] " +
+                        "AND genetic_profile.[GENETIC_PROFILE_ID]=? " +
+                        "GROUP BY genetic_profile.[GENETIC_PROFILE_ID] , [SAMPLE_ID];");
+                break;
+            default:
+                pstmt = con.prepareStatement(
+                        "INSERT INTO mutation_count " +
+                        "SELECT genetic_profile.`GENETIC_PROFILE_ID`, `SAMPLE_ID`, COUNT(*) AS MUTATION_COUNT " +
+                        "FROM `mutation` , `genetic_profile` " +
+                        "WHERE mutation.`GENETIC_PROFILE_ID` = genetic_profile.`GENETIC_PROFILE_ID` " +
+                        "AND genetic_profile.`GENETIC_PROFILE_ID`=? " +
+                        "GROUP BY genetic_profile.`GENETIC_PROFILE_ID` , `SAMPLE_ID`;");
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setInt(1, profileId);
             return pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -549,7 +566,7 @@ public final class DaoMutation {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoMutation.class);
-            pstmt = con.prepareStatement("SELECT MAX(`MUTATION_EVENT_ID`) FROM `mutation_event`");
+            pstmt = con.prepareStatement("SELECT MAX(MUTATION_EVENT_ID) FROM mutation_event");//JK-UPDATED
             rs = pstmt.executeQuery();
             return rs.next() ? rs.getLong(1) : 0;
         } catch (SQLException e) {
@@ -673,8 +690,18 @@ public final class DaoMutation {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoMutation.class);
-            pstmt = con.prepareStatement("SET SESSION group_concat_max_len = 1000000");
-            rs = pstmt.executeQuery();
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                //pstmt = con.prepareStatement("SET SESSION group_concat_max_len = 1000000");//JK-FUTURE-TODO
+                break;
+            default:
+                pstmt = con.prepareStatement("SET SESSION group_concat_max_len = 1000000");//JK-FUTURE-TODO
+                rs = pstmt.executeQuery();
+
+            	break;
+            }//JK-UPDATED
+
+
             String sql = "SELECT mutation.ENTREZ_GENE_ID, GROUP_CONCAT(mutation.SAMPLE_ID), COUNT(*), COUNT(*)/`LENGTH` AS count_per_nt" +
                     " FROM mutation, gene" +
                     " WHERE mutation.ENTREZ_GENE_ID=gene.ENTREZ_GENE_ID" +
@@ -854,11 +881,27 @@ public final class DaoMutation {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoMutation.class);
-            String sql = "SELECT `SAMPLE_ID`, `GENETIC_PROFILE_ID`, me1.`MUTATION_EVENT_ID`" +
-                    " FROM mutation cme, mutation_event me1, mutation_event me2" +
-                    " WHERE me1.`MUTATION_EVENT_ID` IN ("+ concatEventIds + ")" +
-                    " AND me1.`KEYWORD`=me2.`KEYWORD`" +
-                    " AND cme.`MUTATION_EVENT_ID`=me2.`MUTATION_EVENT_ID`";
+            String sql = null;
+
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                sql = "SELECT [SAMPLE_ID], [GENETIC_PROFILE_ID], me1.[MUTATION_EVENT_ID]" +
+                        " FROM mutation cme, mutation_event me1, mutation_event me2" +
+                        " WHERE me1.[MUTATION_EVENT_ID] IN ("+ concatEventIds + ")" +
+                        " AND me1.[KEYWORD]=me2.[KEYWORD]" +
+                        " AND cme.[MUTATION_EVENT_ID]=me2.[MUTATION_EVENT_ID]";
+                
+                break;
+            default:
+                sql = "SELECT `SAMPLE_ID`, `GENETIC_PROFILE_ID`, me1.`MUTATION_EVENT_ID`" +
+                        " FROM mutation cme, mutation_event me1, mutation_event me2" +
+                        " WHERE me1.`MUTATION_EVENT_ID` IN ("+ concatEventIds + ")" +
+                        " AND me1.`KEYWORD`=me2.`KEYWORD`" +
+                        " AND cme.`MUTATION_EVENT_ID`=me2.`MUTATION_EVENT_ID`";
+            	break;
+            }//JK-UPDATED
+
+
             pstmt = con.prepareStatement(sql);
             Map<Sample, Set<Long>> map = new HashMap<Sample, Set<Long>> ();
             rs = pstmt.executeQuery();

@@ -36,6 +36,8 @@ import org.mskcc.cbio.portal.model.CancerStudy;
 import org.mskcc.cbio.portal.model.CanonicalGene;
 import org.mskcc.cbio.portal.model.MutSig;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -68,7 +70,7 @@ public class DaoMutSig {
 
         CanonicalGene gene = mutSig.getCanonicalGene();
         
-        if (MySQLbulkLoader.isBulkLoad()) {
+        if (MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
                 //  write to the temp file maintained by the MySQLbulkLoader
                 MySQLbulkLoader.getMySQLbulkLoader("mut_sig").insertRecord(Integer.toString(mutSig.getCancerType()),
                         Long.toString(gene.getEntrezGeneId()),
@@ -88,16 +90,32 @@ public class DaoMutSig {
         try {
             if (mutSig != null) {
                 con = JdbcUtil.getDbConnection(DaoMutSig.class);
+                switch(DBProperties.getDBVendor()){
+                case mssql:
+                    pstmt = con.prepareStatement
+                    ("INSERT INTO mut_sig ([CANCER_STUDY_ID]," +
+                            "[ENTREZ_GENE_ID], " +
+                            "[RANK], " +
+                            "[NumBasesCovered], " +
+                            "[NumMutations], " +
+                            "[P_Value], " +
+                            "[Q_Value]) "  +
+                            "VALUES (?,?,?,?,?,?,?)");
+                    break;
+                default:
+                    pstmt = con.prepareStatement
+                    ("INSERT INTO mut_sig (`CANCER_STUDY_ID`," +
+                            "`ENTREZ_GENE_ID`, " +
+                            "`RANK`, " +
+                            "`NumBasesCovered`, " +
+                            "`NumMutations`, " +
+                            "`P_Value`, " +
+                            "`Q_Value`) "  +
+                            "VALUES (?,?,?,?,?,?,?)");
+                	break;
+                }//JK-UPDATED
 
-                pstmt = con.prepareStatement
-                        ("INSERT INTO mut_sig (`CANCER_STUDY_ID`," +
-                                "`ENTREZ_GENE_ID`, " +
-                                "`RANK`, " +
-                                "`NumBasesCovered`, " +
-                                "`NumMutations`, " +
-                                "`P_Value`, " +
-                                "`Q_Value`) "  +
-                                "VALUES (?,?,?,?,?,?,?)");
+
 
                 pstmt.setInt(1, mutSig.getCancerType());
                 pstmt.setLong(2,gene.getEntrezGeneId());

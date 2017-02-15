@@ -40,6 +40,8 @@ import java.util.ArrayList;
 
 import org.mskcc.cbio.portal.model.TypeOfCancer;
 
+import edu.jhu.u01.DBProperties;
+
 /**
  * A TypeOfCancer is a clinical cancer type, such as Glioblastoma, Ovarian, etc.
  * Eventually, we'll have ontology problems with this, but initially the dbms
@@ -56,7 +58,16 @@ public class DaoTypeOfCancer {
       ResultSet rs = null;
       try {
          con = JdbcUtil.getDbConnection(DaoTypeOfCancer.class);
-         pstmt = con.prepareStatement("INSERT INTO type_of_cancer ( `TYPE_OF_CANCER_ID`, `NAME`, `CLINICAL_TRIAL_KEYWORDS`, `DEDICATED_COLOR`, `SHORT_NAME`, `PARENT` ) VALUES (?,?,?,?,?,?)");
+         switch(DBProperties.getDBVendor()){
+         case mssql:
+             pstmt = con.prepareStatement("INSERT INTO type_of_cancer ( [TYPE_OF_CANCER_ID], [NAME], [CLINICAL_TRIAL_KEYWORDS], [DEDICATED_COLOR], [SHORT_NAME], [PARENT] ) VALUES (?,?,?,?,?,?)");
+             break;
+         default:
+             pstmt = con.prepareStatement("INSERT INTO type_of_cancer ( `TYPE_OF_CANCER_ID`, `NAME`, `CLINICAL_TRIAL_KEYWORDS`, `DEDICATED_COLOR`, `SHORT_NAME`, `PARENT` ) VALUES (?,?,?,?,?,?)");
+         	break;
+         }//JK-UPDATED
+
+
          pstmt.setString(1, typeOfCancer.getTypeOfCancerId());
          pstmt.setString(2, typeOfCancer.getName());
          pstmt.setString(3, typeOfCancer.getClinicalTrialKeywords());

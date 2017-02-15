@@ -40,6 +40,8 @@ import java.util.ArrayList;
 
 import org.mskcc.cbio.portal.model.User;
 
+import edu.jhu.u01.DBProperties;
+
 /**
  * A User. They must have an EMAIL & ENABLED.
  * NAME is optional (i.e., could be "").
@@ -56,7 +58,16 @@ public class DaoUser {
       ResultSet rs = null;
       try {
          con = JdbcUtil.getDbConnection(DaoUser.class);
-         pstmt = con.prepareStatement("INSERT INTO users ( `EMAIL`, `NAME`, `ENABLED` ) VALUES (?,?,?)");
+         switch(DBProperties.getDBVendor()){
+         case mssql:
+             pstmt = con.prepareStatement("INSERT INTO users ( [EMAIL], [NAME], [ENABLED] ) VALUES (?,?,?)");
+             break;
+         default:
+             pstmt = con.prepareStatement("INSERT INTO users ( `EMAIL`, `NAME`, `ENABLED` ) VALUES (?,?,?)");
+         	break;
+         }//JK-UPDATED
+
+
          pstmt.setString(1, user.getEmail());
          pstmt.setString(2, user.getName());
          pstmt.setBoolean(3, user.isEnabled());

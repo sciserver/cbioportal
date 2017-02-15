@@ -34,6 +34,8 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.model.*;
 
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.collections.map.MultiKeyMap;
 
 import java.sql.*;
@@ -110,8 +112,18 @@ public class DaoPatient {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoPatient.class);
-            pstmt = con.prepareStatement("INSERT INTO patient (`STABLE_ID`, `CANCER_STUDY_ID`) VALUES (?,?)",
-                                         Statement.RETURN_GENERATED_KEYS);
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement("INSERT INTO patient ([STABLE_ID], [CANCER_STUDY_ID]) VALUES (?,?)",
+                        Statement.RETURN_GENERATED_KEYS);
+                break;
+            default:
+                pstmt = con.prepareStatement("INSERT INTO patient (`STABLE_ID`, `CANCER_STUDY_ID`) VALUES (?,?)",
+                        Statement.RETURN_GENERATED_KEYS);
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setString(1, patient.getStableId());
             pstmt.setInt(2, patient.getCancerStudy().getInternalId());
             pstmt.executeUpdate();

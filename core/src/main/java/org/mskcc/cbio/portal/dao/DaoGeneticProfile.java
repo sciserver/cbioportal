@@ -36,6 +36,8 @@ import java.sql.*;
 import java.util.*;
 import org.mskcc.cbio.portal.model.*;
 
+import edu.jhu.u01.DBProperties;
+
 /**
  * Analogous to and replaces the old DaoCancerType. A CancerStudy has a NAME and
  * DESCRIPTION. If PUBLIC is true a CancerStudy can be accessed by anyone,
@@ -92,11 +94,21 @@ public final class DaoGeneticProfile {
         int rows = 0;
         try {
             con = JdbcUtil.getDbConnection(DaoGeneticProfile.class);
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO genetic_profile ([STABLE_ID], [CANCER_STUDY_ID], [GENETIC_ALTERATION_TYPE]," +
+                        "[DATATYPE], [NAME], [DESCRIPTION], [SHOW_PROFILE_IN_ANALYSIS_TAB]) " +
+                        "VALUES (?,?,?,?,?,?,?)");
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO genetic_profile (`STABLE_ID`, `CANCER_STUDY_ID`, `GENETIC_ALTERATION_TYPE`," +
+                        "`DATATYPE`, `NAME`, `DESCRIPTION`, `SHOW_PROFILE_IN_ANALYSIS_TAB`) " +
+                        "VALUES (?,?,?,?,?,?,?)");
+            	break;
+            }//JK-UPDATED
 
-            pstmt = con.prepareStatement
-                    ("INSERT INTO genetic_profile (`STABLE_ID`, `CANCER_STUDY_ID`, `GENETIC_ALTERATION_TYPE`," +
-                            "`DATATYPE`, `NAME`, `DESCRIPTION`, `SHOW_PROFILE_IN_ANALYSIS_TAB`) " +
-                            "VALUES (?,?,?,?,?,?,?)");
             pstmt.setString(1, profile.getStableId());
             pstmt.setInt(2, profile.getCancerStudyId());
             pstmt.setString(3, profile.getGeneticAlterationType().name());
