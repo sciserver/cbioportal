@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.cbioportal.persistence.mybatis.MutationMapper">
@@ -166,7 +165,8 @@
     </select>
 
     <select id="hasAlleleFrequencyData" resultType="boolean">
-        select
+    <if test="_databaseId == 'mysql'">
+       select
 
         exists (
 
@@ -180,50 +180,120 @@
 
           and TUMOR_REF_COUNT >= 0
         )
+     </if>
+
+     	<if test="_databaseId == 'mssql'">
+     
+select cast(case when count(*) =1 then 1 else 0 end as char(1))
+from (
+select top 1 1 as b 
+		from mutation
+
+          where GENETIC_PROFILE_ID = #{geneticProfileId}
+
+          and SAMPLE_ID = #{sampleId}
+
+          and TUMOR_ALT_COUNT >= 0
+
+          and TUMOR_REF_COUNT >= 0
+        )
+        </if>
+            <!-- 
+        <if test="_databaseId == 'mssql'">
+select count(*) from (
+select top 1 1 as b 
+		from mutation
+          where GENETIC_PROFILE_ID =#{geneticProfileId}
+          and SAMPLE_ID =#{sampleId}
+          and TUMOR_ALT_COUNT >= 0
+          and TUMOR_REF_COUNT >= 0) b
+
+        </if> --><!-- //JK-UPDATED -->
+     
     </select>
 
     <insert  id = "groupConcatMaxLenSet">
-        SET SESSION group_concat_max_len = 1000000;
+    	<if test="_databaseId == 'mysql'"><!-- JK-UPDATED -->
+    	      	 SET SESSION group_concat_max_len = 1000000;
+       	 </if>
     </insert>
 
     <select id="getSignificantlyMutatedGenes" resultType="org.cbioportal.persistence.dto.SignificantlyMutatedGene">
-        select
-
-        mutation.ENTREZ_GENE_ID as entrezGeneId,
-        GROUP_CONCAT(mutation.SAMPLE_ID) as concatenatedSampleIds,
-        count(*) as count,
-        count(*)/`LENGTH` as count_per_nt
-
-        from mutation, gene
-
-        where mutation.ENTREZ_GENE_ID = gene.ENTREZ_GENE_ID
-        and GENETIC_PROFILE_ID = #{geneticProfileId}
-
-        <if test="entrezGeneIds != null and !entrezGeneIds.isEmpty()">
-            and mutation.ENTREZ_GENE_ID in
-            <foreach item="item" collection="entrezGeneIds" open="(" separator="," close=")">
-                #{item}
-            </foreach>
-        </if>
-        <if test="sampleIds != null and !sampleIds.isEmpty()">
-            and mutation.SAMPLE_ID in
-            <foreach item="item" collection="sampleIds" open="(" separator="," close=")">
-                #{item}
-            </foreach>
-        </if>
-
-        group by mutation.ENTREZ_GENE_ID
-
-        <if test="thresholdRecurrence > 0">
-            having count(*) >= #{thresholdRecurrence}
-        </if>
-
-        order by count_per_nt desc
-
-        <if test="thresholdNumGenes > 0">
-            LIMIT 0, #{thresholdNumGenes}
-        </if>
-
+        <if test="_databaseId == 'mysql'">
+	        select
+	        mutation.ENTREZ_GENE_ID as entrezGeneId,
+	        GROUP_CONCAT(mutation.SAMPLE_ID) as concatenatedSampleIds,
+	        count(*) as count,
+	        count(*)/`LENGTH` as count_per_nt
+	
+	        from mutation, gene
+	
+	        where mutation.ENTREZ_GENE_ID = gene.ENTREZ_GENE_ID
+	        and GENETIC_PROFILE_ID = #{geneticProfileId}
+	
+	        <if test="entrezGeneIds != null and !entrezGeneIds.isEmpty()">
+	            and mutation.ENTREZ_GENE_ID in
+	            <foreach item="item" collection="entrezGeneIds" open="(" separator="," close=")">
+	                #{item}
+	            </foreach>
+	        </if>
+	        <if test="sampleIds != null and !sampleIds.isEmpty()">
+	            and mutation.SAMPLE_ID in
+	            <foreach item="item" collection="sampleIds" open="(" separator="," close=")">
+	                #{item}
+	            </foreach>
+	        </if>
+	
+	        group by mutation.ENTREZ_GENE_ID
+	
+	        <if test="thresholdRecurrence > 0">
+	            having count(*) >= #{thresholdRecurrence}
+	        </if>
+	
+	        order by count_per_nt desc
+	
+	        <if test="thresholdNumGenes > 0">
+	            LIMIT 0, #{thresholdNumGenes}
+	        </if>
+		</if>
+        <if test="_databaseId == 'mssql'">
+	        select 
+       	     <if test="thresholdNumGenes > 0">
+	            top #{thresholdNumGenes}
+	        </if>
+	        
+	        mutation.ENTREZ_GENE_ID as entrezGeneId,
+	        MIN(mutation.SAMPLE_ID) as concatenatedSampleIds,
+	        count(*) as count,
+	        count(*)/[LENGTH] as count_per_nt
+	
+	        from mutation, gene
+	
+	        where mutation.ENTREZ_GENE_ID = gene.ENTREZ_GENE_ID
+	        and GENETIC_PROFILE_ID = #{geneticProfileId}
+	
+	        <if test="entrezGeneIds != null and !entrezGeneIds.isEmpty()">
+	            and mutation.ENTREZ_GENE_ID in
+	            <foreach item="item" collection="entrezGeneIds" open="(" separator="," close=")">
+	                #{item}
+	            </foreach>
+	        </if>
+	        <if test="sampleIds != null and !sampleIds.isEmpty()">
+	            and mutation.SAMPLE_ID in
+	            <foreach item="item" collection="sampleIds" open="(" separator="," close=")">
+	                #{item}
+	            </foreach>
+	        </if>
+	
+	        group by mutation.ENTREZ_GENE_ID
+	
+	        <if test="thresholdRecurrence > 0">
+	            having count(*) >= #{thresholdRecurrence}
+	        </if>
+	
+	        order by count_per_nt desc
+	
+		</if><!-- //JK-UPDATED -->		
     </select>
 
     <select id="countMutationEvents" resultType="org.cbioportal.model.MutationCount">
