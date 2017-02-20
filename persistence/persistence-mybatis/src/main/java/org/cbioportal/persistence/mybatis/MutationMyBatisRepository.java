@@ -53,6 +53,9 @@ public class MutationMyBatisRepository implements MutationRepository {
     }
 
     public Boolean hasAlleleFrequencyData(Integer geneticProfileId, Integer sampleId) {
+    	//JK-UPDATED
+    	if (mutationMapper.hasAlleleFrequencyData(geneticProfileId, sampleId) == null) return false;
+    	else
         return mutationMapper.hasAlleleFrequencyData(geneticProfileId, sampleId);
     }
 
