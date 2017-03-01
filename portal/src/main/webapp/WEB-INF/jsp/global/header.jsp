@@ -50,6 +50,7 @@
 <jsp:include page="js_include.jsp" flush="true" />
 <%}%>
 <jsp:include page="js_include_analytics_and_email.jsp" flush="true" />
+<jsp:include page="../u01/js_include_u01.jsp" flush="true" /><!--//JK-UPDATED-->
 
     <script type="text/javascript">
         $(document).ready(function(){
