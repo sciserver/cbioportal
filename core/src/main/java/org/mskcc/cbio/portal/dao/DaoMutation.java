@@ -711,7 +711,7 @@ public final class DaoMutation {
                     " GROUP BY mutation.ENTREZ_GENE_ID" +
                     (thresholdRecurrence>0?(" HAVING COUNT(*)>="+thresholdRecurrence):"") +
                     " ORDER BY count_per_nt DESC" +
-                    (thresholdNumGenes>0?(" LIMIT 0,"+thresholdNumGenes):"");
+                    (thresholdNumGenes>0?(" LIMIT 0,"+thresholdNumGenes):"");//JK-TODO
             pstmt = con.prepareStatement(sql);
             rs = pstmt.executeQuery();
             Map<Long, Map<String, String>> map = new HashMap();

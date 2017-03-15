@@ -184,7 +184,9 @@ public final class DaoClinicalEvent {
             con = JdbcUtil.getDbConnection(DaoCopyNumberSegment.class);
             switch(DBProperties.getDBVendor()){
             case mssql:
-                pstmt = con.prepareStatement("SELECT TOP 1 1 FROM clinical_event WHERE PATIENT_ID=?");
+                //pstmt = con.prepareStatement("SELECT CAST (CASE WHEN COUNT (*) = 1 THEN 1 ELSE 0 END AS BIT) FROM ("
+                //		+ "SELECT TOP 1 1 AS B FROM clinical_event WHERE PATIENT_ID=?) AS A");
+                pstmt = con.prepareStatement("SELECT TOP 1 1 AS B FROM clinical_event WHERE PATIENT_ID=?");
                 break;
             default:
                 pstmt = con.prepareStatement("SELECT EXISTS(SELECT 1 FROM `clinical_event` WHERE `PATIENT_ID`=?)");

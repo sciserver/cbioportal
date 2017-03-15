@@ -57,7 +57,7 @@
         <bean id="vendorProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
 		    <property name="properties">
 	        	<props>
-    	        	<prop key="MSSQL">mssql</prop>
+    	        	<prop key="SQL SERVER">sqlserver</prop>
         	    	<prop key="MySQL">mysql</prop>
         		</props>
     		</property>
@@ -71,6 +71,8 @@
             <property name="dataSource" ref="businessDataSource" />
             <property name="typeAliasesPackage" value="org.mskcc.cbio.portal.model" />
             <property name="typeHandlersPackage" value="org.cbioportal.persistence.mybatis.typehandler" />
+            <!--property name="mapperLocations" value="org.cbioportal.persistence.mybatis-sqlserver.*Mapper" /--><!--working//JK-UPDATED-->
+            <property name="mapperLocations" value="classpath:org/cbioportal/persistence/mybatis-sqlserver/*.xml" /><!--WORKING//JK-UPDATED-->
             <property name="databaseIdProvider" ref="databaseIdProvider"/><!--JK-UPDATED-->
             
         </bean>
