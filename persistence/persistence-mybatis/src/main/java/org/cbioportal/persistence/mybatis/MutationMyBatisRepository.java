@@ -53,9 +53,6 @@ public class MutationMyBatisRepository implements MutationRepository {
     }
 
     public Boolean hasAlleleFrequencyData(Integer geneticProfileId, Integer sampleId) {
-    	//JK-UPDATED
-    	if (mutationMapper.hasAlleleFrequencyData(geneticProfileId, sampleId) == null) return false;
-    	else
         return mutationMapper.hasAlleleFrequencyData(geneticProfileId, sampleId);
     }
 
@@ -64,9 +61,11 @@ public class MutationMyBatisRepository implements MutationRepository {
                                                                        List<Integer> sampleIds,
                                                                        Integer thresholdRecurrence,
                                                                        Integer thresholdNumGenes) {
-
+    	
+        //return getSignificantlyMutatedGenes(geneticProfileId, entrezGeneIds, sampleIds, thresholdRecurrence,
+        //        thresholdNumGenes, true);
         return getSignificantlyMutatedGenes(geneticProfileId, entrezGeneIds, sampleIds, thresholdRecurrence,
-                thresholdNumGenes, true);
+                thresholdNumGenes, false);//JK-UPDATED
     }
 
     public List<SignificantlyMutatedGene> getSignificantlyMutatedGenes(Integer geneticProfileId,
