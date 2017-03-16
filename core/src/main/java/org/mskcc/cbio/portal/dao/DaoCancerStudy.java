@@ -222,7 +222,16 @@ public final class DaoCancerStudy {
 
         try {
             con = JdbcUtil.getDbConnection(DaoCancerStudy.class);
-			pstmt = con.prepareStatement("UPDATE cancer_study set IMPORT_DATE = NOW() where cancer_study_id = ?");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+    			pstmt = con.prepareStatement("UPDATE cancer_study set IMPORT_DATE = CURRENT_TIMESTAMP where cancer_study_id = ?");
+                break;
+            default:
+    			pstmt = con.prepareStatement("UPDATE cancer_study set IMPORT_DATE = NOW() where cancer_study_id = ?");
+            	break;
+            }//JK-UPDATED
+
+
 			pstmt.setInt(1, internalId);
             pstmt.executeUpdate();
         }

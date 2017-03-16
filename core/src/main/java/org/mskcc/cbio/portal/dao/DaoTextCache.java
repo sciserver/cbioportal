@@ -77,7 +77,7 @@ public class DaoTextCache
             case mssql:
     			pstmt = con.prepareStatement(
     					"INSERT INTO text_cache ([HASH_KEY], [TEXT], [DATE_TIME_STAMP]) "
-    			        		+ "VALUES (?,?,NOW())");
+    			        		+ "VALUES (?,?,CURRENT_TIMESTAMP)");
                 break;
             default:
     			pstmt = con.prepareStatement(
