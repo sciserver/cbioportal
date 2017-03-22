@@ -345,6 +345,12 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>5.0.3</version>
           </dependency>
+          <!-- msserver --><!-- //JK-UPDATED -->
+		  <dependency>
+		    <groupId>com.microsoft.sqlserver</groupId>
+		    <artifactId>mssql-jdbc</artifactId>
+		    <version>6.1.0.jre8</version>
+		  </dependency> 
         </dependencies>
         <executions>
           <execution>
@@ -359,12 +365,15 @@
               <url>${db.test.url}</url>
               <username>${db.test.username}</username>
               <password>${db.test.password}</password>
+              <!-- //JK-UPDATED
               <sqlCommand>SET storage_engine=INNODB</sqlCommand>
               <sqlCommand>SET SESSION sql_mode = 'ANSI_QUOTES'</sqlCommand>
+              -->
               <srcFiles>
-                <srcFile>src/main/resources/db/cgds.sql</srcFile>
+                <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql</srcFile>
                 <srcFile>src/test/resources/seed_mini.sql</srcFile>
               </srcFiles>
+               
               <!-- added encoding to prevent Unknown initial character set index '192' received from server error -->
               <encoding>UTF-8</encoding>
               <driverProperties>characterEncoding=utf8, connectionCollation=utf8_general_ci</driverProperties>

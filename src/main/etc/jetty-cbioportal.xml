@@ -172,13 +172,13 @@
             <!-- The data source -->
 	    <New id="ds" class="org.eclipse.jetty.plus.jndi.Resource">
 	        <Arg><Ref refid="webapp"/></Arg>
-	        <Arg>jdbc/cbioportal</Arg>
+	        <Arg>jdbc_mssql/cbioportal</Arg>
 	        <Arg>
 	            <New class="org.apache.commons.dbcp.BasicDataSource">
-	                <Set name="driverClassName">com.mysql.jdbc.Driver</Set>
-	                <Set name="url">jdbc:mysql://localhost/cbioportal</Set>
-	                <Set name="username">cbioportal</Set>
-	                <Set name="password">cbioportal</Set>
+	                <Set name="driverClassName">${db.driver}</Set>
+	                <Set name="url">jdbc:sqlserver://127.0.0.1:1433;DatabaseName=cbioportal_test</Set>
+	                <Set name="username">${db.user}</Set>
+	                <Set name="password">${db.password}</Set>
 	                <Set name="testOnBorrow">true</Set>
 	                <Set name="validationQuery">SELECT 1</Set>
 	            </New>

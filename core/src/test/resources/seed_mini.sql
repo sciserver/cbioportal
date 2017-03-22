@@ -33,7 +33,7 @@
 --
 -- Prepared by Stuart Watt -- 13th May 2015
 
-SET SESSION sql_mode = 'ANSI_QUOTES';
+--SET SESSION sql_mode = 'ANSI_QUOTES';
 
 DELETE FROM structural_variant;
 DELETE FROM clinical_event_data;
