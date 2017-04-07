@@ -108,7 +108,7 @@ public class DaoTypeOfCancer {
       ResultSet rs = null;
       try {
          con = JdbcUtil.getDbConnection(DaoTypeOfCancer.class);
-         pstmt = con.prepareStatement("SELECT * FROM type_of_cancer");
+         pstmt = con.prepareStatement("SELECT * FROM type_of_cancer order by type_of_cancer_id");//JK-UPDATED
          rs = pstmt.executeQuery();
          ArrayList<TypeOfCancer> list = new ArrayList<TypeOfCancer>();
          while (rs.next()) {
