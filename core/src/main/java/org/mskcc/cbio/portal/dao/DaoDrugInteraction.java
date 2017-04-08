@@ -127,7 +127,7 @@ public class DaoDrugInteraction {
             pstmt.setString(4, dataSource);
             pstmt.setString(5, experimentTypes);
             pstmt.setString(6, pmids);
-
+            
             return pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new DaoException(e);
