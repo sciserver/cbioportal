@@ -63,7 +63,8 @@ public class DrugInteraction {
     }
 
     public void setDrug(String drug) {
-        this.drug = drug;
+        //this.drug = drug;
+        this.drug = (drug == null)? drug:drug.trim(); //JK-UPDATED
     }
 
     public long getTargetGene() {
@@ -79,7 +80,7 @@ public class DrugInteraction {
     }
 
     public void setInteractionType(String interactionType) {
-        this.interactionType = interactionType;
+        this.interactionType = (interactionType == null? interactionType:interactionType.trim()); //JK-UPDATED	
     }
 
     public String getDataSource() {
