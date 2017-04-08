@@ -35,52 +35,58 @@
 
 --SET SESSION sql_mode = 'ANSI_QUOTES';
 
-DELETE FROM structural_variant;
-DELETE FROM clinical_event_data;
-DELETE FROM clinical_event;
-DELETE FROM pdb_uniprot_residue_mapping;
-DELETE FROM pdb_uniprot_alignment;
-DELETE FROM cosmic_mutation;
-DELETE FROM copy_number_seg_file;
-DELETE FROM copy_number_seg;
-DELETE FROM sample_cna_event;
-DELETE FROM cna_event;
-DELETE FROM drug_interaction;
-DELETE FROM drug;
-DELETE FROM pfam_graphics;
-DELETE FROM text_cache;
-DELETE FROM gistic_to_gene;
-DELETE FROM gistic;
-DELETE FROM sanger_cancer_census;
-DELETE FROM protein_array_cancer_study;
-DELETE FROM protein_array_data;
-DELETE FROM protein_array_target;
-DELETE FROM protein_array_info;
-DELETE FROM mut_sig;
-DELETE FROM interaction;
-DELETE FROM clinical_attribute_meta;
-DELETE FROM mutation_count;
-DELETE FROM mutation;
-DELETE FROM mutation_event;
-DELETE FROM sample_profile;
-DELETE FROM gene_panel;
-DELETE FROM gene_panel_list;
-DELETE FROM genetic_profile_samples;
-DELETE FROM genetic_alteration;
-DELETE FROM genetic_profile;
-DELETE FROM uniprot_id_mapping;
-DELETE FROM gene_alias;
-DELETE FROM gene;
-DELETE FROM clinical_sample;
-DELETE FROM sample;
-DELETE FROM sample_list_list;
-DELETE FROM sample_list;
-DELETE FROM clinical_patient;
-DELETE FROM patient;
-DELETE FROM authorities;
-DELETE FROM users;
-DELETE FROM cancer_study;
-DELETE FROM type_of_cancer;
+PRINT('structural_variant') DELETE FROM structural_variant;
+PRINT('Delete from clinical_event_data ') DELETE FROM clinical_event_data;
+PRINT('Delete from clinical_event') DELETE FROM clinical_event;
+PRINT('Delete from pdb_uniprot_residue_mapping') DELETE FROM pdb_uniprot_residue_mapping;
+PRINT('Delete from pdb_uniprot_alignment') DELETE FROM pdb_uniprot_alignment;
+PRINT('Delete from cosmic_mutation') DELETE FROM cosmic_mutation;
+PRINT('Delete from copy_number_seg_file') DELETE FROM copy_number_seg_file;
+PRINT('Delete from copy_number_seg') DELETE FROM copy_number_seg;
+PRINT('Delete from sample_cna_event') DELETE FROM sample_cna_event;
+PRINT('Delete from cna_event') DELETE FROM cna_event;
+PRINT('Delete from drug_interaction') DELETE FROM drug_interaction;
+PRINT('Delete from drug') DELETE FROM drug;
+PRINT('Delete from pfam_graphics') DELETE FROM pfam_graphics;
+PRINT('Delete from text_cache') DELETE FROM text_cache;
+PRINT('Delete from gistic_to_gene') DELETE FROM gistic_to_gene;
+PRINT('Delete from gistic') DELETE FROM gistic;
+PRINT('Delete from sanger_cancer_census') DELETE FROM sanger_cancer_census;
+PRINT('Delete from protein_array_cancer_study') DELETE FROM protein_array_cancer_study;
+PRINT('Delete from protein_arrayed_data') DELETE FROM protein_array_data;
+PRINT('Delete from protein_array_target') DELETE FROM protein_array_target;
+PRINT('Delete from protein_array_info') DELETE FROM protein_array_info;
+PRINT('Delete from mut_sig') DELETE FROM mut_sig;
+PRINT('Delete from interaction') DELETE FROM interaction;
+PRINT('Delete from clinical_attribute_meta') DELETE FROM clinical_attribute_meta;
+PRINT('Delete from mutation_account') DELETE FROM mutation_count;
+PRINT('Delete from mutation') DELETE FROM mutation;
+PRINT('Delete from mutation_event') DELETE FROM mutation_event;
+PRINT('Delete from sample_profile') DELETE FROM sample_profile;
+--PRINT('Delete from gene_panel') DELETE FROM gene_panel; 
+--//JK-UPDATED: reversed the order of delete b/w gene_panel and gene_ panel_list because of foreign key constraint
+PRINT('Delete from gene_pen_list') DELETE FROM gene_panel_list;
+PRINT('Delete from gene_panel') DELETE FROM gene_panel; 
+
+PRINT('Delete from genetic_profile_samples') DELETE FROM genetic_profile_samples;
+PRINT('Delete from genetic_alteration') DELETE FROM genetic_alteration;
+PRINT('Delete from genetic_profile') DELETE FROM genetic_profile;
+PRINT('Delete from uniprot_id_mapping') DELETE FROM uniprot_id_mapping;
+PRINT('Delete from gene_alias') DELETE FROM gene_alias;
+PRINT('Delete from gene') DELETE FROM gene;
+PRINT('Delete from clinical_sample') DELETE FROM clinical_sample;
+--PRINT('Delete from sample') DELETE FROM sample;--//JK-UPDATED reverse the order of delete between and sample sample_list_list
+
+PRINT('Delete from sample_list_list') DELETE FROM sample_list_list;
+PRINT('Delete from sample') DELETE FROM sample;
+
+PRINT('Delete from sample_list') DELETE FROM sample_list;
+PRINT('Delete from clinical_patient') DELETE FROM clinical_patient;
+PRINT('Delete from patient') DELETE FROM patient;
+PRINT('Delete from authorities') DELETE FROM authorities;
+PRINT('Delete from users') DELETE FROM users;
+PRINT('Delete from cancer_study') DELETE FROM cancer_study;
+PRINT('Delete from type_of_cancer') DELETE FROM type_of_cancer;
 
 -- type_of_cancer
 INSERT INTO "type_of_cancer" ("TYPE_OF_CANCER_ID","NAME","CLINICAL_TRIAL_KEYWORDS","DEDICATED_COLOR","SHORT_NAME","PARENT") VALUES ('acc','Adrenocortical Carcinoma','adrenocortical','Purple','ACC','tissue');
@@ -96,8 +102,10 @@ INSERT INTO "type_of_cancer" ("TYPE_OF_CANCER_ID","NAME","CLINICAL_TRIAL_KEYWORD
 INSERT INTO "type_of_cancer" ("TYPE_OF_CANCER_ID","NAME","CLINICAL_TRIAL_KEYWORDS","DEDICATED_COLOR","SHORT_NAME","PARENT") VALUES ('brca','Breast Invasive Carcinoma','breast,breast invasive','HotPink','Breast','tissue');
 
 -- cancer_study
+SET IDENTITY_INSERT [cancer_study] ON
 INSERT INTO "cancer_study" ("CANCER_STUDY_ID", "CANCER_STUDY_IDENTIFIER", "TYPE_OF_CANCER_ID", "NAME", "SHORT_NAME", "DESCRIPTION", "PUBLIC", "PMID", "CITATION", "GROUPS") 
 VALUES (1,'study_tcga_pub','brca','Breast Invasive Carcinoma (TCGA, Nature 2012)','BRCA (TCGA)','<a href=\"http://cancergenome.nih.gov/\">The Cancer Genome Atlas (TCGA)</a> Breast Invasive Carcinoma project. 825 cases.<br><i>Nature 2012.</i> <a href=\"http://tcga-data.nci.nih.gov/tcga/\">Raw data via the TCGA Data Portal</a>.',1,'23000897','TCGA, Nature 2012','SU2C-PI3K;PUBLIC;GDAC');
+SET IDENTITY_INSERT [cancer_study] OFF
 
 -- gene
 INSERT INTO "gene" ("ENTREZ_GENE_ID","HUGO_GENE_SYMBOL","TYPE","CYTOBAND","LENGTH") VALUES (207,'AKT1','protein-coding','14q32.32',10838);
@@ -113,6 +121,7 @@ INSERT INTO "gene" ("ENTREZ_GENE_ID","HUGO_GENE_SYMBOL","TYPE","CYTOBAND","LENGT
 INSERT INTO "gene" ("ENTREZ_GENE_ID","HUGO_GENE_SYMBOL","TYPE","CYTOBAND","LENGTH") VALUES (4893,'NRAS','protein-coding','1p13.2',4449);
 
 -- cna_event
+SET IDENTITY_INSERT [cna_event] ON
 INSERT INTO "cna_event" ("CNA_EVENT_ID","ENTREZ_GENE_ID","ALTERATION") VALUES (20093,207,-2);
 INSERT INTO "cna_event" ("CNA_EVENT_ID","ENTREZ_GENE_ID","ALTERATION") VALUES (20092,207,2);
 INSERT INTO "cna_event" ("CNA_EVENT_ID","ENTREZ_GENE_ID","ALTERATION") VALUES (26161,208,2);
@@ -130,6 +139,7 @@ INSERT INTO "cna_event" ("CNA_EVENT_ID","ENTREZ_GENE_ID","ALTERATION") VALUES (1
 INSERT INTO "cna_event" ("CNA_EVENT_ID","ENTREZ_GENE_ID","ALTERATION") VALUES (17280,3845,2);
 INSERT INTO "cna_event" ("CNA_EVENT_ID","ENTREZ_GENE_ID","ALTERATION") VALUES (1678,4893,-2);
 INSERT INTO "cna_event" ("CNA_EVENT_ID","ENTREZ_GENE_ID","ALTERATION") VALUES (1677,4893,2);
+SET IDENTITY_INSERT [cna_event] OFF
 
 -- cosmic_mutation
 INSERT INTO "cosmic_mutation" ("COSMIC_MUTATION_ID","CHR","START_POSITION","REFERENCE_ALLELE","TUMOR_SEQ_ALLELE","STRAND","CODON_CHANGE","ENTREZ_GENE_ID","PROTEIN_CHANGE","COUNT","KEYWORD") VALUES ('78883','17',41197784,'G','A','-','c.5503C>T',672,'R1835*',2,'BRCA1 truncating');
@@ -185,12 +195,14 @@ INSERT INTO "gene_alias" ("ENTREZ_GENE_ID","GENE_ALIAS") VALUES (4893,'N-ras');
 INSERT INTO "gene_alias" ("ENTREZ_GENE_ID","GENE_ALIAS") VALUES (4893,'NCMS');
 
 -- genetic_profile
-INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (2,'study_tcga_pub_gistic',1,'COPY_NUMBER_ALTERATION','DISCRETE','Putative copy-number alterations from GISTIC','Putative copy-number from GISTIC 2.0. Values: -2 = homozygous deletion; -1 = hemizygous deletion; 0 = neutral / no change; 1 = gain; 2 = high level amplification.','1');
-INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (3,'study_tcga_pub_mrna',1,'MRNA_EXPRESSION','Z-SCORE','mRNA expression (microarray)','Expression levels (Agilent microarray).','0');
-INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (4,'study_tcga_pub_log2CNA',1,'COPY_NUMBER_ALTERATION','LOG-VALUE','Log2 copy-number values','Log2 copy-number values for each gene (from Affymetrix SNP6).','0');
-INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (5,'study_tcga_pub_methylation_hm27',1,'METHYLATION','CONTINUOUS','Methylation (HM27)','Methylation beta-values (HM27 platform). For genes with multiple methylation probes, the probe least correlated with expression is selected.','0');
-INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (6,'study_tcga_pub_mutations',1,'MUTATION_EXTENDED','MAF','Mutations','Mutation data from whole exome sequencing.','1');
-INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (7,'study_tcga_pub_sv',1,'STRUCTURAL_VARIANT','SV','Structural Variants','Structural Variants detected by Illumina HiSeq sequencing.',1);
+SET IDENTITY_INSERT [genetic_profile] ON
+INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (2,'study_tcga_pub_gistic',1,'COPY_NUMBER_ALTERATION','DISCRETE','Putative copy-number alterations from GISTIC','Putative copy-number from GISTIC 2.0. Values: -2 = homozygous deletion; -1 = hemizygous deletion; 0 = neutral / no change; 1 = gain; 2 = high level amplification.',CONVERT(Binary,'1'));
+INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (3,'study_tcga_pub_mrna',1,'MRNA_EXPRESSION','Z-SCORE','mRNA expression (microarray)','Expression levels (Agilent microarray).',CONVERT(Binary,'0'));
+INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (4,'study_tcga_pub_log2CNA',1,'COPY_NUMBER_ALTERATION','LOG-VALUE','Log2 copy-number values','Log2 copy-number values for each gene (from Affymetrix SNP6).',CONVERT(Binary,'0'));
+INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (5,'study_tcga_pub_methylation_hm27',1,'METHYLATION','CONTINUOUS','Methylation (HM27)','Methylation beta-values (HM27 platform). For genes with multiple methylation probes, the probe least correlated with expression is selected.',CONVERT(Binary,'0'));
+INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (6,'study_tcga_pub_mutations',1,'MUTATION_EXTENDED','MAF','Mutations','Mutation data from whole exome sequencing.',CONVERT(Binary,'1'));
+INSERT INTO "genetic_profile" ("GENETIC_PROFILE_ID", "STABLE_ID", "CANCER_STUDY_ID", "GENETIC_ALTERATION_TYPE", "DATATYPE", "NAME", "DESCRIPTION", "SHOW_PROFILE_IN_ANALYSIS_TAB") VALUES (7,'study_tcga_pub_sv',1,'STRUCTURAL_VARIANT','SV','Structural Variants','Structural Variants detected by Illumina HiSeq sequencing.',CONVERT(Binary,'1'));
+SET IDENTITY_INSERT [genetic_profile] OFF
 
 -- genetic_alteration
 INSERT INTO "genetic_alteration" ("GENETIC_PROFILE_ID","ENTREZ_GENE_ID","VALUES") VALUES (2,10000,'0,0,1,2,0,1,1,1,0,1,1,1,0,1,');
@@ -243,6 +255,7 @@ INSERT INTO "genetic_profile_samples" ("GENETIC_PROFILE_ID", "ORDERED_SAMPLE_LIS
 INSERT INTO "genetic_profile_samples" ("GENETIC_PROFILE_ID", "ORDERED_SAMPLE_LIST") VALUES (5,'2,');
 
 -- patient
+SET IDENTITY_INSERT [patient] ON
 INSERT INTO "patient" ("INTERNAL_ID", "STABLE_ID", "CANCER_STUDY_ID") VALUES (1,'TCGA-A1-A0SB',1);
 INSERT INTO "patient" ("INTERNAL_ID", "STABLE_ID", "CANCER_STUDY_ID") VALUES (2,'TCGA-A1-A0SD',1);
 INSERT INTO "patient" ("INTERNAL_ID", "STABLE_ID", "CANCER_STUDY_ID") VALUES (3,'TCGA-A1-A0SE',1);
@@ -257,8 +270,10 @@ INSERT INTO "patient" ("INTERNAL_ID", "STABLE_ID", "CANCER_STUDY_ID") VALUES (11
 INSERT INTO "patient" ("INTERNAL_ID", "STABLE_ID", "CANCER_STUDY_ID") VALUES (12,'TCGA-A1-A0SO',1);
 INSERT INTO "patient" ("INTERNAL_ID", "STABLE_ID", "CANCER_STUDY_ID") VALUES (13,'TCGA-A1-A0SP',1);
 INSERT INTO "patient" ("INTERNAL_ID", "STABLE_ID", "CANCER_STUDY_ID") VALUES (14,'TCGA-A1-A0SQ',1);
+SET IDENTITY_INSERT [patient] OFF
 
 -- sample
+SET IDENTITY_INSERT [sample] ON
 INSERT INTO "sample" ("INTERNAL_ID","STABLE_ID","SAMPLE_TYPE","PATIENT_ID","TYPE_OF_CANCER_ID") VALUES (1,'TCGA-A1-A0SB-01','Primary Solid Tumor',1,'brca');
 INSERT INTO "sample" ("INTERNAL_ID","STABLE_ID","SAMPLE_TYPE","PATIENT_ID","TYPE_OF_CANCER_ID") VALUES (2,'TCGA-A1-A0SD-01','Primary Solid Tumor',2,'brca');
 INSERT INTO "sample" ("INTERNAL_ID","STABLE_ID","SAMPLE_TYPE","PATIENT_ID","TYPE_OF_CANCER_ID") VALUES (3,'TCGA-A1-A0SE-01','Primary Solid Tumor',3,'brca');
@@ -273,11 +288,14 @@ INSERT INTO "sample" ("INTERNAL_ID","STABLE_ID","SAMPLE_TYPE","PATIENT_ID","TYPE
 INSERT INTO "sample" ("INTERNAL_ID","STABLE_ID","SAMPLE_TYPE","PATIENT_ID","TYPE_OF_CANCER_ID") VALUES (12,'TCGA-A1-A0SO-01','Primary Solid Tumor',12,'brca');
 INSERT INTO "sample" ("INTERNAL_ID","STABLE_ID","SAMPLE_TYPE","PATIENT_ID","TYPE_OF_CANCER_ID") VALUES (13,'TCGA-A1-A0SP-01','Primary Solid Tumor',13,'brca');
 INSERT INTO "sample" ("INTERNAL_ID","STABLE_ID","SAMPLE_TYPE","PATIENT_ID","TYPE_OF_CANCER_ID") VALUES (14,'TCGA-A1-A0SQ-01','Primary Solid Tumor',14,'brca');
+SET IDENTITY_INSERT [sample] OFF
 
 -- mutation_event
+SET IDENTITY_INSERT [mutation_event] ON
 INSERT INTO "mutation_event" ("MUTATION_EVENT_ID","ENTREZ_GENE_ID","CHR","START_POSITION","END_POSITION","REFERENCE_ALLELE","TUMOR_SEQ_ALLELE","PROTEIN_CHANGE","MUTATION_TYPE","FUNCTIONAL_IMPACT_SCORE","FIS_VALUE","LINK_XVAR","LINK_PDB","LINK_MSA","NCBI_BUILD","STRAND","VARIANT_TYPE","DB_SNP_RS","DB_SNP_VAL_STATUS","ONCOTATOR_DBSNP_RS","ONCOTATOR_REFSEQ_MRNA_ID","ONCOTATOR_CODON_CHANGE","ONCOTATOR_UNIPROT_ENTRY_NAME","ONCOTATOR_UNIPROT_ACCESSION","ONCOTATOR_PROTEIN_POS_START","ONCOTATOR_PROTEIN_POS_END","CANONICAL_TRANSCRIPT","KEYWORD") VALUES (2038,672,'17',41244748,41244748,'G','A','Q934*','Nonsense_Mutation','NA',0,'getma.org/?cm=var&var=hg19,17,41244748,G,A&fts=all','NA','NA','37','+','SNP','rs80357223','unknown','rs80357223','NM_007294','c.(2800-2802)CAG>TAG','BRCA1_HUMAN','P38398',934,934,1,'BRCA1 truncating');
 INSERT INTO "mutation_event" ("MUTATION_EVENT_ID","ENTREZ_GENE_ID","CHR","START_POSITION","END_POSITION","REFERENCE_ALLELE","TUMOR_SEQ_ALLELE","PROTEIN_CHANGE","MUTATION_TYPE","FUNCTIONAL_IMPACT_SCORE","FIS_VALUE","LINK_XVAR","LINK_PDB","LINK_MSA","NCBI_BUILD","STRAND","VARIANT_TYPE","DB_SNP_RS","DB_SNP_VAL_STATUS","ONCOTATOR_DBSNP_RS","ONCOTATOR_REFSEQ_MRNA_ID","ONCOTATOR_CODON_CHANGE","ONCOTATOR_UNIPROT_ENTRY_NAME","ONCOTATOR_UNIPROT_ACCESSION","ONCOTATOR_PROTEIN_POS_START","ONCOTATOR_PROTEIN_POS_END","CANONICAL_TRANSCRIPT","KEYWORD") VALUES (22604,672,'17',41258504,41258504,'A','C','C61G','Missense_Mutation','H',4.355,'getma.org/?cm=var&var=hg19,17,41258504,A,C&fts=all','getma.org/pdb.php?prot=BRCA1_HUMAN&from=24&to=64&var=C61G','getma.org/?cm=msa&ty=f&p=BRCA1_HUMAN&rb=24&re=64&var=C61G','37','+','SNP','rs28897672','byCluster','rs28897672','NM_007294','c.(181-183)TGT>GGT','BRCA1_HUMAN','P38398',61,61,1,'BRCA1 C61 missense');
 INSERT INTO "mutation_event" ("MUTATION_EVENT_ID","ENTREZ_GENE_ID","CHR","START_POSITION","END_POSITION","REFERENCE_ALLELE","TUMOR_SEQ_ALLELE","PROTEIN_CHANGE","MUTATION_TYPE","FUNCTIONAL_IMPACT_SCORE","FIS_VALUE","LINK_XVAR","LINK_PDB","LINK_MSA","NCBI_BUILD","STRAND","VARIANT_TYPE","DB_SNP_RS","DB_SNP_VAL_STATUS","ONCOTATOR_DBSNP_RS","ONCOTATOR_REFSEQ_MRNA_ID","ONCOTATOR_CODON_CHANGE","ONCOTATOR_UNIPROT_ENTRY_NAME","ONCOTATOR_UNIPROT_ACCESSION","ONCOTATOR_PROTEIN_POS_START","ONCOTATOR_PROTEIN_POS_END","CANONICAL_TRANSCRIPT","KEYWORD") VALUES (2039,672,'17',41276033,41276033,'C','T','C27_splice','Splice_Site','NA',1.4013e-45,'NA','NA','NA','37','+','SNP','rs80358010','byCluster','rs80358010','NM_007294','c.e2+1','NA','NA',-1,-1,1,'BRCA1 truncating');
+SET IDENTITY_INSERT [mutation_event] OFF
 
 -- mutation
 INSERT INTO "mutation" ("MUTATION_EVENT_ID","GENETIC_PROFILE_ID","SAMPLE_ID","ENTREZ_GENE_ID","CENTER","SEQUENCER","MUTATION_STATUS","VALIDATION_STATUS","TUMOR_SEQ_ALLELE1","TUMOR_SEQ_ALLELE2","MATCHED_NORM_SAMPLE_BARCODE","MATCH_NORM_SEQ_ALLELE1","MATCH_NORM_SEQ_ALLELE2","TUMOR_VALIDATION_ALLELE1","TUMOR_VALIDATION_ALLELE2","MATCH_NORM_VALIDATION_ALLELE1","MATCH_NORM_VALIDATION_ALLELE2","VERIFICATION_STATUS","SEQUENCING_PHASE","SEQUENCE_SOURCE","VALIDATION_METHOD","SCORE","BAM_FILE","TUMOR_ALT_COUNT","TUMOR_REF_COUNT","NORMAL_ALT_COUNT","NORMAL_REF_COUNT") VALUES (2038,6,6,672,'genome.wustl.edu','IlluminaGAIIx','Germline','Unknown','G','A','TCGA-A1-A0SH-10A-03D-A099-09','G','A','NA','NA','NA','NA','Unknown','Phase_IV','Capture','NA','1','dbGAP',-1,-1,-1,-1);
@@ -294,6 +312,7 @@ INSERT INTO "mutation_count" ("GENETIC_PROFILE_ID","SAMPLE_ID","MUTATION_COUNT")
 INSERT INTO "mutation_count" ("GENETIC_PROFILE_ID","SAMPLE_ID","MUTATION_COUNT") VALUES (6,12,165);
 
 -- sample_list
+SET IDENTITY_INSERT [sample_list] ON
 INSERT INTO "sample_list" ("LIST_ID", "STABLE_ID", "CATEGORY", "CANCER_STUDY_ID", "NAME", "DESCRIPTION") VALUES (1,'study_tcga_pub_all','other',1,'All Tumors','All tumor samples (14 samples)');
 INSERT INTO "sample_list" ("LIST_ID", "STABLE_ID", "CATEGORY", "CANCER_STUDY_ID", "NAME", "DESCRIPTION") VALUES (2,'study_tcga_pub_acgh','other',1,'Tumors aCGH','All tumors with aCGH data (778 samples)');
 INSERT INTO "sample_list" ("LIST_ID", "STABLE_ID", "CATEGORY", "CANCER_STUDY_ID", "NAME", "DESCRIPTION") VALUES (3,'study_tcga_pub_cnaseq','other',1,'Tumors with sequencing and aCGH data','All tumor samples that have CNA and sequencing data (482 samples)');
@@ -302,6 +321,7 @@ INSERT INTO "sample_list" ("LIST_ID", "STABLE_ID", "CATEGORY", "CANCER_STUDY_ID"
 INSERT INTO "sample_list" ("LIST_ID", "STABLE_ID", "CATEGORY", "CANCER_STUDY_ID", "NAME", "DESCRIPTION") VALUES (6,'study_tcga_pub_methylation_hm27','other',1,'Tumors with methylation data','All samples with methylation (HM27) data (311 samples)');
 INSERT INTO "sample_list" ("LIST_ID", "STABLE_ID", "CATEGORY", "CANCER_STUDY_ID", "NAME", "DESCRIPTION") VALUES (7,'study_tcga_pub_mrna','other',1,'Tumors with mRNA data (Agilent microarray)','All samples with mRNA expression data (526 samples)');
 INSERT INTO "sample_list" ("LIST_ID", "STABLE_ID", "CATEGORY", "CANCER_STUDY_ID", "NAME", "DESCRIPTION") VALUES (8,'study_tcga_pub_sequenced','other',1,'Sequenced Tumors','All sequenced samples (507 samples)');
+SET IDENTITY_INSERT [sample_list] OFF
 
 -- sample_list_list
 INSERT INTO "sample_list_list" ("LIST_ID","SAMPLE_ID") VALUES (1,1);
@@ -467,8 +487,10 @@ INSERT INTO authorities (EMAIL, AUTHORITY) values ('Lonnie@openid.org', 'ROLE_US
 INSERT INTO authorities (EMAIL, AUTHORITY) values ('Dhorak@yahoo.com', 'ROLE_USER');
 INSERT INTO authorities (EMAIL, AUTHORITY) values ('Dhorak@yahoo.com', 'ROLE_MANAGER');
 
+SET IDENTITY_INSERT [gene_panel] ON
 INSERT INTO "gene_panel" ("INTERNAL_ID", "STABLE_ID", "DESCRIPTION") VALUES(1, 'TESTPANEL1', 'A test panel consisting of a few genes');
 INSERT INTO "gene_panel" ("INTERNAL_ID", "STABLE_ID", "DESCRIPTION") VALUES(2, 'TESTPANEL2', 'Another test panel consisting of a few genes');
+SET IDENTITY_INSERT [gene_panel] OFF
 
 INSERT INTO "gene_panel_list" ("INTERNAL_ID", "GENE_ID") VALUES(1, 207);
 INSERT INTO "gene_panel_list" ("INTERNAL_ID", "GENE_ID") VALUES(1, 369);
