@@ -218,7 +218,13 @@ public final class DaoGeneticProfile {
         try {
             profileType.setShowProfileInAnalysisTab(rs.getBoolean("SHOW_PROFILE_IN_ANALYSIS_TAB"));
         } catch (SQLException e) {
-            profileType.setShowProfileInAnalysisTab(true);
+        	//JK-UPDATED
+        	byte[] v = rs.getBytes("SHOW_PROFILE_IN_ANALYSIS_TAB");
+        	if ((char)v[0] == '0' )
+        		profileType.setShowProfileInAnalysisTab(false);
+        	else 
+        		profileType.setShowProfileInAnalysisTab(true);
+            //profileType.setShowProfileInAnalysisTab(true);//the conversion from binary to BIT is unsupported exception.
         }
         profileType.setGeneticAlterationType(GeneticAlterationType.valueOf(rs.getString("GENETIC_ALTERATION_TYPE")));
         profileType.setDatatype(rs.getString("DATATYPE"));
