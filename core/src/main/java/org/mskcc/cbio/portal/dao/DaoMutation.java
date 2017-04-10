@@ -57,7 +57,7 @@ public final class DaoMutation {
         	if (newMutationEvent) {
         		//add event first, as mutation has a Foreign key constraint to the event:
         		result = addMutationEvent(mutation.getEvent())+1;
-            } 
+            }  
             MySQLbulkLoader.getMySQLbulkLoader("mutation").insertRecord(
                     Long.toString(mutation.getMutationEventId()),
                     Integer.toString(mutation.getGeneticProfileId()),
@@ -85,7 +85,11 @@ public final class DaoMutation {
                     Integer.toString(mutation.getTumorAltCount()),
                     Integer.toString(mutation.getTumorRefCount()),
                     Integer.toString(mutation.getNormalAltCount()),
-                    Integer.toString(mutation.getNormalRefCount()));
+                    Integer.toString(mutation.getNormalRefCount()),
+                    "MST"); //JK-UPDATED for testing purpose
+            //-added 'null' value for the skipped column which is the last in order, 
+            //since without explicitly specifying null mssql throws exception in inserting a row in the table.
+            //For mysql skipping value for the last column is accepted.
             return result;
         }
     }
@@ -578,7 +582,8 @@ public final class DaoMutation {
 
     private static ExtendedMutation extractMutation(ResultSet rs) throws SQLException, DaoException {
         try {
-            ExtendedMutation mutation = new ExtendedMutation(extractMutationEvent(rs));
+            ExtendedMutation mutation = new ExtendedMutation(extractMutationEvent(rs)); 
+        	
             mutation.setGeneticProfileId(rs.getInt("GENETIC_PROFILE_ID"));
             mutation.setSampleId(rs.getInt("SAMPLE_ID"));
             mutation.setSequencingCenter(rs.getString("CENTER"));
@@ -614,7 +619,9 @@ public final class DaoMutation {
     private static ExtendedMutation.MutationEvent extractMutationEvent(ResultSet rs) throws SQLException, DaoException {
         ExtendedMutation.MutationEvent event = new ExtendedMutation.MutationEvent();
         event.setMutationEventId(rs.getLong("MUTATION_EVENT_ID"));
-        long entrezId = rs.getLong("mutation_event.ENTREZ_GENE_ID");
+        //long entrezId = rs.getLong("mutation_event.ENTREZ_GENE_ID");
+        //JK-UPDATED due to incorrect column name ' mutation_event.ENTREZ_GENE_ID'. removed 'mutation_event' from column name. 
+        long entrezId = rs.getLong("ENTREZ_GENE_ID");//JK-UPDATED
         DaoGeneOptimized aDaoGene = DaoGeneOptimized.getInstance();
         CanonicalGene gene = aDaoGene.getGene(entrezId);
         event.setGene(gene);

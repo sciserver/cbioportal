@@ -33,6 +33,9 @@
 package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.util.*;
+
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -79,17 +82,27 @@ public class MySQLbulkLoader {
        boolean executedSetFKChecks = false;
        Connection con = null;
        try {
-            con = JdbcUtil.getDbConnection(MySQLbulkLoader.class);
-            stmt = con.prepareStatement("SELECT @@foreign_key_checks;");
-            ResultSet result = stmt.executeQuery();
-            
-            result.first();
-            checks = result.getInt(1);
+           switch(DBProperties.getDBVendor()){
+           case mssql:
+        	 //JK-FUTURE-TODO
+               break;
+           default:
+               con = JdbcUtil.getDbConnection(MySQLbulkLoader.class);
+               stmt = con.prepareStatement("SELECT @@foreign_key_checks;");
+               ResultSet result = stmt.executeQuery();
+               
+               result.first();
+               checks = result.getInt(1);
 
-            stmt = con.prepareStatement("SET foreign_key_checks = ?;");
-            stmt.setLong(1, 0);
-            stmt.execute();
-            executedSetFKChecks = true;
+               stmt = con.prepareStatement("SET foreign_key_checks = ?;");
+               stmt.setLong(1, 0);
+               stmt.execute();
+               executedSetFKChecks = true;
+           
+           	break;
+           }//JK-UPDATED
+
+
             
             int n = 0;
             for (MySQLbulkLoader mySQLbulkLoader : mySQLbulkLoaders.values()) {
@@ -233,7 +246,20 @@ public class MySQLbulkLoader {
          con = JdbcUtil.getDbConnection(MySQLbulkLoader.class);
          stmt = con.createStatement();
          
-         String command = "LOAD DATA LOCAL INFILE '" + tempFileName.replace("\\", "\\\\") + "'" + " INTO TABLE " + tableName;
+         String command = null;
+         System.out.println("FILE NAME " + tempFileName); //JK-UPDATED for testing
+         
+         switch(DBProperties.getDBVendor()){
+         case mssql:
+        	 command = "SET IMPLICIT_TRANSACTIONS OFF; BEGIN TRANSACTION; BULK INSERT " + tableName + " FROM '" + tempFileName.replace("\\", "\\\\") + 
+        	 "' WITH (DATAFILETYPE = 'char', ROWTERMINATOR = '0x0a'); Commit transaction; ";//JK-UPDATED
+             break;
+         default:
+             command = "LOAD DATA LOCAL INFILE '" + tempFileName.replace("\\", "\\\\") + "'" + " INTO TABLE " + tableName;
+         	break;
+         }
+
+
          stmt.execute( command );
          
          int updateCount = stmt.getUpdateCount();
