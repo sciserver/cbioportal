@@ -143,7 +143,7 @@ IF OBJECT_ID('dbo.type_of_cancer', 'U') IS NOT NULL
 
 
 
-GO
+--GO//JK-UPDATED
 
 CREATE TABLE [type_of_cancer] (
    [TYPE_OF_CANCER_ID] VARCHAR(63) NOT NULL
@@ -584,5 +584,5 @@ CREATE TABLE [info] (
 
 
 
-GO
+--GO //JK-UPDATED
 
