@@ -370,7 +370,7 @@
               <sqlCommand>SET SESSION sql_mode = 'ANSI_QUOTES'</sqlCommand>
               -->
               <srcFiles>
-                <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql</srcFile>
+                <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql</srcFile><!-- //JK-UPDATED -->
                 <srcFile>src/test/resources/seed_mini.sql</srcFile>
               </srcFiles>
                

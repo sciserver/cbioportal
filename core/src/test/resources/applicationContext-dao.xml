@@ -43,7 +43,7 @@
 	    <property name="isolationLevelName" value="ISOLATION_DEFAULT"/>
 	</bean>
 	
-	<!-- Values are for testing only, so need to correspond to the cgds in the pom.xml -->
+	<!-- Values are for testing only, so need to correspond to the cgds in the pom.xml --><!-- //JK-UPDATED -->
 	<bean id="dbcpDataSource" destroy-method="close" class="org.apache.commons.dbcp.BasicDataSource">
 	    <property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
         <property name="url" value="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=cbioportal_test"/>
