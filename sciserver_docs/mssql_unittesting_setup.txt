@@ -1,0 +1,56 @@
+======================
+CBioportal junit test
+======================
+1. Uses Maven Plugin Mojohaus.
+2. for each module there is unit test defined.
+3. 
+
+======================
+Changes made 
+======================
+A. pom.xml
+   - Updated db.test.driver/url/username/password
+
+B. portal
+
+C. core
+  1. /pom.xml
+   -Added <dependency> for mssql in sql plugin for tests.
+   -commented out <sqlcommand> for set storage and session from <executions> for sql plugin.
+   -updated <srcfiles> to use cgds_fixed4MSSQL.sql.MS.CREATE.sql
+  2. /Test/resources/seed_mini.sql
+    reversed order of delete b/w gene_panel and gene_panel_list, sample and sample_list_list 
+    due to the foreign key constraint 
+  3. /src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql 
+    - commented out 'GO' in two places in order to make the test scripts run
+  4. /src/main/resources/db/cgds_insert_test_MSSQL.sql (2 matches)
+    - set identity_insert table_name on/off in order to insert into a table with primary key with auto-increment.
+  5. /src/test/resources/applicationContext-dao.xml
+    - updated dbcpDataSource bean for testing: points to SqlServer Drive and database
+
+D. business
+   - no updates
+
+E. web
+
+F. model
+
+G. persistence
+  1. /persistence-mybatis-test/src/test/resources/testContextDatabase.xml
+    - updated dbcpDataSource bean for testing: points to SqlServer Drive and database
+    - tested DB_URL in MySQL version includes script to run (/src/test/resources/testSql.sql). I have created
+
+    - NOTE IT IS NOT TESTED, YET
+  2. NOT  
+
+H. service
+  no updates
+
+I. scripts
+  no updates
+
+J. /src/main/etc
+  1. jetty-cbioportal.xml
+   - updated <New id="ds" ...><Arg> for jdbc_mssql/cbioportal, and points to SqlServer database. jdbc_mssql/cbioportal is defined as db.tomcat_resource_name in /src/main/resources/portal.properties
+  2. override-web.xml
+   - updated <resource-ref><res-ref-name> to jdbc_mssql/cbioportal
