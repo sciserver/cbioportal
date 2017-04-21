@@ -251,8 +251,8 @@ public class MySQLbulkLoader {
          
          switch(DBProperties.getDBVendor()){
          case mssql:
-        	 command = "SET IMPLICIT_TRANSACTIONS OFF; BEGIN TRANSACTION; BULK INSERT " + tableName + " FROM '" + tempFileName.replace("\\", "\\\\") + 
-        	 "' WITH (DATAFILETYPE = 'char', ROWTERMINATOR = '0x0a'); Commit transaction; ";//JK-UPDATED
+        	 command = "BULK INSERT " + tableName +" FROM '" + tempFileName.replace("\\", "\\\\") + 
+        	 "' WITH (KEEPIDENTITY, DATAFILETYPE = 'char', ROWTERMINATOR = '0x0a')";//JK-UPDATED
              break;
          default:
              command = "LOAD DATA LOCAL INFILE '" + tempFileName.replace("\\", "\\\\") + "'" + " INTO TABLE " + tableName;
