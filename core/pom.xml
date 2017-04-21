@@ -332,6 +332,7 @@
           <additionalClasspathElements>
             <additionalClasspathElement>${project.parent.basedir}/src/main/resources/</additionalClasspathElement>
           </additionalClasspathElements>
+          <skipTests>false</skipTests><!-- //JK-UPDATED: added to specify whether to skip the test of this module or not-->
         </configuration>
       </plugin>
       <!-- sql plugin - for tests -->
