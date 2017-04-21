@@ -86,8 +86,8 @@ public final class DaoMutation {
                     Integer.toString(mutation.getTumorRefCount()),
                     Integer.toString(mutation.getNormalAltCount()),
                     Integer.toString(mutation.getNormalRefCount()),
-                    "MST"); //JK-UPDATED for testing purpose
-            //-added 'null' value for the skipped column which is the last in order, 
+                    ""); //JK-UPDATED 
+            //-added an empty string value for the skipped column which is the last in order, 
             //since without explicitly specifying null mssql throws exception in inserting a row in the table.
             //For mysql skipping value for the last column is accepted.
             return result;
@@ -213,7 +213,7 @@ public final class DaoMutation {
             con = JdbcUtil.getDbConnection(DaoMutation.class);
             pstmt = con.prepareStatement(
                     "SELECT SAMPLE_ID, ENTREZ_GENE_ID FROM mutation " +
-                    //"INNER JOIN mutation_event ON mutation.MUTATION_EVENT_ID=mutation_event.MUTATION_EVENT_ID " +
+                    "INNER JOIN mutation_event ON mutation.MUTATION_EVENT_ID=mutation_event.MUTATION_EVENT_ID " +
                     "WHERE SAMPLE_ID IN ('" +
                     org.apache.commons.lang.StringUtils.join(targetSampleList, "','") +
                     "') AND GENETIC_PROFILE_ID = ? AND mutation.ENTREZ_GENE_ID IN ('" +
