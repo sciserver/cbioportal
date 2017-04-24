@@ -53,6 +53,10 @@ import java.util.*;
 public class MySQLbulkLoader {
    private static boolean bulkLoad = false;
    private static boolean relaxedMode = false;
+   //JK-UPDATED  since MySQL and MS SQL handle inserting null value,
+   //created 2 static variables which represent proper null values for each DB Vendor.
+   public static String MYSQL_NULL_VALUE = "\\N";
+   public static String MSSQL_NULL_VALUE = "";
    
    private static final Map<String,MySQLbulkLoader> mySQLbulkLoaders = new LinkedHashMap<String,MySQLbulkLoader>();
    /**
@@ -207,10 +211,17 @@ public class MySQLbulkLoader {
          e.printStackTrace();
       }
    }
-   
+
+   //JK-UPDATED updated the code to return different null value for MS SQL and MySQL.
    private String escapeValue(String value) {
        if (value==null) {
-           return "\\N";
+           switch(DBProperties.getDBVendor()){
+           case mssql:
+               return MySQLbulkLoader.MSSQL_NULL_VALUE;
+           default:
+               return MySQLbulkLoader.MYSQL_NULL_VALUE;
+           }//JK-UPDATED
+
        }
        
        return value.replace("\r", "").replaceAll("\n", "\\\\n").replace("\t", "\\t");
@@ -273,6 +284,11 @@ public class MySQLbulkLoader {
              throw new DaoException("DB Error: only "+updateCount+" of the "+nLines+" records were inserted in `" + tableName + "`. " + otherDetails);
              
          } else {
+        	 
+        	 //JK-UPDATED
+        	 //Before deleting tempFileHandle copy it to another file for testing
+        	 fileCopyUsingNIOFilesClass(tempFileName, tempFileName+"_copy.txt");
+        	 
              tempFileHandle.delete();
          }
 
@@ -288,6 +304,21 @@ public class MySQLbulkLoader {
       }
    }
 
+   //JK-UPDATED --a method copy a temp file to a file saved on a disk before the temp file is deleted.
+   private static void fileCopyUsingNIOFilesClass(String fromFileName, String toFileName) 
+
+   {
+	   try {
+	   java.nio.file.Path source = java.nio.file.Paths.get(fromFileName);
+	   
+	   java.nio.file.Path destination = java.nio.file.Paths.get(toFileName);
+    
+	   java.nio.file.Files.copy(source, destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+	   } catch (IOException ioe) {
+		   System.out.println(ioe.getMessage());
+	   }
+   }
+   
    public String getTempFileName() {
       return tempFileName;
    }

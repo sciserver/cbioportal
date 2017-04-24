@@ -92,6 +92,7 @@ public class TestImportExtendedMutationData {
         MySQLbulkLoader.flushAll();
         ConsoleUtil.showMessages();
         
+        
         int sampleId = DaoSample.getSampleByCancerStudyAndSampleId(studyId, "TCGA-AA-3664-01").getInternalId();
         
         checkBasicFilteringRules();
@@ -115,6 +116,7 @@ public class TestImportExtendedMutationData {
         File file = new File("src/test/resources/data_mutations_swissprotname.maf");
         ImportExtendedMutationData parser = new ImportExtendedMutationData(file, geneticProfileId, null);
         parser.importData();
+
         MySQLbulkLoader.flushAll();
 
         checkSwissprotLoaded();
@@ -122,6 +124,7 @@ public class TestImportExtendedMutationData {
         int sampleId = DaoSample.getSampleByCancerStudyAndSampleId(studyId, "TCGA-A2-A0CR-01").getInternalId();
         ExtendedMutation m = DaoMutation.getMutations(
                 geneticProfileId, sampleId, 64581).get(0);
+        
         assertNull(m.getOncotatorUniprotAccession());
     }
 
@@ -133,6 +136,8 @@ public class TestImportExtendedMutationData {
      */
     @Test
     public void testImportExtendedMutationDataSwissprotAccession() throws IOException, DaoException {
+
+    	
         loadStudyContext1();
         MySQLbulkLoader.bulkLoadOn();
 
@@ -140,8 +145,11 @@ public class TestImportExtendedMutationData {
         ImportExtendedMutationData parser = new ImportExtendedMutationData(file, geneticProfileId, null);
         parser.setSwissprotIsAccession(true);
         parser.importData();
+        
+        
         MySQLbulkLoader.flushAll();
 
+        
         checkSwissprotLoaded();
         // unknown accessions are only loaded if the column lists accessions
         int sampleId = DaoSample.getSampleByCancerStudyAndSampleId(studyId, "TCGA-A2-A0CR-01").getInternalId();
@@ -182,6 +190,8 @@ public class TestImportExtendedMutationData {
 	 */
 	@Test
     public void testImportExtendedMutationDataOncotated() throws IOException, DaoException {
+
+		
         File file = new File("src/test/resources/data_mutations_oncotated.txt");
         ImportExtendedMutationData parser = new ImportExtendedMutationData(file, geneticProfileId, null);
         parser.importData();

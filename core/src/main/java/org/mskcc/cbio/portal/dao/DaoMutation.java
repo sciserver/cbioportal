@@ -86,7 +86,7 @@ public final class DaoMutation {
                     Integer.toString(mutation.getTumorRefCount()),
                     Integer.toString(mutation.getNormalAltCount()),
                     Integer.toString(mutation.getNormalRefCount()),
-                    ""); //JK-UPDATED 
+                    null); //JK-UPDATED 
             //-added an empty string value for the skipped column which is the last in order, 
             //since without explicitly specifying null mssql throws exception in inserting a row in the table.
             //For mysql skipping value for the last column is accepted.
@@ -97,7 +97,22 @@ public final class DaoMutation {
     public static int addMutationEvent(ExtendedMutation.MutationEvent event) throws DaoException {
         // use this code if bulk loading
         // write to the temp file maintained by the MySQLbulkLoader
-        String keyword = MutationKeywordUtils.guessOncotatorMutationKeyword(event.getProteinChange(), event.getMutationType());
+        String keyword_append = MutationKeywordUtils.guessOncotatorMutationKeyword(event.getProteinChange(), event.getMutationType());
+        String keyword = null;
+        
+        if (null == keyword_append) {
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                keyword = MySQLbulkLoader.MSSQL_NULL_VALUE;
+                break;
+            default:
+            	keyword = MySQLbulkLoader.MYSQL_NULL_VALUE;
+            	break;
+            }//JK-UPDATED
+        } else {
+        	keyword = (event.getGene().getHugoGeneSymbolAllCaps()+" "+keyword_append);
+        }
+        
         MySQLbulkLoader.getMySQLbulkLoader("mutation_event").insertRecord(//JK-FUTURE-TODO
                 Long.toString(event.getMutationEventId()),
                 Long.toString(event.getGene().getEntrezGeneId()),
@@ -126,7 +141,7 @@ public final class DaoMutation {
                 Integer.toString(event.getOncotatorProteinPosStart()),
                 Integer.toString(event.getOncotatorProteinPosEnd()),
                 boolToStr(event.isCanonicalTranscript()),
-                keyword==null ? "\\N":(event.getGene().getHugoGeneSymbolAllCaps()+" "+keyword));
+                keyword);//JK-UPDATED replace the code in order to handle different behaviors in dealing with null in MySQL and MS SQL 
         return 1;
     }
 
