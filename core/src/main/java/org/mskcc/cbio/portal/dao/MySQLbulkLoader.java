@@ -57,6 +57,7 @@ public class MySQLbulkLoader {
    //created 2 static variables which represent proper null values for each DB Vendor.
    public static String MYSQL_NULL_VALUE = "\\N";
    public static String MSSQL_NULL_VALUE = "";
+   private Boolean debugMode = true;
    
    private static final Map<String,MySQLbulkLoader> mySQLbulkLoaders = new LinkedHashMap<String,MySQLbulkLoader>();
    /**
@@ -287,7 +288,8 @@ public class MySQLbulkLoader {
         	 
         	 //JK-UPDATED
         	 //Before deleting tempFileHandle copy it to another file for testing
-        	 fileCopyUsingNIOFilesClass(tempFileName, tempFileName+"_copy.txt");
+        	 if (debugMode)
+        		 fileCopyUsingNIOFilesClass(tempFileName, tempFileName+"_copy.txt");
         	 
              tempFileHandle.delete();
          }
