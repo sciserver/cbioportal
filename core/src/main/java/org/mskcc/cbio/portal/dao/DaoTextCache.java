@@ -195,13 +195,19 @@ public class DaoTextCache
 
 
             
-            // create date_time_stamp string using the given date
-            // (java.sql package does not have a proper "datetime" type support)
-            //SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");//JK-UPDATED
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//JK-UPDATED
-            
-            
-            pstmt.setString(1, formatter.format(date));
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt.setTimestamp(1, new java.sql.Timestamp(date.getTime()));
+                break;
+            default:
+                // create date_time_stamp string using the given date
+                // (java.sql package does not have a proper "datetime" type support)
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+                pstmt.setString(1, formatter.format(date));
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.executeUpdate();
         }
         catch (SQLException e)
