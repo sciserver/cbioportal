@@ -1,56 +1,145 @@
 ======================
 CBioportal junit test
 ======================
-1. Uses Maven Plugin Mojohaus.
+1. Uses Maven Plugin surefly
 2. for each module there is unit test defined.
-3. 
+3. NOTE: in MySQL Set SESSION SQL_MODE = ANSI_QUOTE is used. This requires to use single quotes for quoting literal strings in MS SQL.
+
+
+==============================
+How to debug unit test in eclipse
+==============================
+1.Debugger all unit tests 
+  From command line
+   >cd C:\eclipse_genomics\Git\cbioportal-sqlserver\portal\target\  
+   >mvn -Dmaven.surefire.debug test
+  From eclipse create a remove java application with host=localhost, port=5005
+
+2.Debugger a single unit test 
+  From command line
+   >cd C:\eclipse_genomics\Git\cbioportal-sqlserver\portal\target\  
+   >mvn -e -DfailIfNoTests=false -Dtest=TestDaoDrugInteraction -Dmaven.surefire.debug test
+  From eclipse create a remove java application with host=localhost, port=5005
+
+
+
+=====================
+How to skip test
+=====================
+1. Skipping test in some Maven modules
+Add <skipTests>true</skipTests> to surefly plugin's configuration
+<project>
+  [...]
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.4.2</version>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  [...]
+</project>
+
+The following method i haven't tried:
+Eventually, you can create a profile that will disable the tests (still the pom.xml of the module) :
+<project>
+  [...]
+  <profiles>
+    <profile>
+      <id>noTest</id>
+      <activation>
+        <property>
+          <name>noTest</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.4.2</version>
+            <configuration>
+              <skipTests>true</skipTests>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+  [...]
+</project>
+
+With the latter solution, if you run mvn clean package, it will run all tests. If you run mvn clean package -DnoTest=true, 
+it will not run the tests for this module.
+
 
 ======================
-Changes made 
+Changes made in code
 ======================
-A. pom.xml
+1. pom.xml
    - Updated db.test.driver/url/username/password
 
-B. portal
+2. portal
 
-C. core
-  1. /pom.xml
+3. core
+  1). /pom.xml
    -Added <dependency> for mssql in sql plugin for tests.
    -commented out <sqlcommand> for set storage and session from <executions> for sql plugin.
    -updated <srcfiles> to use cgds_fixed4MSSQL.sql.MS.CREATE.sql
-  2. /Test/resources/seed_mini.sql
+  2). /Test/resources/seed_mini.sql
     reversed order of delete b/w gene_panel and gene_panel_list, sample and sample_list_list 
     due to the foreign key constraint 
-  3. /src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql 
+  3). /src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql 
     - commented out 'GO' in two places in order to make the test scripts run
-  4. /src/main/resources/db/cgds_insert_test_MSSQL.sql (2 matches)
+  4). /src/main/resources/db/cgds_insert_test_MSSQL.sql (2 matches)
     - set identity_insert table_name on/off in order to insert into a table with primary key with auto-increment.
-  5. /src/test/resources/applicationContext-dao.xml
+  5). /src/test/resources/applicationContext-dao.xml
     - updated dbcpDataSource bean for testing: points to SqlServer Drive and database
+  6) /src/main/java/org/mskcc/cbio/portal/dao/MySQLbulkLoader.java
+    - added instance variable "debugMode" to  turn on/off some debugging related codes.
+    - added WITH (KEEPIDENTITY) condition in MS SQL bulk  insert statement in order to insert a row if a value is provided 
+    for an auto-increment column.  
+    - Added 2 static variables representing NULL value in a data file used in bulk insert statement for each DB vendor.
+      Their values are "\\N" and  ""(empty string) for MySQL and MS SQL, respectively
+  7) /src/main/java/org/mskcc/cbio/portal/dao/DaoTextCache.java
+    - in purgeOldKeys method added MS SQL version of setting current timestamp value in a delete statement.     
 
-D. business
+4. business
    - no updates
 
-E. web
+5. web
 
-F. model
+6. model
 
-G. persistence
-  1. /persistence-mybatis-test/src/test/resources/testContextDatabase.xml
+7. persistence
+  1). /persistence-mybatis-test/src/test/resources/testContextDatabase.xml
     - updated dbcpDataSource bean for testing: points to SqlServer Drive and database
     - tested DB_URL in MySQL version includes script to run (/src/test/resources/testSql.sql). I have created
 
     - NOTE IT IS NOT TESTED, YET
-  2. NOT  
+  2). NOT  
 
-H. service
+8. service
   no updates
 
-I. scripts
+9. scripts
   no updates
 
-J. /src/main/etc
+10. /src/main/etc
   1. jetty-cbioportal.xml
    - updated <New id="ds" ...><Arg> for jdbc_mssql/cbioportal, and points to SqlServer database. jdbc_mssql/cbioportal is defined as db.tomcat_resource_name in /src/main/resources/portal.properties
   2. override-web.xml
    - updated <resource-ref><res-ref-name> to jdbc_mssql/cbioportal
+   
+============================
+Building test database
+============================
+in MySQL case, used an embedded database which allows to run init script in database url. The init script includes DDLs. 
+
+

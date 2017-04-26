@@ -384,5 +384,5 @@ ALTER TABLE clinical_event_data ADD CONSTRAINT fk_clinical_event_data_CLINICAL_E
 
 
 
-GO
+--GO
 
