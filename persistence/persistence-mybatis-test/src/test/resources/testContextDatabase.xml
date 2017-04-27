@@ -42,11 +42,8 @@
                       http://www.springframework.org/schema/util
                       http://www.springframework.org/schema/util/spring-util.xsd">
   <bean id="dbcpDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-     <property name="driverClassName" value="${db.driver}"/><!--//JK-UPDATED-->
-    <property name="url" value="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=cbioportal_test"/><!--//JK-UPDATED but it is not tested, yet-->
-    <!-- property name="url" value="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=cbioportal_test;INIT=RUNSCRIPT FROM '${basedir}/src/test/resources/testSql_MSSQL.sql"/--><!--//JK-UPDATED-->
-    <property name="username" value="${db.user}"/><!--//JK-UPDATED-->
-    <property name="password" value="${db.password}"/><!--//JK-UPDATED-->
+  <!--//JK-UPDATED instead of running initial script build cbio_test_persistence using testSql_MSSQL.sql and make a connection-->
+    <property name="url" value="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=cbioportal_test_persistence;user=cbio_user;password=cbio2246"/>
   </bean>
   
 
