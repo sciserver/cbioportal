@@ -140,6 +140,31 @@ Changes made in code
 ============================
 Building test database
 ============================
-in MySQL case, used an embedded database which allows to run init script in database url. The init script includes DDLs. 
+It requires two separate test databases using MS SQL for core and persistence-mybatis modules
+1. core module junit tests use cbio_test db.
+   1. cbio_user must have the following privileges: db_ddadmin(set in owned schemas), db_datareader, db_datawriter, db_ddladmin (set in membership)
+   2. in /core/pom.xml include
+                <srcFiles>
+                <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql</srcFile><!-- //JK-UPDATED -->
+                <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.KEYS.sql</srcFile><!-- //JK-UPDATED -->
+                <srcFile>src/test/resources/seed_mini.sql</srcFile>
+              	</srcFiles>
+  
+
+2. Persistence module junit tests use cbio_test_persistence
+  1. in /persistence/persistence-mybatis-test/src/test/resources/testContextDatabase.xml set
+  
+     <bean id="dbcpDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+       <!--//JK-UPDATED instead of running initial script build cbio_test_persistence using testSql_MSSQL.sql and make a connection-->
+       <property name="url" value="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=cbioportal_test_persistence;user=cbio_user;password=cbio2246"/>
+     </bean>
+  2. in /persistence/persistence-mybatis-test/pom.xml
+     Replace com.h2database by sql server dependency 
+      		  <dependency>
+		    <groupId>com.microsoft.sqlserver</groupId>
+		    <artifactId>mssql-jdbc</artifactId>
+		    <version>6.1.0.jre8</version>
+		  </dependency>
+ 
 
 
