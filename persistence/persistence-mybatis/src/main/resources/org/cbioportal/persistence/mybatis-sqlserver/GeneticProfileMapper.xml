@@ -15,8 +15,8 @@
             genetic_profile.DATATYPE AS "${prefix}datatype",
             genetic_profile.NAME AS "${prefix}name",
             genetic_profile.DESCRIPTION AS "${prefix}description",
-            genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB AS "${prefix}showProfileInAnalysisTab"
-        </if>
+            cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit) AS "${prefix}showProfileInAnalysisTab"
+        </if><!-- //JK-UPDATED: cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit)  -->
         <if test="projection == 'DETAILED'">
             ,
             <include refid="org.cbioportal.persistence.mybatis.StudyMapper.select">

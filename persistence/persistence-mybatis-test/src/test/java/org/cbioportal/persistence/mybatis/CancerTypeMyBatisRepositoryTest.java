@@ -34,7 +34,7 @@ public class CancerTypeMyBatisRepositoryTest {
 
     @Test
     public void getAllCancerTypesSummaryProjection() throws Exception {
-
+    	System.out.println(" get all cancer types summary projection: summary all nulls ");
         List<TypeOfCancer> result = cancerTypeMyBatisRepository.getAllCancerTypes("SUMMARY", null, null, null, null);
 
         Assert.assertEquals(2, result.size());
@@ -49,7 +49,6 @@ public class CancerTypeMyBatisRepositoryTest {
 
     @Test
     public void getAllCancerTypesDetailedProjection() throws Exception {
-
         List<TypeOfCancer> result = cancerTypeMyBatisRepository.getAllCancerTypes("DETAILED", null, null, null, null);
 
         Assert.assertEquals(2, result.size());
@@ -64,7 +63,6 @@ public class CancerTypeMyBatisRepositoryTest {
 
     @Test
     public void getAllCancerTypesSummaryProjection1PageSize() throws Exception {
-
         List<TypeOfCancer> result = cancerTypeMyBatisRepository.getAllCancerTypes("SUMMARY", 1, 0, null, null);
 
         Assert.assertEquals(1, result.size());
@@ -72,7 +70,6 @@ public class CancerTypeMyBatisRepositoryTest {
 
     @Test
     public void getAllCancerTypesSummaryProjectionNameSort() throws Exception {
-
         List<TypeOfCancer> result = cancerTypeMyBatisRepository.getAllCancerTypes("SUMMARY", null, null, "name", "ASC");
 
         Assert.assertEquals(2, result.size());
@@ -90,7 +87,6 @@ public class CancerTypeMyBatisRepositoryTest {
 
     @Test
     public void getCancerTypeNullResult() throws Exception {
-
         TypeOfCancer result = cancerTypeMyBatisRepository.getCancerType("invalid_cancer_type");
 
         Assert.assertNull(result);
@@ -98,7 +94,7 @@ public class CancerTypeMyBatisRepositoryTest {
 
     @Test
     public void getCancerType() throws Exception {
-
+    	System.out.println( "get cancer type");
         TypeOfCancer result = cancerTypeMyBatisRepository.getCancerType("acc");
 
         Assert.assertEquals("acc", result.getTypeOfCancerId());

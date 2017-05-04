@@ -155,6 +155,18 @@ public class GeneticProfile {
         return showProfileInAnalysisTab;
     }
 
+    //JK-UPDATED
+    public void setShowProfileInAnalysisTab(byte[] v) {
+    	if (null == v)
+    		this.setShowProfileInAnalysisTab(false);
+    	else {
+	    	if ((char)v[0] == '0' )
+	    		this.setShowProfileInAnalysisTab(false);
+	    	else 
+	    		this.setShowProfileInAnalysisTab(true);
+    	}
+    }    
+    
     public void setShowProfileInAnalysisTab(boolean showProfileInAnalysisTab) {
         this.showProfileInAnalysisTab = showProfileInAnalysisTab;
     }

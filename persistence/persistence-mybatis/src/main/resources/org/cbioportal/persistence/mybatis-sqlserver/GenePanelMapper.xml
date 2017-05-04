@@ -170,11 +170,11 @@
             cancer_study.NAME,
             cancer_study.SHORT_NAME,
             cancer_study.DESCRIPTION,
-            cancer_study.PUBLIC,
+            cancer_study.[PUBLIC],
             cancer_study.PMID,
             cancer_study.CITATION,
             cancer_study.GROUPS,
-            cancer_study.STATUS
+            cancer_study.[STATUS]
         from sample
             inner join patient on sample.PATIENT_ID = patient.INTERNAL_ID
             inner join type_of_cancer on sample.TYPE_OF_CANCER_ID = type_of_cancer.TYPE_OF_CANCER_ID
@@ -234,18 +234,18 @@
             genetic_profile.DATATYPE,
             genetic_profile.NAME,
             genetic_profile.DESCRIPTION,
-            genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB,
+            cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit),
             cancer_study.CANCER_STUDY_ID,
             cancer_study.CANCER_STUDY_IDENTIFIER,
             cancer_study.TYPE_OF_CANCER_ID,
             cancer_study.NAME,
             cancer_study.SHORT_NAME,
             cancer_study.DESCRIPTION,
-            cancer_study.PUBLIC,
+            cancer_study.[PUBLIC],
             cancer_study.PMID,
             cancer_study.CITATION,
             cancer_study.GROUPS,
-            cancer_study.STATUS,
+            cancer_study.[STATUS],
             type_of_cancer.TYPE_OF_CANCER_ID,
             type_of_cancer.NAME,
             type_of_cancer.CLINICAL_TRIAL_KEYWORDS,
@@ -257,7 +257,7 @@
             inner join type_of_cancer on cancer_study.TYPE_OF_CANCER_ID = type_of_cancer.TYPE_OF_CANCER_ID
         where
             genetic_profile.STABLE_ID = #{stableId}
-    </select>
+    </select><!-- //JK-UPDATED:cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit)  -->
 
     <select id="sampleProfileMappingExistsByProfile" resultType="int">
         select
