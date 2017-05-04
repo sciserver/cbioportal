@@ -1,3 +1,4 @@
+
 ======================
 CBioportal junit test
 ======================
@@ -137,12 +138,36 @@ Changes made in code
   2. override-web.xml
    - updated <resource-ref><res-ref-name> to jdbc_mssql/cbioportal
    
+   
+11. persistence-mybatis-test
+  1. /model/src/main/java/org/cbioportal/model/TypeOfCancer.java
+     Updated setDedicatedColor  since dedicatedColor column in the database is char(31) and MySQL 
+    	returns trimmed value while SqlServer returns Char(31) length string value.
+  2. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\ClinicalDataMapper.xml
+        If there is no order by clause the result order in SQL server may not be the same in MySQL
+		therefore added an order by clause if both sortBy and direction are null.-->
+        <if test="sortBy == null and direction == null and projection != 'ID' and limit == null">
+            ORDER BY clinical_sample(or clinical_patient).ATTR_ID ASC
+        </if>
+  3. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\GenePanelMapper.xml
+    -in select id= getGeneticProfileByStableId updated select statement to convert binary value into bit 
+    so that in the jdbc result set it can be treated as a boolean.
+    cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit)
+    - \core\src\main\java\org\mskcc\cbio\portal\model\GeneticProfile.java
+      added an extra setShowProfileInAnalysisTab(byte[] v) in case needed.
+    - in <select id=getSampleByStableIdAndStudyId>: PUBLIC -> [PUBLIC], STATUS->[STATUS]  
+  4. GeneticProfileMapper.xml
+    - in <sql id="select"> cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit)
+  5. StudyMapper.xml
+    - in <sql id="select"> : PUBLIC -> [PUBLIC], STATUS->[STATUS]	    
+      		     
 ============================
 Building test database
 ============================
 It requires two separate test databases using MS SQL for core and persistence-mybatis modules
-1. core module junit tests use cbio_test db.
-   1. cbio_user must have the following privileges: db_ddadmin(set in owned schemas), db_datareader, db_datawriter, db_ddladmin (set in membership)
+1. Give db user from Security>Logins>ServerRoles>bulkadmin.
+2. core module junit tests use cbio_test db.
+   1. cbio_user must have the following privileges: db_datareader, db_datawriter, db_ddladmin (set in membership)
    2. in /core/pom.xml include
                 <srcFiles>
                 <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql</srcFile><!-- //JK-UPDATED -->
@@ -154,10 +179,37 @@ It requires two separate test databases using MS SQL for core and persistence-my
 2. Persistence module junit tests use cbio_test_persistence
   1. in /persistence/persistence-mybatis-test/src/test/resources/testContextDatabase.xml set
   
-     <bean id="dbcpDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+    <bean id="dbcpDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
        <!--//JK-UPDATED instead of running initial script build cbio_test_persistence using testSql_MSSQL.sql and make a connection-->
        <property name="url" value="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=cbioportal_test_persistence;user=cbio_user;password=cbio2246"/>
-     </bean>
+    </bean>
+    Added vendor properties
+    <bean id="vendorProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="properties">
+	       <props>
+    	       <prop key="SQL SERVER">sqlserver</prop>
+        	   <prop key="MySQL">mysql</prop>
+           </props>
+    	</property>
+	</bean>
+		<bean id="databaseIdProvider" class="org.apache.ibatis.mapping.VendorDatabaseIdProvider">
+    		<property name="properties" ref="vendorProperties"/>
+	</bean>
+
+   In sqlSessionFactory bean, set mapperLocations pointing to SqlServer specific Mapper folders 
+   and databaseIdProvider. For setting mapperLocations do NOT use java package Expression 
+   since there is no org.cbioportal.persistence.mybatis-sqlserver.
+      
+  <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dbcpDataSource" />
+    <property name="typeAliasesPackage" value="org.mskcc.cbio.portal.model"/>
+    <property name="typeHandlersPackage" value="org.cbioportal.persistence.mybatis.typehandler"/>
+    <!-- //JK-UPDATED -->
+    <property name="mapperLocations" value="classpath:org/cbioportal/persistence/mybatis-sqlserver/*.xml" /><!--WORKING//JK-UPDATED-->
+    <property name="databaseIdProvider" ref="databaseIdProvider"/> 
+    
+  </bean>
+     
   2. in /persistence/persistence-mybatis-test/pom.xml
      Replace com.h2database by sql server dependency 
       		  <dependency>

@@ -45,12 +45,27 @@
   <!--//JK-UPDATED instead of running initial script build cbio_test_persistence using testSql_MSSQL.sql and make a connection-->
     <property name="url" value="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=cbioportal_test_persistence;user=cbio_user;password=cbio2246"/>
   </bean>
-  
+
+          <bean id="vendorProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		    <property name="properties">
+	        	<props>
+    	        	<prop key="SQL SERVER">sqlserver</prop>
+        	    	<prop key="MySQL">mysql</prop>
+        		</props>
+    		</property>
+		</bean>
+		<bean id="databaseIdProvider" class="org.apache.ibatis.mapping.VendorDatabaseIdProvider">
+    		<property name="properties" ref="vendorProperties"/>
+		</bean>
 
   <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
     <property name="dataSource" ref="dbcpDataSource" />
     <property name="typeAliasesPackage" value="org.mskcc.cbio.portal.model"/>
     <property name="typeHandlersPackage" value="org.cbioportal.persistence.mybatis.typehandler"/>
+    <!-- //JK-UPDATED -->
+    <property name="mapperLocations" value="classpath:org/cbioportal/persistence/mybatis-sqlserver/*.xml" /><!--WORKING//JK-UPDATED-->
+    <property name="databaseIdProvider" ref="databaseIdProvider"/> 
+    
   </bean>
 
   <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">

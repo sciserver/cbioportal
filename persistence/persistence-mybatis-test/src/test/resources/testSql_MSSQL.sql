@@ -1,6 +1,8 @@
 -- MS SQL version of testSQL.sql 
 -- create new test database with test data inserted.
 
+Use cbioportal_test_persistence;
+
 IF OBJECT_ID('dbo.info', 'U') IS NOT NULL
  DROP TABLE dbo.info
 
