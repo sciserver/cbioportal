@@ -19,11 +19,15 @@
         </if><!-- //JK-UPDATED: cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit)  -->
         <if test="projection == 'DETAILED'">
             ,
-            <include refid="org.cbioportal.persistence.mybatis.StudyMapper.select">
+            <include refid="org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy">
                 <property name="prefix" value="${prefix}cancerStudy."/>
-            </include>
+            </include><!-- //JK-UPDATED Changed include refid from 
+            org.cbioportal.persistence.mybatis.StudyMapper.select to 
+            org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy 
+            since StudyMapper.select selects aggregated columns for group by.-->
         </if>
     </sql>
+    
 
     <select id="getAllGeneticProfiles" resultType="org.cbioportal.model.GeneticProfile">
         SELECT

@@ -156,10 +156,25 @@ Changes made in code
     - \core\src\main\java\org\mskcc\cbio\portal\model\GeneticProfile.java
       added an extra setShowProfileInAnalysisTab(byte[] v) in case needed.
     - in <select id=getSampleByStableIdAndStudyId>: PUBLIC -> [PUBLIC], STATUS->[STATUS]  
-  4. GeneticProfileMapper.xml
+  4. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\GeneticProfileMapper.xml
     - in <sql id="select"> cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit)
-  5. StudyMapper.xml
-    - in <sql id="select"> : PUBLIC -> [PUBLIC], STATUS->[STATUS]	    
+  5. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\StudyMapper.xml
+    - in <sql id="select"> : PUBLIC -> [PUBLIC], STATUS->[STATUS]
+    - in sql replace "" by []
+    - in sql cast binary datatype column to tinyint in order to treat it as a boolean in java:
+      min(cast(cancer_study.[PUBLIC] as tinyint)	
+    - add aggregation function to all the selected columns other than the group by column
+    - added <sql id="cancerTypeMapperSelect"> instead of referring org.cbioportal.persistence.mybatis.CancerTypeMapper.select
+      in order to select aggregated column value for group by.
+    - in order by clause replace referring column name by column index(eg., order by 1) since column alias 
+      includes $prefix property which cannot be set in order by clause.
+     - added <sql id="selectWithoutGroupBy"> for other *Mapper.xml referring to <sql id=select>. 
+      
+   6. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\GeneticProfileMapper.xml 
+    - updated <include refid="org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy">  instead of referring select.
+    
+   7. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\SampleListMapper.xml    
+    - updated <include refid="org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy">  instead of referring select.
       		     
 ============================
 Building test database
