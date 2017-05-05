@@ -6,37 +6,37 @@
     <select id="getMutationsDetailed" resultType="org.cbioportal.model.Mutation">
         select
 
-        mutation.CENTER as center,
-        mutation.MUTATION_STATUS as mutationStatus,
-        mutation.TUMOR_REF_COUNT as tumorRefCount,
-        mutation.NORMAL_REF_COUNT as normalRefCount,
-        mutation.TUMOR_ALT_COUNT as tumorAltCount,
-        mutation.NORMAL_ALT_COUNT as normalAltCount,
-        mutation.VALIDATION_STATUS as validationStatus,
+        mutation.CENTER as [center],
+        mutation.MUTATION_STATUS as [mutationStatus],
+        mutation.TUMOR_REF_COUNT as [tumorRefCount],
+        mutation.NORMAL_REF_COUNT as [normalRefCount],
+        mutation.TUMOR_ALT_COUNT as [tumorAltCount],
+        mutation.NORMAL_ALT_COUNT as [normalAltCount],
+        mutation.VALIDATION_STATUS as [validationStatus],
 
-        mutation_event.MUTATION_TYPE as mutationEvent.mutationType,
-        mutation_event.PROTEIN_CHANGE as mutationEvent.proteinChange,
-        mutation_event.FUNCTIONAL_IMPACT_SCORE as mutationEvent.functionalImpactScore,
-        mutation_event.LINK_XVAR as mutationEvent.linkXvar,
-        mutation_event.LINK_PDB as mutationEvent.linkPdb,
-        mutation_event.LINK_MSA as mutationEvent.linkMsa,
-        mutation_event.CHR as mutationEvent.chr,
-        mutation_event.START_POSITION as mutationEvent.startPosition,
-        mutation_event.END_POSITION as mutationEvent.endPosition,
-        mutation_event.ONCOTATOR_PROTEIN_POS_START as mutationEvent.oncotatorProteinPosStart,
-        mutation_event.ONCOTATOR_PROTEIN_POS_END as mutationEvent.oncotatorProteinPosEnd,
-        mutation_event.REFERENCE_ALLELE as mutationEvent.referenceAllele,
-        mutation_event.TUMOR_SEQ_ALLELE as mutationEvent.tumorSeqAllele,
-        mutation_event.KEYWORD as mutationEvent.keyword,
+        mutation_event.MUTATION_TYPE as [mutationEvent.mutationType],
+        mutation_event.PROTEIN_CHANGE as [mutationEvent.proteinChange],
+        mutation_event.FUNCTIONAL_IMPACT_SCORE as [mutationEvent.functionalImpactScore],
+        mutation_event.LINK_XVAR as [mutationEvent.linkXvar],
+        mutation_event.LINK_PDB as [mutationEvent.linkPdb],
+        mutation_event.LINK_MSA as [mutationEvent.linkMsa],
+        mutation_event.CHR as [mutationEvent.chr],
+        mutation_event.START_POSITION as [mutationEvent.startPosition],
+        mutation_event.END_POSITION as [mutationEvent.endPosition],
+        mutation_event.ONCOTATOR_PROTEIN_POS_START as [mutationEvent.oncotatorProteinPosStart],
+        mutation_event.ONCOTATOR_PROTEIN_POS_END as [mutationEvent.oncotatorProteinPosEnd],
+        mutation_event.REFERENCE_ALLELE as [mutationEvent.referenceAllele],
+        mutation_event.TUMOR_SEQ_ALLELE as [mutationEvent.tumorSeqAllele],
+        mutation_event.KEYWORD as [mutationEvent.keyword],
 
-        gene.HUGO_GENE_SYMBOL as gene.hugoGeneSymbol,
-        gene.ENTREZ_GENE_ID as gene.entrezGeneId,
+        gene.HUGO_GENE_SYMBOL as [gene.hugoGeneSymbol],
+        gene.ENTREZ_GENE_ID as [gene.entrezGeneId],
 
-        sample.INTERNAL_ID as sampleId,
+        sample.INTERNAL_ID as [sampleId],
 
-        cancer_study.CANCER_STUDY_ID as geneticProfile.cancerStudyId,
+        cancer_study.CANCER_STUDY_ID as [geneticProfile.cancerStudyId],
 
-        genetic_profile.GENETIC_PROFILE_ID as geneticProfileId
+        genetic_profile.GENETIC_PROFILE_ID as [geneticProfileId]
 
         from mutation
         inner join mutation_event on mutation.MUTATION_EVENT_ID = mutation_event.MUTATION_EVENT_ID
@@ -76,68 +76,68 @@
     <select id="getMutations" resultType="org.cbioportal.model.Mutation">
         select
 
-        mutation.SAMPLE_ID as sampleId,
-        mutation.ENTREZ_GENE_ID as entrezGeneId
+        mutation.SAMPLE_ID as [sampleId],
+        mutation.ENTREZ_GENE_ID as [entrezGeneId]
 
         <if test="!simplified">
-            , mutation.MUTATION_EVENT_ID as mutationEventId,
-            mutation.GENETIC_PROFILE_ID as geneticProfileId,
-            mutation.CENTER as center,
-            mutation.SEQUENCER as sequencer,
-            mutation.MUTATION_STATUS as mutationStatus,
-            mutation.VALIDATION_STATUS as validationStatus,
-            mutation.TUMOR_SEQ_ALLELE1 as tumorSeqAllele1,
-            mutation.TUMOR_SEQ_ALLELE2 as tumorSeqAllele2,
-            mutation.MATCHED_NORM_SAMPLE_BARCODE as matchedNormSampleBarcode,
-            mutation.MATCH_NORM_SEQ_ALLELE1 as matchNormSeqAllele1,
-            mutation.MATCH_NORM_SEQ_ALLELE2 as matchNormSeqAllele2,
-            mutation.TUMOR_VALIDATION_ALLELE1 as tumorValidationAllele1,
-            mutation.TUMOR_VALIDATION_ALLELE2 as tumorValidationAllele2,
-            mutation.MATCH_NORM_VALIDATION_ALLELE1 as matchNormValidationAllele1,
-            mutation.MATCH_NORM_VALIDATION_ALLELE2 as matchNormValidationAllele2,
-            mutation.VERIFICATION_STATUS as verificationStatus,
-            mutation.SEQUENCING_PHASE as sequencingPhase,
-            mutation.SEQUENCE_SOURCE as sequenceSource,
-            mutation.VALIDATION_METHOD as validationMethod,
-            mutation.SCORE as score,
-            mutation.BAM_FILE as bamFile,
-            mutation.TUMOR_ALT_COUNT as tumorAltCount,
-            mutation.TUMOR_REF_COUNT as tumorRefCount,
-            mutation.NORMAL_ALT_COUNT as normalAltCount,
-            mutation.NORMAL_REF_COUNT as normalRefCount,
-            mutation.AMINO_ACID_CHANGE as aminoAcidChange,
+            , mutation.MUTATION_EVENT_ID as [mutationEventId],
+            mutation.GENETIC_PROFILE_ID as [geneticProfileId],
+            mutation.CENTER as [center],
+            mutation.SEQUENCER as [sequencer],
+            mutation.MUTATION_STATUS as [mutationStatus],
+            mutation.VALIDATION_STATUS as [validationStatus],
+            mutation.TUMOR_SEQ_ALLELE1 as [tumorSeqAllele1],
+            mutation.TUMOR_SEQ_ALLELE2 as [tumorSeqAllele2],
+            mutation.MATCHED_NORM_SAMPLE_BARCODE as [matchedNormSampleBarcode],
+            mutation.MATCH_NORM_SEQ_ALLELE1 as [matchNormSeqAllele1],
+            mutation.MATCH_NORM_SEQ_ALLELE2 as [matchNormSeqAllele2],
+            mutation.TUMOR_VALIDATION_ALLELE1 as [tumorValidationAllele1],
+            mutation.TUMOR_VALIDATION_ALLELE2 as [tumorValidationAllele2],
+            mutation.MATCH_NORM_VALIDATION_ALLELE1 as [matchNormValidationAllele1],
+            mutation.MATCH_NORM_VALIDATION_ALLELE2 as [matchNormValidationAllele2],
+            mutation.VERIFICATION_STATUS as [verificationStatus],
+            mutation.SEQUENCING_PHASE as [sequencingPhase],
+            mutation.SEQUENCE_SOURCE as [sequenceSource],
+            mutation.VALIDATION_METHOD as [validationMethod],
+            mutation.SCORE as [score],
+            mutation.BAM_FILE as [bamFile],
+            mutation.TUMOR_ALT_COUNT as [tumorAltCount],
+            mutation.TUMOR_REF_COUNT as [tumorRefCount],
+            mutation.NORMAL_ALT_COUNT as [normalAltCount],
+            mutation.NORMAL_REF_COUNT as [normalRefCount],
+            mutation.AMINO_ACID_CHANGE as [aminoAcidChange],
 
-            mutation_event.MUTATION_EVENT_ID as mutationEvent.mutationEventId,
-            mutation_event.ENTREZ_GENE_ID as mutationEvent.entrezGeneId,
-            mutation_event.CHR as mutationEvent.chr,
-            mutation_event.START_POSITION as mutationEvent.startPosition,
-            mutation_event.END_POSITION as mutationEvent.endPosition,
-            mutation_event.REFERENCE_ALLELE as mutationEvent.referenceAllele,
-            mutation_event.TUMOR_SEQ_ALLELE as mutationEvent.tumorSeqAllele,
-            mutation_event.PROTEIN_CHANGE as mutationEvent.proteinChange,
-            mutation_event.MUTATION_TYPE as mutationEvent.mutationType,
-            mutation_event.FUNCTIONAL_IMPACT_SCORE as mutationEvent.functionalImpactScore,
-            mutation_event.FIS_VALUE as mutationEvent.fisValue,
-            mutation_event.LINK_XVAR as mutationEvent.linkXvar,
-            mutation_event.LINK_PDB as mutationEvent.linkPdb,
-            mutation_event.LINK_MSA as mutationEvent.linkMsa,
-            mutation_event.NCBI_BUILD as mutationEvent.ncbiBuild,
-            mutation_event.STRAND as mutationEvent.strand,
-            mutation_event.VARIANT_TYPE as mutationEvent.variantType,
-            mutation_event.DB_SNP_RS as mutationEvent.dbSnpRs,
-            mutation_event.DB_SNP_VAL_STATUS as mutationEvent.dbSnpValStatus,
-            mutation_event.ONCOTATOR_DBSNP_RS as mutationEvent.oncotatorDbsnpRs,
-            mutation_event.ONCOTATOR_REFSEQ_MRNA_ID as mutationEvent.oncotatorRefseqMrnaId,
-            mutation_event.ONCOTATOR_CODON_CHANGE as mutationEvent.oncotatorCodonChange,
-            mutation_event.ONCOTATOR_UNIPROT_ENTRY_NAME as mutationEvent.oncotatorUniprotEntryName,
-            mutation_event.ONCOTATOR_UNIPROT_ACCESSION as mutationEvent.oncotatorUniprotAccession,
-            mutation_event.ONCOTATOR_PROTEIN_POS_START as mutationEvent.oncotatorProteinPosStart,
-            mutation_event.ONCOTATOR_PROTEIN_POS_END as mutationEvent.oncotatorProteinPosEnd,
-            mutation_event.CANONICAL_TRANSCRIPT as mutationEvent.canonicalTranscript,
-            mutation_event.KEYWORD as mutationEvent.keyword,
+            mutation_event.MUTATION_EVENT_ID as [mutationEvent.mutationEventId],
+            mutation_event.ENTREZ_GENE_ID as [mutationEvent.entrezGeneId],
+            mutation_event.CHR as [mutationEvent.chr],
+            mutation_event.START_POSITION as [mutationEvent.startPosition],
+            mutation_event.END_POSITION as [mutationEvent.endPosition],
+            mutation_event.REFERENCE_ALLELE as [mutationEvent.referenceAllele],
+            mutation_event.TUMOR_SEQ_ALLELE as [mutationEvent.tumorSeqAllele],
+            mutation_event.PROTEIN_CHANGE as [mutationEvent.proteinChange],
+            mutation_event.MUTATION_TYPE as [mutationEvent.mutationType],
+            mutation_event.FUNCTIONAL_IMPACT_SCORE as [mutationEvent.functionalImpactScore],
+            mutation_event.FIS_VALUE as [mutationEvent.fisValue],
+            mutation_event.LINK_XVAR as [mutationEvent.linkXvar],
+            mutation_event.LINK_PDB as [mutationEvent.linkPdb],
+            mutation_event.LINK_MSA as [mutationEvent.linkMsa],
+            mutation_event.NCBI_BUILD as [mutationEvent.ncbiBuild],
+            mutation_event.STRAND as [mutationEvent.strand],
+            mutation_event.VARIANT_TYPE as [mutationEvent.variantType],
+            mutation_event.DB_SNP_RS as [mutationEvent.dbSnpRs],
+            mutation_event.DB_SNP_VAL_STATUS as [mutationEvent.dbSnpValStatus],
+            mutation_event.ONCOTATOR_DBSNP_RS as [mutationEvent.oncotatorDbsnpRs],
+            mutation_event.ONCOTATOR_REFSEQ_MRNA_ID as [mutationEvent.oncotatorRefseqMrnaId],
+            mutation_event.ONCOTATOR_CODON_CHANGE as [mutationEvent.oncotatorCodonChange],
+            mutation_event.ONCOTATOR_UNIPROT_ENTRY_NAME as [mutationEvent.oncotatorUniprotEntryName],
+            mutation_event.ONCOTATOR_UNIPROT_ACCESSION as [mutationEvent.oncotatorUniprotAccession],
+            mutation_event.ONCOTATOR_PROTEIN_POS_START as [mutationEvent.oncotatorProteinPosStart],
+            mutation_event.ONCOTATOR_PROTEIN_POS_END as [mutationEvent.oncotatorProteinPosEnd],
+            mutation_event.CANONICAL_TRANSCRIPT as [mutationEvent.canonicalTranscript],
+            mutation_event.KEYWORD as [mutationEvent.keyword],
 
-            gene.HUGO_GENE_SYMBOL as gene.hugoGeneSymbol,
-            gene.ENTREZ_GENE_ID as gene.entrezGeneId
+            gene.HUGO_GENE_SYMBOL as [gene.hugoGeneSymbol],
+            gene.ENTREZ_GENE_ID as [gene.entrezGeneId]
         </if>
         from mutation
         <if test="!simplified">
@@ -341,16 +341,17 @@ select top 1 1 as b
         select
 
         <if test="perStudy">
-            distinct cancer_study.CANCER_STUDY_IDENTIFIER as cancerStudyIdentifier,
-        </if>
+            min(distinct cancer_study.CANCER_STUDY_IDENTIFIER) as cancerStudyIdentifier,
+        </if><!-- //JK-UPDATED: add aggregate ftn due to group by -->
         <if test="type == 'count'">
             count(patient.INTERNAL_ID) as count
         </if>
         <if test="type == 'frequency'">
-            count(patient.INTERNAL_ID) / (select count(sll.SAMPLE_ID) from sample_list_list sll, sample_list sl
+            count(patient.INTERNAL_ID) / (select count(sll.SAMPLE_ID) 
+            from sample_list_list sll, sample_list sl, cancer_study
             where sl.CATEGORY = 'all_cases_with_mutation_data' and sll.LIST_ID = sl.LIST_ID
             and sl.CANCER_STUDY_ID = cancer_study.CANCER_STUDY_ID) as frequency
-        </if>
+        </if><!-- //JK-UPDATED: added cancer_study to from clause -->
         from mutation_event, mutation, gene, sample, patient, cancer_study
         where gene.HUGO_GENE_SYMBOL = #{hugoGeneSymbol} and mutation_event.ENTREZ_GENE_ID = gene.ENTREZ_GENE_ID
         <if test="start != null">

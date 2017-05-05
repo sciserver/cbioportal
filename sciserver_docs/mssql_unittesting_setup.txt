@@ -175,7 +175,12 @@ Changes made in code
     
    7. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\SampleListMapper.xml    
     - updated <include refid="org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy">  instead of referring select.
-      		     
+    
+   8. MutationMapper.xml
+    - in sql id=getMutationsCounts 
+      - added aggregate ftn to the select list.
+      - added cancer_study to 'from' clause of subselect.
+         		     
 ============================
 Building test database
 ============================
