@@ -14,7 +14,7 @@
         </if>
         <if test="projection == 'DETAILED'">
             ,
-            <include refid="org.cbioportal.persistence.mybatis.StudyMapper.select">
+            <include refid="org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy">
                 <property name="prefix" value="${prefix}cancerStudy."/>
             </include>
         </if>
