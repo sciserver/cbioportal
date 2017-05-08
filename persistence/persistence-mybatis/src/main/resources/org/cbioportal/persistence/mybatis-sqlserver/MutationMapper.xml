@@ -203,9 +203,15 @@ select top 1 1 as b
 	        
 	        mutation.ENTREZ_GENE_ID as entrezGeneId
 	        ,cast(STUFF(
-			(select distinct ',', + cast( mutation.SAMPLE_ID as varchar(10)) from mutation
-			where mutation.GENETIC_PROFILE_ID = 6
-			 for XML PATH('')), 1,1,'') as varchar(max)) as concatenatedSampleIds
+			(select ',', + cast( mutation.SAMPLE_ID as varchar(10)) from mutation
+			where mutation.GENETIC_PROFILE_ID = #{geneticProfileId} 
+	        <if test="sampleIds != null and !sampleIds.isEmpty()">
+	            and mutation.SAMPLE_ID in
+	            <foreach item="item" collection="sampleIds" open="(" separator="," close=")">
+	                #{item}
+	            </foreach>
+	        </if>
+	        for XML PATH('')), 1,1,'') as varchar(max)) as concatenatedSampleIds
 	        ,count(*) as [count]
 	        ,round(1.*count(*)/min(gene.LENGTH), 4) as count_per_nt
 	        	
@@ -262,7 +268,7 @@ select top 1 1 as b
         select
 
         ENTREZ_GENE_ID as entrezGeneId,
-        count(distinct SAMPLE_ID) as count
+        count(distinct SAMPLE_ID) as [count]
 
         from mutation
         where GENETIC_PROFILE_ID = #{geneticProfileId}
@@ -275,15 +281,16 @@ select top 1 1 as b
         </if>
 
          group by ENTREZ_GENE_ID
+         order by [count]
 
-    </select>
+    </select><!-- //JK-UPDATED added order by clause to get the same order of result as in MySQL -->
 
     <select id="countSamplesWithKeywords" resultType="org.cbioportal.persistence.dto.KeywordSampleCount">
 
         select
 
         KEYWORD as keyword,
-        count(distinct SAMPLE_ID) as count
+        count(distinct SAMPLE_ID) as [count]
 
         from
         mutation, mutation_event
@@ -298,9 +305,32 @@ select top 1 1 as b
         </if>
 
         group by KEYWORD
-    </select>
+        order by [count]
+
+    </select><!-- //JK-UPDATED added order by clause to get the same order of select result as in MySQL -->
 
     <select id="getGenesOfMutations" resultType="integer">
+
+        select
+
+        ENTREZ_GENE_ID
+
+        from mutation_event
+
+        <where>
+            <if test="mutationEventIds != null and !mutationEventIds.isEmpty()">
+                MUTATION_EVENT_ID in
+                <foreach item="item" collection="mutationEventIds" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        group by ENTREZ_GENE_ID
+        order by count(ENTREZ_GENE_ID)
+    </select><!-- //JK-UPDATED: replaced distinct A by group by A order by count(A)
+    In order to get the same order of select result as in MySQL-->
+
+    <select id="getGenesOfMutations_deprecated" resultType="integer">
 
         select
 
@@ -316,7 +346,7 @@ select top 1 1 as b
                 </foreach>
             </if>
         </where>
-    </select>
+    </select>    
 
     <select id="getKeywordsOfMutations" resultType="string">
 

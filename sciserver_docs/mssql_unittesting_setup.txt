@@ -179,7 +179,12 @@ Changes made in code
    8. MutationMapper.xml
     - in sql id=getMutationsCounts 
       - added aggregate ftn to the select list.
-      - added cancer_study to 'from' clause of subselect.
+      - added cancer_study to 'from' clause of subselect clause
+    - Fixed bug in getSignificantlyMutatedGenes: removed distinct from STUFF clause and added missing sample id constraint in STUFF clause.
+    - Added order by count(distinct SAMPLE_ID) clause in countSamplesWithMutatedGenes, and countSamplesWithKeywords in order to match the order of query results as in MySQL
+    - Rewrote getGenesOfMutations: replaced distinct A by group by A and order by count(A) in order to match the order of query results as in MySQL
+
+      
          		     
 ============================
 Building test database
