@@ -71,8 +71,8 @@
             <property name="dataSource" ref="businessDataSource" />
             <property name="typeAliasesPackage" value="org.mskcc.cbio.portal.model" />
             <property name="typeHandlersPackage" value="org.cbioportal.persistence.mybatis.typehandler" />
-            <!--property name="mapperLocations" value="org.cbioportal.persistence.mybatis-sqlserver.*Mapper" /--><!--working//JK-UPDATED-->
-            <property name="mapperLocations" value="classpath:org/cbioportal/persistence/mybatis-sqlserver/*.xml" /><!--WORKING//JK-UPDATED-->
+             <property name="mapperLocations" value="classpath:org/cbioportal/persistence/mybatis-sqlserver/*.xml" />
+             <!--//JK-UPDATED:Since java package doesn't exists use this option-->
             <property name="databaseIdProvider" ref="databaseIdProvider"/><!--JK-UPDATED-->
             
         </bean>
