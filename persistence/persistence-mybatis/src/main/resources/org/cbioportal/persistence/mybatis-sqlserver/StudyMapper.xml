@@ -18,7 +18,7 @@
             min(cancer_study.CITATION) AS [${prefix}citation],
             min(cancer_study.GROUPS) AS [${prefix}groups],
             min(cancer_study.[STATUS]) AS [${prefix}status],
-            min(cancer_study.IMPORT_DATE) AS [${prefix}importDate]
+            min(cancer_study.IMPORT_DATE) AT TIME ZONE 'UTC' AS [${prefix}importDate]
 
         </if>
     </sql>
@@ -37,7 +37,7 @@
             cancer_study.CITATION AS [${prefix}citation],
             cancer_study.GROUPS AS [${prefix}groups],
             cancer_study.[STATUS] AS [${prefix}status],
-            cancer_study.IMPORT_DATE AS [${prefix}importDate]
+            cancer_study.IMPORT_DATE AT TIME ZONE 'UTC' AS [${prefix}importDate]
         </if>
     </sql><!-- //JK-UPDATED: added for other Mapper.xml reference without group by clause -->
     

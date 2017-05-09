@@ -169,14 +169,17 @@ Changes made in code
     - in order by clause replace referring column name by column index(eg., order by 1) since column alias 
       includes $prefix property which cannot be set in order by clause.
      - added <sql id="selectWithoutGroupBy"> for other *Mapper.xml referring to <sql id=select>. 
-      
+     - in order to return date type column in 'UTC' time zone, used "AT TIME ZONE 'UTC'" 
+       which is a new feature available in SqlServer 2016. 
+       - Eg., select importDate AT TIME ZONE 'UTC'
+     
    6. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\GeneticProfileMapper.xml 
     - updated <include refid="org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy">  instead of referring select.
     
    7. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\SampleListMapper.xml    
     - updated <include refid="org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy">  instead of referring select.
     
-   8. MutationMapper.xml
+   8. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\MutationMapper.xml
     - in sql id=getMutationsCounts 
       - added aggregate ftn to the select list.
       - added cancer_study to 'from' clause of subselect clause
@@ -245,3 +248,10 @@ It requires two separate test databases using MS SQL for core and persistence-my
  
 
 
+==================================================
+Create Table/Alter table updateds
+==================================================
+1. In MySQL ddls some foreign key constraints contain 'ON DELETE CASCADE'will will.
+   In SqlServer DDL's some are translated the same as in MySQL DDL's. 
+   But in some cases SqlServer complains that there might be a  cycle in foreign key constraints.
+   In such  Cases, used 'on delete no action' is used 
