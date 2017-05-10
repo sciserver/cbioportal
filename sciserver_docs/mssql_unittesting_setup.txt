@@ -251,7 +251,7 @@ It requires two separate test databases using MS SQL for core and persistence-my
 ==================================================
 Create Table/Alter table updateds
 ==================================================
-1. In MySQL ddls some foreign key constraints contain 'ON DELETE CASCADE'will will.
+1. In MySQL ddls some foreign key constraints contain 'ON DELETE CASCADE'.
    In SqlServer DDL's some are translated the same as in MySQL DDL's. 
    But in some cases SqlServer complains that there might be a  cycle in foreign key constraints.
    In such  Cases, used 'on delete no action' is used 

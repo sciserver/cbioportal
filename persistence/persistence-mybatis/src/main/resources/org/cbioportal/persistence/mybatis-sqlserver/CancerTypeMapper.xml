@@ -27,16 +27,15 @@
         </if>
         <if test="projection == 'ID'">
             ORDER BY type_of_cancer.TYPE_OF_CANCER_ID ASC
-	        </if>
-		<if test="limit != null and limit != 0">
-			<if test="sortBy == null and projection != 'ID'">
-				ORDER BY type_of_cancer.TYPE_OF_CANCER_ID ASC
-			</if>
-		
+        </if>
+        <if test="sortBy == null and projection != 'ID'">
+        	ORDER BY type_of_cancer.TYPE_OF_CANCER_ID DESC
+        </if><!-- //JK-UPDATED: added this default condition -->   
+        <if test="limit != null and limit != 0">
 			OFFSET (#{offset}) ROWS
 			FETCH NEXT (#{limit}) ROWS ONLY
-		</if><!-- //JK-UPDATED -->
-    </select>
+		</if>
+    </select>    
 
     <select id="getMetaCancerTypes" resultType="org.cbioportal.model.meta.BaseMeta">
         SELECT
