@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import edu.jhu.u01.DBProperties;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,12 +22,6 @@ public class ClinicalDataMyBatisRepositoryTest {
     @Autowired
     private ClinicalDataMyBatisRepository clinicalDataMyBatisRepository;
 
-    @Test
-    public void testTest() throws Exception {
-    	DBProperties db;
-    	System.out.println("Print vendor " + DBProperties.getDBVendor());
-    }
-    
     @Test
     public void getAllClinicalDataOfSampleInStudyEmptyResult() throws Exception {
 
