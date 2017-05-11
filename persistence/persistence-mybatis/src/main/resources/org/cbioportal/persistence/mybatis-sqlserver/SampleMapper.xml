@@ -58,10 +58,11 @@
 		<if test="projection == 'ID'">
 			ORDER BY sample.STABLE_ID ASC
 		</if>
+		<if test="sortBy == null and projection != 'ID'">
+			ORDER BY sample.INTERNAL_ID ASC
+		</if>
+		
 		<if test="limit != null and limit != 0">
-			<if test="sortBy == null and projection != 'ID'">
-				ORDER BY sample.INTERNAL_ID ASC
-			</if>
 		    OFFSET (#{offset}) ROWS
 			FETCH NEXT (#{limit}) ROWS ONLY
 		</if><!-- //JK-UPDATED -->

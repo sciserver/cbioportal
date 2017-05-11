@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import edu.jhu.u01.DBProperties;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +24,12 @@ public class ClinicalDataMyBatisRepositoryTest {
     @Autowired
     private ClinicalDataMyBatisRepository clinicalDataMyBatisRepository;
 
+    @Test
+    public void testTest() throws Exception {
+    	DBProperties db;
+    	System.out.println("Print vendor " + DBProperties.getDBVendor());
+    }
+    
     @Test
     public void getAllClinicalDataOfSampleInStudyEmptyResult() throws Exception {
 
@@ -249,16 +257,17 @@ public class ClinicalDataMyBatisRepositoryTest {
 
         List<ClinicalData> result = clinicalDataMyBatisRepository.getAllClinicalDataInStudy("study_tcga_pub",
                 null, PersistenceConstants.SAMPLE_CLINICAL_DATA_TYPE, "SUMMARY", null, null, "attrId", "ASC");
-
-        Assert.assertEquals(6, result.size());
-        Assert.assertEquals("DAYS_TO_COLLECTION", result.get(0).getAttrId());
-        Assert.assertEquals("IS_FFPE", result.get(1).getAttrId());
-        Assert.assertEquals("OCT_EMBEDDED", result.get(2).getAttrId());
-        Assert.assertEquals("OTHER_SAMPLE_ID", result.get(3).getAttrId());
-        Assert.assertEquals("PATHOLOGY_REPORT_FILE_NAME", result.get(4).getAttrId());
-        Assert.assertEquals("SAMPLE_TYPE", result.get(5).getAttrId());
+        
+		Assert.assertEquals(6, result.size());
+		Assert.assertEquals("DAYS_TO_COLLECTION", result.get(0).getAttrId());
+		Assert.assertEquals("IS_FFPE", result.get(1).getAttrId());
+		Assert.assertEquals("OCT_EMBEDDED", result.get(2).getAttrId());
+		Assert.assertEquals("OTHER_SAMPLE_ID", result.get(3).getAttrId());
+		Assert.assertEquals("PATHOLOGY_REPORT_FILE_NAME", result.get(4).getAttrId());
+		Assert.assertEquals("SAMPLE_TYPE", result.get(5).getAttrId());
     }
 
+    
     @Test
     public void getMetaAllClinicalDataZeroCount() throws Exception {
 
@@ -286,7 +295,7 @@ public class ClinicalDataMyBatisRepositoryTest {
         Assert.assertEquals((Integer) 1, result.getTotalCount());
     }
 
-    @Test
+    //@Test //JK-UPDATED : commented out: this is for MySQL 
     public void fetchClinicalDataNullAttributeSummaryProjection() throws Exception {
 
         List<String> studyIds = new ArrayList<>();
@@ -306,6 +315,47 @@ public class ClinicalDataMyBatisRepositoryTest {
         Assert.assertNull(data.getClinicalAttribute());
     }
 
+    @Test //JK-UPDATED : this is for SQL Server 
+    public void fetchClinicalDataNullAttributeSummaryProjection_SQLServer() throws Exception {
+
+        List<String> studyIds = new ArrayList<>();
+        studyIds.add("study_tcga_pub");
+        studyIds.add("study_tcga_pub");
+        List<String> sampleIds = new ArrayList<>();
+        sampleIds.add("TCGA-A1-A0SB-01");
+        sampleIds.add("TCGA-A1-A0SD-01");
+        List<ClinicalData> result = clinicalDataMyBatisRepository.fetchClinicalData(studyIds, sampleIds, null,
+                PersistenceConstants.SAMPLE_CLINICAL_DATA_TYPE, "SUMMARY");
+
+        Assert.assertEquals(6, result.size());
+        
+        int row = getRow("OTHER_SAMPLE_ID", result);
+        if (row == -1) throw new Exception("OTHER_SAMPLE_ID not found");
+		else {
+			ClinicalData data = result.get(row);
+			Assert.assertEquals("OTHER_SAMPLE_ID", data.getAttrId());
+			Assert.assertEquals("5C631CE8-F96A-4C35-A459-556FC4AB21E1", data.getAttrValue());
+			Assert.assertEquals((Integer) 1, data.getInternalId());
+			Assert.assertNull(data.getClinicalAttribute());
+		}
+	   }
+    
+    private int getRow(String s, List<ClinicalData> result) {
+    	int size = result.size();
+    	int i = 0;
+    	//boolean found = false;
+    	String v = null;
+    	while (i < size /*&& !found*/) {
+    		if (s.equals(result.get(i).getAttrId())) {
+    			//found = true;
+    			return i;
+    		} else {
+    			i++;
+    		}
+    	}
+    	return -1; //not found
+    }
+    
     @Test
     public void fetchMetaClinicalDataNullAttribute() throws Exception {
 

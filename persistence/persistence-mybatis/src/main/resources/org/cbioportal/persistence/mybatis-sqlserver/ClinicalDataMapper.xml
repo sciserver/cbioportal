@@ -104,12 +104,7 @@
         <if test="limit != null and limit != 0">
 		    OFFSET (#{offset}) ROWS
 			FETCH NEXT (#{limit}) ROWS ONLY
-		</if><!-- //JK-UPDATED -->
-		<!-- //JK-UPDATED: if there is no order by clause the result order in SQL server may not be the same in MySQL
-		therefore added an order by clause if both sortBy and direction are null.-->
-        <!-- <if test="sortBy == null and direction == null and projection != 'ID' and limit == null">
-            ORDER BY clinical_sample.ATTR_ID ASC
-        </if> TODELETE-->
+		</if>
 		
     </select>
 
@@ -138,21 +133,15 @@
         <if test="projection == 'ID'">
             ORDER BY clinical_patient.ATTR_ID ASC
         </if>
-			<if test="sortBy == null and projection != 'ID'">
-				ORDER BY clinical_patient.INTERNAL_ID ASC
-			</if>
+		<if test="sortBy == null and projection != 'ID'">
+			ORDER BY clinical_patient.INTERNAL_ID ASC
+		</if><!-- //JK-UPDATED : added an order by clause not handled in MySQL version-->
 		
         
         <if test="limit != null and limit != 0">
 		    OFFSET (#{offset}) ROWS
 			FETCH NEXT (#{limit}) ROWS ONLY
-		</if><!-- //JK-UPDATED -->
-		<!-- //JK-UPDATED: if there is no order by clause the result order in SQL server may not be the same in MySQL
-		therefore added an order by clause if both sortBy and direction are null.-->
-        <!-- <if test="sortBy == null and direction == null and projection != 'ID' and limit == null">
-            ORDER BY clinical_patient.ATTR_ID ASC
-        </if> -->
-		
+		</if>
     </select>
 
     <select id="getMetaPatientClinicalData" resultType="org.cbioportal.model.meta.BaseMeta">

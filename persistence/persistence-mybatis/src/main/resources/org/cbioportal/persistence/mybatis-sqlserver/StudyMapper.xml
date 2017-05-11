@@ -102,10 +102,11 @@
             <!-- ORDER BY cancer_study.CANCER_STUDY_IDENTIFIER ASC -->
             ORDER BY 2 ASC
         </if>
+		<if test="sortBy == null and projection != 'ID'">
+			ORDER BY 1 ASC
+		</if>
+        
         <if test="limit != null and limit != 0">
-			<if test="sortBy == null and projection != 'ID'">
-				ORDER BY 1 ASC
-			</if>
         
 		    OFFSET (#{offset}) ROWS
 			FETCH NEXT (#{limit}) ROWS ONLY

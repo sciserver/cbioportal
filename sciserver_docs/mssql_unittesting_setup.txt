@@ -187,8 +187,11 @@ Changes made in code
     - Added order by count(distinct SAMPLE_ID) clause in countSamplesWithMutatedGenes, and countSamplesWithKeywords in order to match the order of query results as in MySQL
     - Rewrote getGenesOfMutations: replaced distinct A by group by A and order by count(A) in order to match the order of query results as in MySQL
 
-      
-         		     
+   9.  ClinicalDataMyBatisRepositoryTest 
+    - commented out fetchClinicalDataNullAttributeSummaryProjection() and 
+      added fetchClinicalDataNullAttributeSummaryProjection_SQLServer() since without proper 'order by' clause
+      getting the same order of results set in SQL Server vs MySQL is not guaranteed. Therefore, updated
+      the unit testing method instead of changing the query itself.    		     
 ============================
 Building test database
 ============================
