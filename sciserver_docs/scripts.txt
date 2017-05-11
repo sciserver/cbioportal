@@ -1,0 +1,9 @@
+1. copy-SQLSERVER.bat: Deploying cbioportal.war in Apache tomcat
+2. switchto-SQLSERVER.bat: Switch from MySQL to SqlServer context.XML, maven build and startup-debug.bat 
+3. switchto-MYSQL.bat: Switch context.XML from SQL Server to  MySQL version, maven build and startup-debug.bat:: p.m.
+4. startup-debug.bat: start remote debug available from switch to eclipse.
+5. maveninstall-SQLSERVER.bat: copied maven install command from eclipse debug.
+6. debug-unittest.bat: run all you need test in debug mode - it takes extremely long time to complete.
+7. debug-singletest.bat: debug a single unit test.
+8. rerun-debug-singletest.bat: rerun after changing unit test code only. if need to recompile modules 
+   use debug-singetest.bat
