@@ -51,7 +51,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class GeneticAlterationUtil {
-    private static final String NAN = "NaN";
+    private static final String NAN = "NaN";//JK-FUTURE-TODO
     private static MutationRepository mutationRepository;
     private static MutationModelConverter mutationModelConverter;
 

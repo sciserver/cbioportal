@@ -733,7 +733,7 @@ public final class DaoMutation {
                     " GROUP BY mutation.ENTREZ_GENE_ID" +
                     (thresholdRecurrence>0?(" HAVING COUNT(*)>="+thresholdRecurrence):"") +
                     " ORDER BY count_per_nt DESC" +
-                    (thresholdNumGenes>0?(" LIMIT 0,"+thresholdNumGenes):"");//JK-TODO
+                    (thresholdNumGenes>0?(" LIMIT 0,"+thresholdNumGenes):"");//JK-FUTURE-TODO:Since this method is deprecated and not refereed sql is not fixed.
             pstmt = con.prepareStatement(sql);
             rs = pstmt.executeQuery();
             Map<Long, Map<String, String>> map = new HashMap();

@@ -259,9 +259,24 @@ public class DaoGeneticAlteration {
         try {
             con = JdbcUtil.getDbConnection(DaoGeneticAlteration.class);
 
-            pstmt = con.prepareStatement("SELECT * FROM genetic_alteration WHERE"
-                    + " GENETIC_PROFILE_ID = " + geneticProfileId
-                    + " LIMIT 3000 OFFSET " + offSet);//JK-FUTURE-TODO
+            String sql = null;
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                sql = "SELECT * FROM genetic_alteration WHERE"
+                        + " GENETIC_PROFILE_ID = " + geneticProfileId
+                        + " ORDER BY ENTREZ_GENE_ID"
+                        + " OFFSET " + offSet + " ROWS FETCH NEXT 3000 ROWS ONLY";
+                break;
+            default:
+            	sql = "SELECT * FROM genetic_alteration WHERE"
+                        + " GENETIC_PROFILE_ID = " + geneticProfileId
+                        + " LIMIT 3000 OFFSET " + offSet;
+            	break;
+            }//JK-UPDATED: added order by in mssql version.
+
+
+            
+            pstmt = con.prepareStatement(sql);//JK-UPDATED
 
             rs = pstmt.executeQuery();
             while (rs.next()) {

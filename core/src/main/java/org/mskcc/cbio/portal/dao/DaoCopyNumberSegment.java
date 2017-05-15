@@ -182,7 +182,7 @@ public final class DaoCopyNumberSegment {
                 break;
             default:
                 if (cutoff>0) {
-                    sql = "SELECT  `SAMPLE_ID`, SUM(`switch to eclipse`-`START`)"
+                    sql = "SELECT  `SAMPLE_ID`, SUM(`END`-`START`)"
                         + " FROM `copy_number_seg`"
                         + " WHERE `CANCER_STUDY_ID`="+cancerStudyId
                         + " AND ABS(`SEGMENT_MEAN`)>=" + cutoff
