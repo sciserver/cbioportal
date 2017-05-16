@@ -724,7 +724,7 @@ public final class DaoMutation {
             }//JK-UPDATED
 
 
-            String sql = "SELECT mutation.ENTREZ_GENE_ID, GROUP_CONCAT(mutation.SAMPLE_ID), COUNT(*), COUNT(*)/`LENGTH` AS count_per_nt" +
+            String sql = "SELECT mutation.ENTREZ_GENE_ID, dbo.group_concat(mutation.SAMPLE_ID, 500000), COUNT(*), COUNT(*)/`LENGTH` AS count_per_nt" +
                     " FROM mutation, gene" +
                     " WHERE mutation.ENTREZ_GENE_ID=gene.ENTREZ_GENE_ID" +
                     " AND GENETIC_PROFILE_ID=" + profileId +

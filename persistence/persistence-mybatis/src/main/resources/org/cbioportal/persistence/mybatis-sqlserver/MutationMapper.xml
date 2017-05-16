@@ -202,7 +202,9 @@ select top 1 1 as b
 	        </if>
 	        
 	        mutation.ENTREZ_GENE_ID as entrezGeneId
-	        ,cast(STUFF(
+	        ,dbo.group_concat(mutation.SAMPLE_ID, 500000) as concatenatedSampleIds
+	         
+	        <!-- ,cast(STUFF(
 			(select ',', + cast( mutation.SAMPLE_ID as varchar(10)) from mutation
 			where mutation.GENETIC_PROFILE_ID = #{geneticProfileId} 
 	        <if test="sampleIds != null and !sampleIds.isEmpty()">
@@ -211,7 +213,7 @@ select top 1 1 as b
 	                #{item}
 	            </foreach>
 	        </if>
-	        for XML PATH('')), 1,1,'') as varchar(max)) as concatenatedSampleIds
+	        for XML PATH('')), 1,1,'') as varchar(max)) as concatenatedSampleIds -->
 	        ,count(*) as [count]
 	        ,round(1.*count(*)/min(gene.LENGTH), 4) as count_per_nt
 	        	
