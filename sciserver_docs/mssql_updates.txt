@@ -1,0 +1,78 @@
+===================================================
+List of Updates to make cBioPortal MSSQL compliant.
+===================================================
+1. All upates listed in mssql_unittesting_setup.txt
+2.
+
+
+
+===============================================
+Property  updates
+===============================================
+1. portal.properties
+ -added 
+2.  business/src/main/resources/applicationContext-business.xml
+ - Updated URL property of <bean id="businessDataSource">
+ - added bean 'vendorProperties'
+============================
+Java updates
+============================
+1. New classes added 
+ 1). added core/src/main/java/edu/jhu/u01/DBProperties.java
+ - Updated core/src/main/java/org/mskcc/cbio/portal/dao/JdbcUtil.java to use this DBProperties class. 
+ 2). added new class which encapsulates database vendor which defines DBVendor enum 
+  (core/src/main/java/edu/jhu/u01/DBVendor.java)
+2. Updated classes as consequence 
+ 1). Updated  prepared statements  
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoCancerStudy.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoClinicalAttributeMeta.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoClinicalData.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoClinicalEvent.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoCnaEvent.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoCopyNumberSegment.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoCopyNumberSegmentFile.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoDrug.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoDrugInteraction.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoGene.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoGeneticAlteration.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoGeneticProfile.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoGeneticProfile.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoGistic.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoInteraction.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoMutSig.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoMutation.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoPatient.java 
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoPdbUniprotResidueMapping.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoPfamGraphics.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoProteinArrayData .java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoProteinArrayInfo.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoProteinArrayTarget.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoSample.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoSampleList.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoSampleProfile.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoSangerCensus.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoTextCache.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoTypeOfCancer.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoUser.java
+ - core/src/main/java/org/mskcc/cbio/portal/dao/DaoUserAuthorities.java
+ 
+ 
+
+================================================
+Other Java code updates
+================================================
+1. NetworkIO.java: added string trim to entrez_gene in addNote and addDrugNode.
+-  addNode method add a node to a map whose key is entrez_gene. And if entrez_gene = '62232' it has trails of spaces eg., '62232     '.
+   Therefore, in a subsequent method cannot find a node with entrez_gene='62232' since its key in the map is 
+   '62232     '.  
+   
+2. persistence/persistence-mybatis/src/main/java/org/cbioportal/persistence/mybatis/MutationMyBatisRepository.java
+ - Updated method hasAlleleFrequenceData method to include 
+   if (mutationMapper.hasAlleleFrequencyData(geneticProfileId, sampleId) == null) return false;
+==============================================
+Mapper.xml updates
+===============================================  
+1. created a separate foder for mssql MyBatis Mapper folder:
+  persistence/persistence-mybatis/src/main/resources/org/cbioportal/persistence/mybatis-sqlserver
+  
+   

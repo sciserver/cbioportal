@@ -261,10 +261,3 @@ Create Table/Alter table updateds
    
   
   
-================================================
-Other Java code updates
-================================================
-1. NetworkIO.java: added string trim to entrez_gene in addNote and addDrugNode.
--  addNode method add a node to a map whose key is entrez_gene. And if entrez_gene = '62232' it has trails of spaces eg., '62232     '.
-   Therefore, in a subsequent method cannot find a node with entrez_gene='62232' since its key in the map is 
-   '62232     '.  
