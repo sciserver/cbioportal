@@ -69,6 +69,20 @@ Other Java code updates
 2. persistence/persistence-mybatis/src/main/java/org/cbioportal/persistence/mybatis/MutationMyBatisRepository.java
  - Updated method hasAlleleFrequenceData method to include 
    if (mutationMapper.hasAlleleFrequencyData(geneticProfileId, sampleId) == null) return false;
+ - in method 'getSignificantlyMutatedGenes' set the value of parameter for setting groupConcat to false
+  since MS SQL does not support setting system parameter groupconcat as in MySQL.   
+  
+3.  core/src/main/java/org/mskcc/cbio/portal/dao/DaoCancerStudy.java
+ - replaced IMPORT_DATE = NOW() by IMPORT_DATE =CURRENT_TIMESTAMP   
+ 
+4.  core/src/main/java/org/mskcc/cbio/portal/dao/DaoTextCache.java
+ - replaced NOW() by CURRENT_TIMESTAMP in insert statement
+ - Updated purgeOldKeys: setting date time parameter for delete statement 
+ for mssql: datetime format from 'yyyyMMddHHmmss' to 'yyyy-MM-dd HH:mm:ss'. 
+ 
+5.  2  core/src/main/java/org/mskcc/cbio/portal/dao/DaoMutation.java
+  - Replaced XML_PATH method by SQL function dbo.group_concat(col, max_length) in order to avoid too many parameters passed to SQL error.
+  //JK-FUTURE-TODO
 ==============================================
 Mapper.xml updates
 ===============================================  

@@ -94,8 +94,10 @@ Changes made in code
    -commented out <sqlcommand> for set storage and session from <executions> for sql plugin.
    -updated <srcfiles> to use cgds_fixed4MSSQL.sql.MS.CREATE.sql
   2). /Test/resources/seed_mini.sql
-    reversed order of delete b/w gene_panel and gene_panel_list, sample and sample_list_list 
-    due to the foreign key constraint 
+    -reversed order of delete b/w gene_panel and gene_panel_list, sample and sample_list_list 
+    due to the foreign key constraint
+    - added set identity_insert on/off for inserting rows in a table if auto increment column exits 
+     in order to be compliant on SQL Server. Also added print statement. 
   3). /src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql 
     - commented out 'GO' in two places in order to make the test scripts run
   4). /src/main/resources/db/cgds_insert_test_MSSQL.sql (2 matches)
@@ -108,9 +110,27 @@ Changes made in code
     for an auto-increment column.  
     - Added 2 static variables representing NULL value in a data file used in bulk insert statement for each DB vendor.
       Their values are "\\N" and  ""(empty string) for MySQL and MS SQL, respectively
+      
   7) /src/main/java/org/mskcc/cbio/portal/dao/DaoTextCache.java
-    - in purgeOldKeys method added MS SQL version of setting current timestamp value in a delete statement.     
-
+    - in purgeOldKeys method added MS SQL version of setting current timestamp value in a delete statement.
+  8) core/src/main/java/org/mskcc/cbio/portal/dao/DaoTypeOfCancer.java
+    - Updated sql for getAllTypesOfCancer() in order to pass JUnit test, TestWebService: 
+    in SQL added 'order by type_of_cancer_id' in order to make the order of the query results 
+    the same as in MySQL case.       
+  9) core/src/main/java/org/mskcc/cbio/portal/dao/DaoDrugInteraction.java
+    - 'INTERACTION_TYPE' returned from the database since the column length is char(50) and 
+      sqlserver jdbc returns a value padded to fill up to char(50). BUt MySQL jdbc returns trimmed value. 
+    - Add trim to setInteractionType since 'Interaction_Type' column data type is char(50) instead of varchar(50) in the DB.
+      In sql server jdbc brings char(50) length string padded by spaces. in the contrary, mysql jdbc returns trimmed value. 
+      So in order to make string comparison in the javacode, trimmed the value.
+  10) core/src/main/java/org/mskcc/cbio/portal/dao/DaoGeneticProfile.java
+     - The column data type of 'ShowProfileInAnalsisTab' is binary(1), and SQL SERVER jdbc returns 'bytes[1]', 
+     but MYSQL jdbc allows getBoolean, which fails in sql server jdbc. SO updated code to getBytes instead of
+     getBoolean in extract method 	     
+  11) core/src/main/java/org/mskcc/cbio/portal/dao/DaoMutation.java
+     - Fixed issue with different handling of null value in bulk insert for MSSQL and MySQL. 
+     created static strings("" for MSSQL, "\\N" for MySQL) in MySQLBulkLoader, one for 
+     each DB vendor to replace null value in data file to be loaded in the DB.
 4. business
    - no updates
 
@@ -120,11 +140,7 @@ Changes made in code
 
 7. persistence
   1). /persistence-mybatis-test/src/test/resources/testContextDatabase.xml
-    - updated dbcpDataSource bean for testing: points to SqlServer Drive and database
-    - tested DB_URL in MySQL version includes script to run (/src/test/resources/testSql.sql). I have created
-
-    - NOTE IT IS NOT TESTED, YET
-  2). NOT  
+    - updated dbcpDataSource bean for testing: points to SqlServer Drive and test database database
 
 8. service
   no updates
@@ -140,6 +156,8 @@ Changes made in code
    
    
 11. persistence-mybatis-test
+  0.  persistence/persistence-mybatis-test/src/test/resources/testSql_MSSQL.sql
+    - Added 'Use cbioportal_test_persistence' to use the correct test database for persistent testing.back
   1. /model/src/main/java/org/cbioportal/model/TypeOfCancer.java
      Updated setDedicatedColor  since dedicatedColor column in the database is char(31) and MySQL 
     	returns trimmed value while SqlServer returns Char(31) length string value.
@@ -200,6 +218,14 @@ It requires two separate test databases using MS SQL for core and persistence-my
 2. core module junit tests use cbio_test db.
    1. cbio_user must have the following privileges: db_datareader, db_datawriter, db_ddladmin (set in membership)
    2. in /core/pom.xml include
+     1). in groupId = org.codehaus.mojo added dependency for MS SQL
+     		<dependency>
+		    <groupId>com.microsoft.sqlserver</groupId>
+		    <artifactId>mssql-jdbc</artifactId>
+		    <version>6.1.0.jre8</version>
+		    </dependency> 
+       
+     2).
                 <srcFiles>
                 <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql</srcFile><!-- //JK-UPDATED -->
                 <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.KEYS.sql</srcFile><!-- //JK-UPDATED -->
@@ -242,17 +268,24 @@ It requires two separate test databases using MS SQL for core and persistence-my
   </bean>
      
   2. in /persistence/persistence-mybatis-test/pom.xml
-     Replace com.h2database by sql server dependency 
+    1). Replace com.h2database by sql server dependency 
       		  <dependency>
 		    <groupId>com.microsoft.sqlserver</groupId>
 		    <artifactId>mssql-jdbc</artifactId>
 		    <version>6.1.0.jre8</version>
 		  </dependency>
- 
+    2). added log4j dependency.
+      - also added log4j.properties to /persistence/persistence-mybatis-test/resource
+
+=================================================
+Some other changes
+================================================
+1.  .travis/settings.xml
+  - put the proper password value.
 
 
 ==================================================
-Create Table/Alter table updateds
+Create Table/Alter table updates
 ==================================================
 1. In MySQL ddls some foreign key constraints contain 'ON DELETE CASCADE'.
    In SqlServer DDL's some are translated the same as in MySQL DDL's. 
