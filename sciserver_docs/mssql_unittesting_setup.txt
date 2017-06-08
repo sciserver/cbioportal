@@ -157,7 +157,7 @@ Changes made in code
    
 11. persistence-mybatis-test
   0.  persistence/persistence-mybatis-test/src/test/resources/testSql_MSSQL.sql
-    - Added 'Use cbioportal_test_persistence' to use the correct test database for persistent testing.back
+    - Added 'Use cbioportal_test_persistence' to use the correct test database for persistent testing.
   1. /model/src/main/java/org/cbioportal/model/TypeOfCancer.java
      Updated setDedicatedColor  since dedicatedColor column in the database is char(31) and MySQL 
     	returns trimmed value while SqlServer returns Char(31) length string value.
