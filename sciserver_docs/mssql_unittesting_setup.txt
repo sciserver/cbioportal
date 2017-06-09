@@ -21,6 +21,8 @@ How to debug unit test in eclipse
    >cd C:\eclipse_genomics\Git\cbioportal-sqlserver\portal\target\  
    >mvn -e -DfailIfNoTests=false -Dtest=TestDaoDrugInteraction -Dmaven.surefire.debug test
   From eclipse create a remove java application with host=localhost, port=5005
+  
+3. Note: for normal debugging mode use host = localhost, port=8000 for eclipse remote Java application.
 
 
 
@@ -28,7 +30,7 @@ How to debug unit test in eclipse
 How to skip test
 =====================
 1. Skipping test in some Maven modules
-Add <skipTests>true</skipTests> to surefly plugin's configuration
+Add <skipTests>true</skipTests> to surefly plugin's configuration(pom.xml)
 <project>
   [...]
   <build>
