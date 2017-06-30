@@ -95,3 +95,4 @@ target/
 portal/META-INF/*
 portal/reactapp/*
 /bin/
+/cbioportal.war
