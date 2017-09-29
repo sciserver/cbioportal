@@ -209,12 +209,19 @@
     <mockito.version>1.10.19</mockito.version>
 
     <final.war.name>cbioportal-${project.version}</final.war.name>
-
+    
+ <!-- For MySQL < 5.5 change 'default_storage_engine' to 'storage_engine' -->
+ <!-- 
   <db.test.driver>com.mysql.jdbc.Driver</db.test.driver>
-    <!-- For MySQL < 5.5 change 'default_storage_engine' to 'storage_engine' -->
   <db.test.url>jdbc:mysql://127.0.0.1:3306/cgds_test?sessionVariables=default_storage_engine=InnoDB</db.test.url>
-    <db.test.username>cbio_user</db.test.username>
+  <db.test.username>cbio_user</db.test.username>
     <db.test.password>somepassword</db.test.password>
+   -->
+   <!-- //JK-UPDATED -->
+  <db.test.driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</db.test.driver>
+    <db.test.url>jdbc:sqlserver://127.0.0.1:1433;;DatabaseName=cbioportal_test</db.test.url>
+    <db.test.username>cbio_user</db.test.username>
+    <db.test.password>cbio2246</db.test.password>
 
     <!--For tomcat instances, the scope to tomcat catalina lib should be provided. this prop is used in portal module.-->
     <tomcat.catalina.scope>provided</tomcat.catalina.scope>
@@ -294,6 +301,12 @@
       <artifactId>mysql-connector-java</artifactId>
       <version>5.1.16</version>
     </dependency>
+    <!-- msserver -->
+	<dependency><!-- //JK-UPDATED -->
+	    <groupId>com.microsoft.sqlserver</groupId>
+	    <artifactId>mssql-jdbc</artifactId>
+	    <version>6.1.0.jre8</version>
+	</dependency>    
     <!-- slf4j -->
     <dependency>
       <groupId>org.slf4j</groupId>

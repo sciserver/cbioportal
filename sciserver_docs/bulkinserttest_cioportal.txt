@@ -1,0 +1,24 @@
+Begin transaction;
+BULK INSERT mutation_event FROM 'C:\\Users\\jkim\\AppData\\Local\\Temp\\mutation_event9147442665235323074.tempTable' WITH (DATAFILETYPE = 'char', ROWTERMINATOR = '
+')
+
+Commit transaction;
+
+begin transaction;
+BULK INSERT mutation FROM 'C:\\Users\\jkim\\AppData\\Local\\Temp\\mutation5829976678938271497.tempTable' WITH (DATAFILETYPE = 'char', ROWTERMINATOR = '
+')
+Commit transaction;
+
+--SELECT * FROM mutation INNER JOIN mutation_event ON mutation.MUTATION_EVENT_ID=mutation_event.MUTATION_EVENT_ID WHERE SAMPLE_ID = 1 AND GENETIC_PROFILE_ID = 2 AND mutation.ENTREZ_GENE_ID = 321
+
+--	BULK INSERT mutation_event FROM 'C:\\Users\\jkim\\AppData\\Local\\Temp\\mutation_event78107251022712731.tempTable' WITH (DATAFILETYPE = 'char', ROWTERMINATOR = '
+--')
+
+
+
+
+IF @@TRANCOUNT = 0 PRINT 'No current transaction, autocommit mode (default)'
+ELSE IF @@OPTIONS & 2 = 0 PRINT 'Implicit transactions is off, explicit transaction is currently running'
+ELSE PRINT 'Implicit transactions is on, implicit or explicit transaction is currently running'
+
+DBCC OPENTRAN

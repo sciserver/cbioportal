@@ -1,0 +1,298 @@
+
+======================
+CBioportal junit test
+======================
+1. Uses Maven Plugin surefly
+2. for each module there is unit test defined.
+3. NOTE: in MySQL Set SESSION SQL_MODE = ANSI_QUOTE is used. This requires to use single quotes for quoting literal strings in MS SQL.
+
+
+==============================
+How to debug unit test in eclipse
+==============================
+1.Debugger all unit tests 
+  From command line
+   >cd C:\eclipse_genomics\Git\cbioportal-sqlserver\portal\target\  
+   >mvn -Dmaven.surefire.debug test
+  From eclipse create a remove java application with host=localhost, port=5005
+
+2.Debugger a single unit test 
+  From command line
+   >cd C:\eclipse_genomics\Git\cbioportal-sqlserver\portal\target\  
+   >mvn -e -DfailIfNoTests=false -Dtest=TestDaoDrugInteraction -Dmaven.surefire.debug test
+  From eclipse create a remove java application with host=localhost, port=5005
+  
+3. Note: for normal debugging mode use host = localhost, port=8000 for eclipse remote Java application.
+
+
+
+=====================
+How to skip test
+=====================
+1. Skipping test in some Maven modules
+Add <skipTests>true</skipTests> to surefly plugin's configuration(pom.xml)
+<project>
+  [...]
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.4.2</version>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  [...]
+</project>
+
+The following method i haven't tried:
+Eventually, you can create a profile that will disable the tests (still the pom.xml of the module) :
+<project>
+  [...]
+  <profiles>
+    <profile>
+      <id>noTest</id>
+      <activation>
+        <property>
+          <name>noTest</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.4.2</version>
+            <configuration>
+              <skipTests>true</skipTests>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+  [...]
+</project>
+
+With the latter solution, if you run mvn clean package, it will run all tests. If you run mvn clean package -DnoTest=true, 
+it will not run the tests for this module.
+
+
+======================
+Changes made in code
+======================
+1. pom.xml
+   - Updated db.test.driver/url/username/password
+
+2. portal
+
+3. core
+  1). /pom.xml
+   -Added <dependency> for mssql in sql plugin for tests.
+   -commented out <sqlcommand> for set storage and session from <executions> for sql plugin.
+   -updated <srcfiles> to use cgds_fixed4MSSQL.sql.MS.CREATE.sql
+  2). /Test/resources/seed_mini.sql
+    -reversed order of delete b/w gene_panel and gene_panel_list, sample and sample_list_list 
+    due to the foreign key constraint
+    - added set identity_insert on/off for inserting rows in a table if auto increment column exits 
+     in order to be compliant on SQL Server. Also added print statement. 
+  3). /src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql 
+    - commented out 'GO' in two places in order to make the test scripts run
+  4). /src/main/resources/db/cgds_insert_test_MSSQL.sql (2 matches)
+    - set identity_insert table_name on/off in order to insert into a table with primary key with auto-increment.
+  5). /src/test/resources/applicationContext-dao.xml
+    - updated dbcpDataSource bean for testing: points to SqlServer Drive and database
+  6) /src/main/java/org/mskcc/cbio/portal/dao/MySQLbulkLoader.java
+    - added instance variable "debugMode" to  turn on/off some debugging related codes.
+    - added WITH (KEEPIDENTITY) condition in MS SQL bulk  insert statement in order to insert a row if a value is provided 
+    for an auto-increment column.  
+    - Added 2 static variables representing NULL value in a data file used in bulk insert statement for each DB vendor.
+      Their values are "\\N" and  ""(empty string) for MySQL and MS SQL, respectively
+      
+  7) /src/main/java/org/mskcc/cbio/portal/dao/DaoTextCache.java
+    - in purgeOldKeys method added MS SQL version of setting current timestamp value in a delete statement.
+  8) core/src/main/java/org/mskcc/cbio/portal/dao/DaoTypeOfCancer.java
+    - Updated sql for getAllTypesOfCancer() in order to pass JUnit test, TestWebService: 
+    in SQL added 'order by type_of_cancer_id' in order to make the order of the query results 
+    the same as in MySQL case.       
+  9) core/src/main/java/org/mskcc/cbio/portal/dao/DaoDrugInteraction.java
+    - 'INTERACTION_TYPE' returned from the database since the column length is char(50) and 
+      sqlserver jdbc returns a value padded to fill up to char(50). BUt MySQL jdbc returns trimmed value. 
+    - Add trim to setInteractionType since 'Interaction_Type' column data type is char(50) instead of varchar(50) in the DB.
+      In sql server jdbc brings char(50) length string padded by spaces. in the contrary, mysql jdbc returns trimmed value. 
+      So in order to make string comparison in the javacode, trimmed the value.
+  10) core/src/main/java/org/mskcc/cbio/portal/dao/DaoGeneticProfile.java
+     - The column data type of 'ShowProfileInAnalsisTab' is binary(1), and SQL SERVER jdbc returns 'bytes[1]', 
+     but MYSQL jdbc allows getBoolean, which fails in sql server jdbc. SO updated code to getBytes instead of
+     getBoolean in extract method 	     
+  11) core/src/main/java/org/mskcc/cbio/portal/dao/DaoMutation.java
+     - Fixed issue with different handling of null value in bulk insert for MSSQL and MySQL. 
+     created static strings("" for MSSQL, "\\N" for MySQL) in MySQLBulkLoader, one for 
+     each DB vendor to replace null value in data file to be loaded in the DB.
+4. business
+   - no updates
+
+5. web
+
+6. model
+
+7. persistence
+  1). /persistence-mybatis-test/src/test/resources/testContextDatabase.xml
+    - updated dbcpDataSource bean for testing: points to SqlServer Drive and test database database
+
+8. service
+  no updates
+
+9. scripts
+  no updates
+
+10. /src/main/etc
+  1. jetty-cbioportal.xml
+   - updated <New id="ds" ...><Arg> for jdbc_mssql/cbioportal, and points to SqlServer database. jdbc_mssql/cbioportal is defined as db.tomcat_resource_name in /src/main/resources/portal.properties
+  2. override-web.xml
+   - updated <resource-ref><res-ref-name> to jdbc_mssql/cbioportal
+   
+   
+11. persistence-mybatis-test
+  0.  persistence/persistence-mybatis-test/src/test/resources/testSql_MSSQL.sql
+    - Added 'Use cbioportal_test_persistence' to use the correct test database for persistent testing.
+  1. /model/src/main/java/org/cbioportal/model/TypeOfCancer.java
+     Updated setDedicatedColor  since dedicatedColor column in the database is char(31) and MySQL 
+    	returns trimmed value while SqlServer returns Char(31) length string value.
+  2. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\ClinicalDataMapper.xml
+        If there is no order by clause the result order in SQL server may not be the same in MySQL
+		therefore added an order by clause if both sortBy and direction are null.-->
+        <if test="sortBy == null and direction == null and projection != 'ID' and limit == null">
+            ORDER BY clinical_sample(or clinical_patient).ATTR_ID ASC
+        </if>
+  3. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\GenePanelMapper.xml
+    -in select id= getGeneticProfileByStableId updated select statement to convert binary value into bit 
+    so that in the jdbc result set it can be treated as a boolean.
+    cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit)
+    - \core\src\main\java\org\mskcc\cbio\portal\model\GeneticProfile.java
+      added an extra setShowProfileInAnalysisTab(byte[] v) in case needed.
+    - in <select id=getSampleByStableIdAndStudyId>: PUBLIC -> [PUBLIC], STATUS->[STATUS]  
+  4. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\GeneticProfileMapper.xml
+    - in <sql id="select"> cast(genetic_profile.SHOW_PROFILE_IN_ANALYSIS_TAB as bit)
+  5. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\StudyMapper.xml
+    - in <sql id="select"> : PUBLIC -> [PUBLIC], STATUS->[STATUS]
+    - in sql replace "" by []
+    - in sql cast binary datatype column to tinyint in order to treat it as a boolean in java:
+      min(cast(cancer_study.[PUBLIC] as tinyint)	
+    - add aggregation function to all the selected columns other than the group by column
+    - added <sql id="cancerTypeMapperSelect"> instead of referring org.cbioportal.persistence.mybatis.CancerTypeMapper.select
+      in order to select aggregated column value for group by.
+    - in order by clause replace referring column name by column index(eg., order by 1) since column alias 
+      includes $prefix property which cannot be set in order by clause.
+     - added <sql id="selectWithoutGroupBy"> for other *Mapper.xml referring to <sql id=select>. 
+     - in order to return date type column in 'UTC' time zone, used "AT TIME ZONE 'UTC'" 
+       which is a new feature available in SqlServer 2016. 
+       - Eg., select importDate AT TIME ZONE 'UTC'
+     
+   6. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\GeneticProfileMapper.xml 
+    - updated <include refid="org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy">  instead of referring select.
+    
+   7. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\SampleListMapper.xml    
+    - updated <include refid="org.cbioportal.persistence.mybatis.StudyMapper.selectWithoutGroupBy">  instead of referring select.
+    
+   8. \persistence\persistence-mybatis\src\main\resources\org\cbioportal\persistence\mybatis-sqlserver\MutationMapper.xml
+    - in sql id=getMutationsCounts 
+      - added aggregate ftn to the select list.
+      - added cancer_study to 'from' clause of subselect clause
+    - Fixed bug in getSignificantlyMutatedGenes: removed distinct from STUFF clause and added missing sample id constraint in STUFF clause.
+    - Added order by count(distinct SAMPLE_ID) clause in countSamplesWithMutatedGenes, and countSamplesWithKeywords in order to match the order of query results as in MySQL
+    - Rewrote getGenesOfMutations: replaced distinct A by group by A and order by count(A) in order to match the order of query results as in MySQL
+
+   9.  ClinicalDataMyBatisRepositoryTest 
+    - commented out fetchClinicalDataNullAttributeSummaryProjection() and 
+      added fetchClinicalDataNullAttributeSummaryProjection_SQLServer() since without proper 'order by' clause
+      getting the same order of results set in SQL Server vs MySQL is not guaranteed. Therefore, updated
+      the unit testing method instead of changing the query itself.    		     
+============================
+Building test database
+============================
+It requires two separate test databases using MS SQL for core and persistence-mybatis modules
+1. Give db user from Security>Logins>ServerRoles>bulkadmin.
+2. core module junit tests use cbio_test db.
+   1. cbio_user must have the following privileges: db_datareader, db_datawriter, db_ddladmin (set in membership)
+   2. in /core/pom.xml include
+     1). in groupId = org.codehaus.mojo added dependency for MS SQL
+     		<dependency>
+		    <groupId>com.microsoft.sqlserver</groupId>
+		    <artifactId>mssql-jdbc</artifactId>
+		    <version>6.1.0.jre8</version>
+		    </dependency> 
+       
+     2).
+                <srcFiles>
+                <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql</srcFile><!-- //JK-UPDATED -->
+                <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.KEYS.sql</srcFile><!-- //JK-UPDATED -->
+                <srcFile>src/test/resources/seed_mini.sql</srcFile>
+              	</srcFiles>
+  
+
+2. Persistence module junit tests use cbio_test_persistence
+  1. in /persistence/persistence-mybatis-test/src/test/resources/testContextDatabase.xml set
+  
+    <bean id="dbcpDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+       <!--//JK-UPDATED instead of running initial script build cbio_test_persistence using testSql_MSSQL.sql and make a connection-->
+       <property name="url" value="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=cbioportal_test_persistence;user=cbio_user;password=cbio2246"/>
+    </bean>
+    Added vendor properties
+    <bean id="vendorProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="properties">
+	       <props>
+    	       <prop key="SQL SERVER">sqlserver</prop>
+        	   <prop key="MySQL">mysql</prop>
+           </props>
+    	</property>
+	</bean>
+		<bean id="databaseIdProvider" class="org.apache.ibatis.mapping.VendorDatabaseIdProvider">
+    		<property name="properties" ref="vendorProperties"/>
+	</bean>
+
+   In sqlSessionFactory bean, set mapperLocations pointing to SqlServer specific Mapper folders 
+   and databaseIdProvider. For setting mapperLocations do NOT use java package Expression 
+   since there is no org.cbioportal.persistence.mybatis-sqlserver.
+      
+  <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dbcpDataSource" />
+    <property name="typeAliasesPackage" value="org.mskcc.cbio.portal.model"/>
+    <property name="typeHandlersPackage" value="org.cbioportal.persistence.mybatis.typehandler"/>
+    <!-- //JK-UPDATED -->
+    <property name="mapperLocations" value="classpath:org/cbioportal/persistence/mybatis-sqlserver/*.xml" /><!--WORKING//JK-UPDATED-->
+    <property name="databaseIdProvider" ref="databaseIdProvider"/> 
+    
+  </bean>
+     
+  2. in /persistence/persistence-mybatis-test/pom.xml
+    1). Replace com.h2database by sql server dependency 
+      		  <dependency>
+		    <groupId>com.microsoft.sqlserver</groupId>
+		    <artifactId>mssql-jdbc</artifactId>
+		    <version>6.1.0.jre8</version>
+		  </dependency>
+    2). added log4j dependency.
+      - also added log4j.properties to /persistence/persistence-mybatis-test/resource
+
+=================================================
+Some other changes
+================================================
+1.  .travis/settings.xml
+  - put the proper password value.
+
+
+==================================================
+Create Table/Alter table updates
+==================================================
+1. In MySQL ddls some foreign key constraints contain 'ON DELETE CASCADE'.
+   In SqlServer DDL's some are translated the same as in MySQL DDL's. 
+   But in some cases SqlServer complains that there might be a  cycle in foreign key constraints.
+   In such  Cases, used 'on delete no action' is used 
+   
+  
+  
