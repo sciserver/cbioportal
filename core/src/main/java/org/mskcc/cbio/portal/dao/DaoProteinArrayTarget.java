@@ -82,8 +82,8 @@ public class DaoProteinArrayTarget {
         try {
             con = JdbcUtil.getDbConnection(DaoProteinArrayTarget.class);
             pstmt = con.prepareStatement
-                    ("INSERT INTO protein_array_target (`PROTEIN_ARRAY_ID`,`ENTREZ_GENE_ID`) "
-                            + "VALUES (?,?)");
+                    ("INSERT INTO protein_array_target (PROTEIN_ARRAY_ID,ENTREZ_GENE_ID) "
+                            + "VALUES (?,?)");//JK-UPDATED
             pstmt.setString(1, proteinArrayId);
             pstmt.setLong(2, entrezGeneId);
             return pstmt.executeUpdate();
@@ -101,7 +101,7 @@ public class DaoProteinArrayTarget {
         try {
             con = JdbcUtil.getDbConnection(DaoProteinArrayTarget.class);
             pstmt = con.prepareStatement
-                    ("DELETE FROM protein_array_target WHERE `PROTEIN_ARRAY_ID`=?");
+                    ("DELETE FROM protein_array_target WHERE PROTEIN_ARRAY_ID=?");//JK-UPDATED
             pstmt.setString(1, proteinArrayId);
             return pstmt.executeUpdate();
         } catch (SQLException e) {

@@ -400,12 +400,12 @@ public final class NetworkIO {
     }
 
     private static Node addNode(Network net, String entrez, String hugo) {
-        Node node = net.getNodeById(entrez);
+        Node node = net.getNodeById(entrez.trim());//JK-UPDATED added trim()
         if (node != null) {
             return node;
         }
 
-        node = new Node(entrez);
+        node = new Node(entrez.trim());//JK-UPDATED added trim()
         node.setType(NodeType.PROTEIN);
         node.setAttribute("RELATIONSHIP_XREF", "HGNC:"+hugo+";Entrez Gene:"+entrez);
         net.addNode(node);
@@ -413,12 +413,12 @@ public final class NetworkIO {
     }
 
     private static Node addDrugNode(Network net, Drug drug) throws DaoException {
-        Node node = net.getNodeById(drug.getId());
+        Node node = net.getNodeById(drug.getId().trim());//JK-UPDATED added trim()
         if (node != null) {
             return node;
         }
 
-        node = new Node(drug.getId());
+        node = new Node(drug.getId().trim());//JK-UPDATED added trim()
         node.setType(NodeType.DRUG);
         node.setAttribute("NAME", drug.getName());
         node.setAttribute("RELATIONSHIP_XREF", drug.getExternalReference());

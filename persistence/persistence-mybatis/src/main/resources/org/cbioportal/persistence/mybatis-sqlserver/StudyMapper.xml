@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.cbioportal.persistence.mybatis.StudyMapper">
+    <cache/>
+
+    <sql id="select">
+        cancer_study.CANCER_STUDY_ID AS [${prefix}cancerStudyId],
+        min(cancer_study.CANCER_STUDY_IDENTIFIER) AS [cancerStudyIdentifier]
+        <if test="projection == 'SUMMARY' || projection == 'DETAILED'">
+            ,
+            min(cancer_study.TYPE_OF_CANCER_ID) AS [${prefix}typeOfCancerId],
+            min(cancer_study.NAME) AS [${prefix}name],
+            min(cancer_study.SHORT_NAME) AS [${prefix}shortName],
+            min(cancer_study.DESCRIPTION) AS [${prefix}description],
+            min(cast(cancer_study.[PUBLIC] as tinyint)) AS [${prefix}publicStudy],
+            min(cancer_study.PMID) AS [${prefix}pmid],
+            min(cancer_study.CITATION) AS [${prefix}citation],
+            min(cancer_study.GROUPS) AS [${prefix}groups],
+            min(cancer_study.[STATUS]) AS [${prefix}status],
+            min(cancer_study.IMPORT_DATE) AT TIME ZONE 'UTC' AS [${prefix}importDate]
+
+        </if>
+    </sql>
+    
+    <sql id="selectWithoutGroupBy">
+        cancer_study.CANCER_STUDY_ID AS [${prefix}cancerStudyId],
+        cancer_study.CANCER_STUDY_IDENTIFIER AS [${prefix}cancerStudyIdentifier]
+        <if test="projection == 'SUMMARY' || projection == 'DETAILED'">
+            ,
+            cancer_study.TYPE_OF_CANCER_ID AS [${prefix}typeOfCancerId],
+            cancer_study.NAME AS [${prefix}name],
+            cancer_study.SHORT_NAME AS [${prefix}shortName],
+            cancer_study.DESCRIPTION AS [${prefix}description],
+            cast(cancer_study.[PUBLIC] as tinyint) AS [${prefix}publicStudy],
+            cancer_study.PMID AS [${prefix}pmid],
+            cancer_study.CITATION AS [${prefix}citation],
+            cancer_study.GROUPS AS [${prefix}groups],
+            cancer_study.[STATUS] AS [${prefix}status],
+            cancer_study.IMPORT_DATE AT TIME ZONE 'UTC' AS [${prefix}importDate]
+        </if>
+    </sql><!-- //JK-UPDATED: added for other Mapper.xml reference without group by clause -->
+    
+    
+    
+
+    <sql id="cancerTypeMapperSelect">
+        min(type_of_cancer.TYPE_OF_CANCER_ID) AS [${prefix}typeOfCancerId]
+        <if test="projection == 'SUMMARY' || projection == 'DETAILED'">
+            ,
+            min(type_of_cancer.NAME) AS [${prefix}name],
+            min(type_of_cancer.CLINICAL_TRIAL_KEYWORDS) AS [${prefix}clinicalTrialKeywords],
+            min(type_of_cancer.DEDICATED_COLOR) AS [${prefix}dedicatedColor],
+            min(type_of_cancer.SHORT_NAME) AS [${prefix}shortName],
+            min(type_of_cancer.PARENT) AS [${prefix}parent]
+        </if>
+    </sql><!-- //JK-UPDATED: updated org.cbioportal.persistence.mybatis.CancerTypeMapper.select 
+          to include aggregation function for group by -->
+          
+    <sql id="selectDetailed">
+        ,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_sequenced') THEN 1 ELSE NULL END) AS sequencedSampleCount,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_cna') THEN 1 ELSE NULL END) AS cnaSampleCount,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_rna_seq_v2_mrna') THEN 1 ELSE NULL END) AS mrnaRnaSeqV2SampleCount,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_microrna') THEN 1 ELSE NULL END) AS mrnaMicroarraySampleCount,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_mrna') THEN 1 ELSE NULL END) AS miRnaSampleCount,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_methylation_hm27') THEN 1 ELSE NULL END) AS methylationHm27SampleCount,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_rppa') THEN 1 ELSE NULL END) AS rppaSampleCount,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_3way_complete') THEN 1 ELSE NULL END) AS completeSampleCount,
+        <include refid="cancerTypeMapperSelect">
+            <property name="prefix" value="typeOfCancer."/>
+        </include><!-- //JK-UPDATED:  updated from org.cbioportal.persistence.mybatis.CancerTypeMapper.select
+                  since it does not take into account aggregation function required for group by -->
+    </sql>
+    
+
+    <sql id="from">
+        FROM cancer_study
+        INNER JOIN sample_list ON cancer_study.CANCER_STUDY_ID = sample_list.CANCER_STUDY_ID
+        INNER JOIN sample_list_list ON sample_list.LIST_ID = sample_list_list.LIST_ID
+        <if test="projection == 'DETAILED'">
+            INNER JOIN type_of_cancer ON cancer_study.TYPE_OF_CANCER_ID = type_of_cancer.TYPE_OF_CANCER_ID
+        </if>
+    </sql>
+
+    <select id="getAllStudies" resultType="org.cbioportal.model.CancerStudy">
+        SELECT
+        <include refid="select">
+            <property name="prefix" value=""/>
+        </include>
+        ,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_all') THEN 1 ELSE NULL END) AS allSampleCount
+        <if test="projection == 'DETAILED'">
+            <include refid="selectDetailed"/>
+        </if>
+        <include refid="from"/>
+        GROUP BY cancer_study.CANCER_STUDY_ID
+        <if test="sortBy != null and projection != 'ID'">
+            ORDER BY ${sortBy} ${direction}
+        </if>
+        <if test="projection == 'ID'">
+            <!-- ORDER BY cancer_study.CANCER_STUDY_IDENTIFIER ASC -->
+            ORDER BY 2 ASC
+        </if>
+		<if test="sortBy == null and projection != 'ID'">
+			ORDER BY 1 ASC
+		</if>
+        
+        <if test="limit != null and limit != 0">
+        
+		    OFFSET (#{offset}) ROWS
+			FETCH NEXT (#{limit}) ROWS ONLY
+		</if><!-- //JK-UPDATED -->
+    </select>
+
+    <select id="getMetaStudies" resultType="org.cbioportal.model.meta.BaseMeta">
+        SELECT
+        COUNT(*) AS totalCount
+        FROM cancer_study
+    </select>
+
+    <select id="getStudy" resultType="org.cbioportal.model.CancerStudy">
+        SELECT
+        <include refid="select">
+            <property name="prefix" value=""/>
+        </include>
+        ,
+        COUNT(CASE WHEN sample_list.STABLE_ID = CONCAT(cancer_study.CANCER_STUDY_IDENTIFIER,'_all') THEN 1 ELSE NULL END) AS allSampleCount
+        <if test="projection == 'DETAILED'">
+            <include refid="selectDetailed"/>
+        </if>
+        <include refid="from"/>
+        WHERE cancer_study.CANCER_STUDY_IDENTIFIER = #{studyId}
+        GROUP BY cancer_study.CANCER_STUDY_ID
+    </select>
+
+</mapper>

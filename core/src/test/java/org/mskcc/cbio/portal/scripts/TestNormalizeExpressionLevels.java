@@ -92,9 +92,12 @@ public class TestNormalizeExpressionLevels {
 
 			NormalizeExpressionLevels.driver(args);
 			// compare with correct
+			
 			String line;
 			Process p = Runtime.getRuntime().exec(
-					"diff" + " " + validationFile + " " + args[2]);
+//					"diff" + " " + validationFile + " " + args[2]);//JK-UPDATED
+			"fc" + " " + validationFile + " " + args[2]);//JK-UPDATED for MS-DOS:use fc instead of diff.
+
 			BufferedReader input = new BufferedReader(new InputStreamReader(
 					p.getInputStream()));
 			while ((line = input.readLine()) != null) {

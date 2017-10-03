@@ -51,7 +51,7 @@ import java.util.Set;
 public final class DaoUniProtIdMapping {
     public static int addUniProtIdMapping(final String uniprotAcc, final String uniProtId, final Integer entrezGeneId) throws DaoException {
         checkNotNull(uniProtId);
-        if (!MySQLbulkLoader.isBulkLoad()) {
+        if (!MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
                 throw new DaoException("You have to turn on MySQLbulkLoader in order to insert uniprot ID mapping");
             } else {
 

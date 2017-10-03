@@ -41,6 +41,8 @@ import java.util.Date;
 
 import org.mskcc.cbio.portal.util.CacheUtil;
 
+import edu.jhu.u01.DBProperties;
+
 public class DaoTextCache
 {	
 	/**
@@ -71,9 +73,20 @@ public class DaoTextCache
         try
         {
 			con = JdbcUtil.getDbConnection(DaoTextCache.class);
-			pstmt = con.prepareStatement(
-					"INSERT INTO text_cache (`HASH_KEY`, `TEXT`, `DATE_TIME_STAMP`) "
-			        		+ "VALUES (?,?,NOW())");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+    			pstmt = con.prepareStatement(
+    					"INSERT INTO text_cache ([HASH_KEY], [TEXT], [DATE_TIME_STAMP]) "
+    			        		+ "VALUES (?,?,CURRENT_TIMESTAMP)");
+                break;
+            default:
+    			pstmt = con.prepareStatement(
+    					"INSERT INTO text_cache (`HASH_KEY`, `TEXT`, `DATE_TIME_STAMP`) "
+    			        		+ "VALUES (?,?,NOW())");
+            	break;
+            }//JK-UPDATED
+
+
 			pstmt.setString(1, key);
 			pstmt.setString(2, text);
 			
@@ -169,14 +182,32 @@ public class DaoTextCache
         try
         {
             con = JdbcUtil.getDbConnection(DaoTextCache.class);
-            pstmt = con.prepareStatement("DELETE FROM text_cache " +
-            		"WHERE `DATE_TIME_STAMP` <= ?");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement("DELETE FROM text_cache " +
+                		"WHERE [DATE_TIME_STAMP] <= ?");
+                break;
+            default:
+                pstmt = con.prepareStatement("DELETE FROM text_cache " +
+                		"WHERE `DATE_TIME_STAMP` <= ?");
+            	break;
+            }//JK-UPDATED
+
+
             
-            // create date_time_stamp string using the given date
-            // (java.sql package does not have a proper "datetime" type support)
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-            
-            pstmt.setString(1, formatter.format(date));
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt.setTimestamp(1, new java.sql.Timestamp(date.getTime()));
+                break;
+            default:
+                // create date_time_stamp string using the given date
+                // (java.sql package does not have a proper "datetime" type support)
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+                pstmt.setString(1, formatter.format(date));
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.executeUpdate();
         }
         catch (SQLException e)

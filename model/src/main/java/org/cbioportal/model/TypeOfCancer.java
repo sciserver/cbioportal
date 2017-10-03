@@ -40,7 +40,10 @@ public class TypeOfCancer implements Serializable {
     }
 
     public void setDedicatedColor(String dedicatedColor) {
-        this.dedicatedColor = dedicatedColor;
+    	//JK-UPDATED since dedicatedColor column in the database is char(31) and MySQL 
+    	//returns trimmed value while SqlServer returns Char(31) length string value.
+        //this.dedicatedColor = dedicatedColor;
+    	this.dedicatedColor = (null == dedicatedColor)? null:dedicatedColor.trim();
     }
 
     public String getShortName() {

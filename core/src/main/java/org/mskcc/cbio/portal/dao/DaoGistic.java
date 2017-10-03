@@ -38,6 +38,8 @@ import org.mskcc.cbio.portal.model.Gistic;
 import org.mskcc.cbio.portal.validate.ValidateGistic;
 import org.mskcc.cbio.portal.validate.validationException;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
@@ -77,16 +79,36 @@ public class DaoGistic {
         try {
             con = JdbcUtil.getDbConnection(DaoGistic.class);
             // insert into SQL gistic table
-            pstmt = con.prepareStatement
-				("INSERT INTO gistic (`CANCER_STUDY_ID`," +
-				  "`CHROMOSOME`, " +
-                  "`CYTOBAND`, " +
-				  "`WIDE_PEAK_START`, " +
-				  "`WIDE_PEAK_END`, " +
-				  "`Q_VALUE`, "  +
-				  "`AMP`) "  +
-				  "VALUES (?,?,?,?,?,?,?)",
-				 Statement.RETURN_GENERATED_KEYS);
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+    				("INSERT INTO gistic ([CANCER_STUDY_ID]," +
+    				  "[CHROMOSOME], " +
+                      "[CYTOBAND], " +
+    				  "[WIDE_PEAK_START], " +
+    				  "[WIDE_PEAK_END], " +
+    				  "[Q_VALUE], "  +
+    				  "[AMP]) "  +
+    				  "VALUES (?,?,?,?,?,?,?)",
+    				 Statement.RETURN_GENERATED_KEYS);
+                
+                break;
+            default:
+                pstmt = con.prepareStatement
+    				("INSERT INTO gistic (`CANCER_STUDY_ID`," +
+    				  "`CHROMOSOME`, " +
+                      "`CYTOBAND`, " +
+    				  "`WIDE_PEAK_START`, " +
+    				  "`WIDE_PEAK_END`, " +
+    				  "`Q_VALUE`, "  +
+    				  "`AMP`) "  +
+    				  "VALUES (?,?,?,?,?,?,?)",
+    				 Statement.RETURN_GENERATED_KEYS);
+              
+            	break;
+            }//JK-UPDATED
+
+
 
             pstmt.setInt(1, gistic.getCancerStudyId());
             pstmt.setInt(2, gistic.getChromosome()) ;
@@ -129,10 +151,23 @@ public class DaoGistic {
                     // EntrezId = -1 if it does not exist in the gene table
                     // if this is the case, we are going to simply skip over this gene
                     if (g.getEntrezGeneId() != -1) {
-                    pstmt = con.prepareStatement
+                        switch(DBProperties.getDBVendor()){
+                        case mssql:
+                            pstmt = con.prepareStatement
+                            ("INSERT INTO gistic_to_gene ([GISTIC_ROI_ID]," +
+                                    "[ENTREZ_GENE_ID])" +
+                                    "VALUES (?,?)");
+
+                            break;
+                        default:
+                            pstmt = con.prepareStatement
                             ("INSERT INTO gistic_to_gene (`GISTIC_ROI_ID`," +
                                     "`ENTREZ_GENE_ID`)" +
                                     "VALUES (?,?)");
+
+                        	break;
+                        }//JK-UPDATED
+
 
                     pstmt.setInt(1, gistic.getInternalId());
                     pstmt.setLong(2, g.getEntrezGeneId());

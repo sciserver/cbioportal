@@ -34,6 +34,8 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.model.*;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.*;
 import java.util.*;
 
@@ -52,9 +54,18 @@ public class DaoSampleList {
         int rows;
         try {
             con = JdbcUtil.getDbConnection(DaoSampleList.class);
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement("INSERT INTO sample_list ([STABLE_ID], [CANCER_STUDY_ID], [NAME], [CATEGORY]," +
+                        "[DESCRIPTION])" + " VALUES (?,?,?,?,?)");
+                break;
+            default:
+                pstmt = con.prepareStatement("INSERT INTO sample_list (`STABLE_ID`, `CANCER_STUDY_ID`, `NAME`, `CATEGORY`," +
+                        "`DESCRIPTION`)" + " VALUES (?,?,?,?,?)");
+            	break;
+            }//JK-UPDATED
 
-            pstmt = con.prepareStatement("INSERT INTO sample_list (`STABLE_ID`, `CANCER_STUDY_ID`, `NAME`, `CATEGORY`," +
-                    "`DESCRIPTION`)" + " VALUES (?,?,?,?,?)");
+
             pstmt.setString(1, sampleList.getStableId());
             pstmt.setInt(2, sampleList.getCancerStudyId());
             pstmt.setString(3, sampleList.getName());
@@ -246,7 +257,7 @@ public class DaoSampleList {
         ResultSet rs = null;
         int skippedPatients = 0;
         try {
-            StringBuilder sql = new StringBuilder("INSERT INTO sample_list_list (`LIST_ID`, `SAMPLE_ID`) VALUES ");
+            StringBuilder sql = new StringBuilder("INSERT INTO sample_list_list (LIST_ID, SAMPLE_ID) VALUES ");//JK-UPDATED
             // NOTE - as of 12/12/14, patient lists contain sample ids
             for (String sampleId : sampleList.getSampleList()) {
                 Sample sample = DaoSample.getSampleByCancerStudyAndSampleId(sampleList.getCancerStudyId(), sampleId);

@@ -55,7 +55,7 @@ import org.mskcc.cbio.portal.model.ExtendedMutation;
  */
 public class DaoCosmicData {
     public static int addCosmic(CosmicMutationFrequency cosmic) throws DaoException {
-            if (!MySQLbulkLoader.isBulkLoad()) {
+            if (!MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
                 throw new DaoException("You have to turn on MySQLbulkLoader in order to insert mutations");
             } else {
 

@@ -34,6 +34,8 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.model.Sample;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.*;
 import java.util.*;
 
@@ -68,9 +70,22 @@ public final class DaoGeneticProfileSamples
         }
         try {
             con = JdbcUtil.getDbConnection(DaoGeneticProfileSamples.class);
-            pstmt = con.prepareStatement
-                    ("INSERT INTO genetic_profile_samples (`GENETIC_PROFILE_ID`, " +
-                    "`ORDERED_SAMPLE_LIST`) "+ "VALUES (?,?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO genetic_profile_samples ([GENETIC_PROFILE_ID], " +
+                "[ORDERED_SAMPLE_LIST]) "+ "VALUES (?,?)");
+                
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO genetic_profile_samples (`GENETIC_PROFILE_ID`, " +
+                "`ORDERED_SAMPLE_LIST`) "+ "VALUES (?,?)");
+              
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setInt(1, geneticProfileId);
             pstmt.setString(2, orderedSampleListBuf.toString());
             return pstmt.executeUpdate();

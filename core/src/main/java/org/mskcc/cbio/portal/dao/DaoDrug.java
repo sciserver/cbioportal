@@ -43,6 +43,8 @@ import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.mskcc.cbio.portal.model.Drug;
 
+import edu.jhu.u01.DBProperties;
+
 /**
  * Data access object for Drug table
  */
@@ -67,7 +69,7 @@ public class DaoDrug {
     }
 
     public int addDrug(Drug drug) throws DaoException {
-        if (MySQLbulkLoader.isBulkLoad()) {
+        if (MySQLbulkLoader.isBulkLoad()) {//JK-FUTURE-TODO
             MySQLbulkLoader.getMySQLbulkLoader("drug").insertRecord(
                     drug.getId(),
                     drug.getResource(),
@@ -91,14 +93,30 @@ public class DaoDrug {
             Drug existingDrug = getDrug(drug.getId());
             if (existingDrug == null) {
                 con = JdbcUtil.getDbConnection(DaoDrug.class);
-                pstmt = con.prepareStatement(
-                        "INSERT INTO drug "
-                                + "(`DRUG_ID`, `DRUG_RESOURCE`, `DRUG_NAME`, "
-                                    + "`DRUG_SYNONYMS`, `DRUG_DESCRIPTION`, `DRUG_XREF`, "
-                                    + "`DRUG_ATC_CODE`, `DRUG_APPROVED`, `DRUG_CANCERDRUG`, "
-                                    + "`DRUG_NUTRACEUTICAL`, `DRUG_NUMOFTRIALS`) "
-                                + "VALUES (?,?,?,?,?,?,?,?,?,?,?)"
-                        );
+                switch(DBProperties.getDBVendor()){
+                case mssql:
+                    pstmt = con.prepareStatement(
+                            "INSERT INTO drug "
+                                    + "([DRUG_ID], [DRUG_RESOURCE], [DRUG_NAME], "
+                                        + "[DRUG_SYNONYMS], [DRUG_DESCRIPTION], [DRUG_XREF], "
+                                        + "[DRUG_ATC_CODE], [DRUG_APPROVED], [DRUG_CANCERDRUG], "
+                                        + "[DRUG_NUTRACEUTICAL], [DRUG_NUMOFTRIALS]) "
+                                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+                            );
+                    break;
+                default:
+                    pstmt = con.prepareStatement(
+                            "INSERT INTO drug "
+                                    + "(`DRUG_ID`, `DRUG_RESOURCE`, `DRUG_NAME`, "
+                                        + "`DRUG_SYNONYMS`, `DRUG_DESCRIPTION`, `DRUG_XREF`, "
+                                        + "`DRUG_ATC_CODE`, `DRUG_APPROVED`, `DRUG_CANCERDRUG`, "
+                                        + "`DRUG_NUTRACEUTICAL`, `DRUG_NUMOFTRIALS`) "
+                                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+                            );                  
+                	break;
+                }//JK-UPDATED
+
+
                 pstmt.setString(1, drug.getId());
                 pstmt.setString(2, drug.getResource());
                 pstmt.setString(3, drug.getName());

@@ -34,6 +34,8 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.model.*;
 
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
@@ -86,9 +88,20 @@ public class DaoProteinArrayData {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoProteinArrayData.class);
-            pstmt = con.prepareStatement
-                    ("INSERT INTO protein_array_data (`PROTEIN_ARRAY_ID`,`CANCER_STUDY_ID`,`SAMPLE_ID`,`ABUNDANCE`) "
-                            + "VALUES (?,?,?,?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO protein_array_data ([PROTEIN_ARRAY_ID],[CANCER_STUDY_ID],[SAMPLE_ID],[ABUNDANCE]) "
+                        + "VALUES (?,?,?,?)");
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO protein_array_data (`PROTEIN_ARRAY_ID`,`CANCER_STUDY_ID`,`SAMPLE_ID`,`ABUNDANCE`) "
+                        + "VALUES (?,?,?,?)");
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setString(1, pad.getArrayId());
             pstmt.setInt(2, pad.getCancerStudyId());
             pstmt.setInt(3, pad.getSampleId());

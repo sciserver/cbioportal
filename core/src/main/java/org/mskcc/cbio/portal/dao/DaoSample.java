@@ -36,6 +36,8 @@ import org.mskcc.cbio.portal.model.*;
 
 import org.mskcc.cbio.portal.util.ProgressMonitor;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.*;
 import java.util.*;
 
@@ -133,10 +135,22 @@ public class DaoSample {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoSample.class);
-            pstmt = con.prepareStatement("INSERT INTO sample " +
-                                         "( `STABLE_ID`, `SAMPLE_TYPE`, `PATIENT_ID`, `TYPE_OF_CANCER_ID` ) " +
-                                         "VALUES (?,?,?,?)",
-                                         Statement.RETURN_GENERATED_KEYS);
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement("INSERT INTO sample " +
+                        "( [STABLE_ID], [SAMPLE_TYPE], [PATIENT_ID], [TYPE_OF_CANCER_ID] ) " +
+                        "VALUES (?,?,?,?)",
+                        Statement.RETURN_GENERATED_KEYS);
+                break;
+            default:
+                pstmt = con.prepareStatement("INSERT INTO sample " +
+                        "( `STABLE_ID`, `SAMPLE_TYPE`, `PATIENT_ID`, `TYPE_OF_CANCER_ID` ) " +
+                        "VALUES (?,?,?,?)",
+                        Statement.RETURN_GENERATED_KEYS);
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setString(1, sample.getStableId());
             pstmt.setString(2, sample.getType().toString());
             pstmt.setInt(3, sample.getInternalPatientId());

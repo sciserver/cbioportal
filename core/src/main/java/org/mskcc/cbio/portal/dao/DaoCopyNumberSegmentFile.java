@@ -34,6 +34,8 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.model.CopyNumberSegmentFile;
 
+import edu.jhu.u01.DBProperties;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
@@ -49,9 +51,20 @@ public final class DaoCopyNumberSegmentFile {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCopyNumberSegmentFile.class);
-            pstmt = con.prepareStatement
-                    ("INSERT INTO copy_number_seg_file (`CANCER_STUDY_ID`, `REFERENCE_GENOME_ID`, `DESCRIPTION`,`FILENAME`)"
-                     + " VALUES (?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO copy_number_seg_file ([CANCER_STUDY_ID], [REFERENCE_GENOME_ID], [DESCRIPTION],[FILENAME])"
+                 + " VALUES (?,?,?,?)", Statement.RETURN_GENERATED_KEYS);              
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO copy_number_seg_file (`CANCER_STUDY_ID`, `REFERENCE_GENOME_ID`, `DESCRIPTION`,`FILENAME`)"
+                 + " VALUES (?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setInt(1, copySegFile.cancerStudyId);
             pstmt.setString(2, copySegFile.referenceGenomeId.toString());
             pstmt.setString(3, copySegFile.description);
@@ -76,7 +89,7 @@ public final class DaoCopyNumberSegmentFile {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoCopyNumberSegmentFile.class);
-            pstmt = con.prepareStatement("SELECT * from copy_number_seg_file WHERE `CANCER_STUDY_ID` = ?");
+            pstmt = con.prepareStatement("SELECT * from copy_number_seg_file WHERE CANCER_STUDY_ID = ?");//JK-UPDATED
             pstmt.setInt(1, cancerStudyId);
             rs = pstmt.executeQuery();
             if (rs.next()) {

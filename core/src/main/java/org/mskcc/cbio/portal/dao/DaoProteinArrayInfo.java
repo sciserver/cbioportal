@@ -34,6 +34,8 @@ package org.mskcc.cbio.portal.dao;
 
 import org.mskcc.cbio.portal.model.ProteinArrayInfo;
 
+import edu.jhu.u01.DBProperties;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -90,9 +92,21 @@ public class DaoProteinArrayInfo {
         ResultSet rs = null;
         try {
             con = JdbcUtil.getDbConnection(DaoProteinArrayInfo.class);
-            pstmt = con.prepareStatement
-                    ("INSERT INTO protein_array_info (`PROTEIN_ARRAY_ID`,`TYPE`,`GENE_SYMBOL`,`TARGET_RESIDUE`) "
-                            + "VALUES (?,?,?,?)");
+            switch(DBProperties.getDBVendor()){
+            case mssql:
+                pstmt = con.prepareStatement
+                ("INSERT INTO protein_array_info ([PROTEIN_ARRAY_ID],[TYPE],[GENE_SYMBOL],[TARGET_RESIDUE]) "
+                        + "VALUES (?,?,?,?)");
+                
+                break;
+            default:
+                pstmt = con.prepareStatement
+                ("INSERT INTO protein_array_info (`PROTEIN_ARRAY_ID`,`TYPE`,`GENE_SYMBOL`,`TARGET_RESIDUE`) "
+                        + "VALUES (?,?,?,?)");
+            	break;
+            }//JK-UPDATED
+
+
             pstmt.setString(1, pai.getId());
             pstmt.setString(2, pai.getType());
             pstmt.setString(3, pai.getGene());
@@ -112,7 +126,7 @@ public class DaoProteinArrayInfo {
         try {
             con = JdbcUtil.getDbConnection(DaoProteinArrayInfo.class);
             pstmt = con.prepareStatement
-                    ("DELETE FROM protein_array_info WHERE `PROTEIN_ARRAY_ID`=? ");
+                    ("DELETE FROM protein_array_info WHERE PROTEIN_ARRAY_ID=? ");//JK-UPDATED
             pstmt.setString(1, arrayId);
             return pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -137,8 +151,8 @@ public class DaoProteinArrayInfo {
                 }
                 
                 pstmt = con.prepareStatement
-                        ("INSERT INTO protein_array_cancer_study (`PROTEIN_ARRAY_ID`,`CANCER_STUDY_ID`) "
-                                + "VALUES (?,?)");
+                        ("INSERT INTO protein_array_cancer_study (PROTEIN_ARRAY_ID,CANCER_STUDY_ID) "
+                                + "VALUES (?,?)");//JK-UPDATED
                 pstmt.setString(1, arrayId);
                 pstmt.setInt(2, cancerStudyId);
                 rows += pstmt.executeUpdate();
