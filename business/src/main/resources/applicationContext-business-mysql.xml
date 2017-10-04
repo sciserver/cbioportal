@@ -77,28 +77,11 @@
             <property name="dataSource" ref="businessDataSource" />
         </bean>
 
-     <!--JK-UPDATED-->
-        <bean id="vendorProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
-		    <property name="properties">
-	        	<props>
-    	        	<prop key="SQL SERVER">sqlserver</prop>
-        	    	<prop key="MySQL">mysql</prop>
-        		</props>
-    		</property>
-		</bean>
-		<bean id="databaseIdProvider" class="org.apache.ibatis.mapping.VendorDatabaseIdProvider">
-    		<property name="properties" ref="vendorProperties"/>
-		</bean>
-
         <!-- define the SqlSessionFactory -->
         <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
             <property name="dataSource" ref="businessDataSource" />
             <property name="typeAliasesPackage" value="org.mskcc.cbio.portal.model" />
             <property name="typeHandlersPackage" value="org.cbioportal.persistence.mybatis.typehandler" />
-             <property name="mapperLocations" value="classpath:org/cbioportal/persistence/mybatis-sqlserver/*.xml" />
-             <!--//JK-UPDATED:Since java package doesn't exists use this option-->
-            <property name="databaseIdProvider" ref="databaseIdProvider"/><!--JK-UPDATED-->
-            
         </bean>
     </beans>
   
@@ -107,8 +90,7 @@
         <!-- setting minIdle/maxIdle to 1 doesn't limit the number of active -->
         <bean id="businessDataSource" destroy-method="close" class="org.apache.commons.dbcp2.BasicDataSource">
             <property name="driverClassName" value="${db.driver}"/>
-            <!--property name="url" value="${db.connection_string}${db.portal_db_name}?zeroDateTimeBehavior=convertToNull"/-->
-            <property name="url" value="${db.url}"/>
+            <property name="url" value="${db.connection_string}${db.portal_db_name}?zeroDateTimeBehavior=convertToNull"/>
             <property name="username" value="${db.user}"/>
             <property name="password" value="${db.password}"/>
             <property name="minIdle" value="0"/>

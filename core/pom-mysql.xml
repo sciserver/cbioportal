@@ -345,7 +345,6 @@
           <excludes>
               <exclude>**/Test*.java</exclude>
           </excludes>
-          <skipTests>false</skipTests><!-- //JK-UPDATED: added to specify whether to skip the test of this module or not-->
         </configuration>
         <executions>
             <execution>
@@ -395,12 +394,6 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>5.0.3</version>
           </dependency>
-          <!-- msserver --><!-- //JK-UPDATED -->
-		  <dependency>
-		    <groupId>com.microsoft.sqlserver</groupId>
-		    <artifactId>mssql-jdbc</artifactId>
-		    <version>6.1.0.jre8</version>
-		  </dependency>           
         </dependencies>
         <executions>
           <execution>
@@ -415,14 +408,10 @@
               <url>${db.test.url}</url>
               <username>${db.test.username}</username>
               <password>${db.test.password}</password>
-              <!-- //JK-UPDATED              
               <sqlCommand>SET storage_engine=INNODB</sqlCommand>
               <sqlCommand>SET SESSION sql_mode = 'ANSI_QUOTES'</sqlCommand>
-              -->
               <srcFiles>
-                <srcFile>${project.build.testOutputDirectory}/cgds.sql</srcFile><!--//JK-FUTURE-TODO Fins project.build.testOutputDirectory and replace with mssql own cgds.sql-->
-        		<srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.CREATE.sql</srcFile><!-- //JK-UPDATED //JK-FUTURE-TODO-->
-                <srcFile>src/main/resources/db/cgds_fixed4MSSQL.sql.MS.KEYS.sql</srcFile><!-- //JK-UPDATED //JK-FUTURE-TODO-->                
+                <srcFile>${project.build.testOutputDirectory}/cgds.sql</srcFile>
                 <srcFile>src/test/resources/seed_mini.sql</srcFile>
               </srcFiles>
               <!-- added encoding to prevent Unknown initial character set index '192' received from server error -->
