@@ -95,3 +95,7 @@ target/
 portal/META-INF/*
 portal/reactapp/*
 package.json
+bin/
+.ignore
+/.gitignore
+/cbioportal.war

@@ -36,11 +36,22 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+	    	<groupId>log4j</groupId>
+	    	<artifactId>log4j</artifactId>
+	    	<version>1.2.16</version>
+	    </dependency><!-- //JK-UPDATED -->
+	    
+		<!-- <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.192</version>
             <scope>test</scope>
-        </dependency>
+        </dependency>//JK-UPDATED-->
+		  <dependency>
+		    <groupId>com.microsoft.sqlserver</groupId>
+		    <artifactId>mssql-jdbc</artifactId>
+		    <version>6.1.0.jre8</version>
+		  </dependency><!-- //JK-UPDATED including MS SQL dependency --> 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-dbcp2</artifactId>
