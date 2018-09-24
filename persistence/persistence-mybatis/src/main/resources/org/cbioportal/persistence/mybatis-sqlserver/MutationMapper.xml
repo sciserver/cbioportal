@@ -243,7 +243,7 @@ select top 1 1 as b
 	
 	        order by count_per_nt desc, entrezGeneId
 	
-		<!-- added entrezGeneId to ensure the order of sample ids match with mysql results -->
+		<!-- JK-UPDATED rewrote the query and added entrezGeneId to ensure the order of sample ids match with mysql results -->
     </select>
 
     <select id="countMutationEvents" resultType="org.cbioportal.model.MutationCount">
