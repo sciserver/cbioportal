@@ -41,6 +41,7 @@ import joptsimple.*;
 import java.util.*;
 import java.util.regex.*;
 import org.apache.commons.collections.map.MultiKeyMap;
+import org.apache.commons.lang.StringUtils;
 
 public class ImportClinicalData extends ConsoleRunnable {
 
@@ -167,6 +168,11 @@ public class ImportClinicalData extends ConsoleRunnable {
                     " in file. Please check your file format and try again.");
         }
         importData(buff, columnAttrs);
+        
+        if (getAttributesType() == ImportClinicalData.AttributeTypes.SAMPLE_ATTRIBUTES ||
+            getAttributesType() == ImportClinicalData.AttributeTypes.MIXED_ATTRIBUTES) {
+            DaoPatient.createSampleCountClinicalData(cancerStudy.getInternalId());
+        }
         
         if (MySQLbulkLoader.isBulkLoad()) {
             MySQLbulkLoader.flushAll();
@@ -432,6 +438,10 @@ public class ImportClinicalData extends ConsoleRunnable {
     {
         return findAttributeColumnIndex(SAMPLE_ID_COLUMN_NAME, attrs);
     }
+    
+    private int findSampleTypeColumn(List<ClinicalAttribute> attrs) {
+        return findAttributeColumnIndex(SAMPLE_TYPE_COLUMN_NAME, attrs);
+    }
 
     private int findAttributeColumnIndex(String columnHeader, List<ClinicalAttribute> attrs)
     {
@@ -482,8 +492,21 @@ public class ImportClinicalData extends ConsoleRunnable {
 
     private int addSampleToDatabase(String sampleId, String[] fields, List<ClinicalAttribute> columnAttrs) throws Exception
     {
+        int sampleTypeIndex = findSampleTypeColumn(columnAttrs);
+        String sampleTypeStr = (sampleTypeIndex != -1) ? fields[sampleTypeIndex] : null;
+        if (sampleTypeStr != null) {
+            // want to match Sample.Type enum names
+            sampleTypeStr = sampleTypeStr.trim().toUpperCase().replaceAll(" ", "_");
+        }
+        Sample.Type sampleType = Sample.Type.has(sampleTypeStr) ? Sample.Type.valueOf(sampleTypeStr) : null;
+        
         int internalSampleId = -1;
         if (validSampleId(sampleId) && !StableIdUtil.isNormal(sampleId)) {
+            // want to try and capture normal sample types based on value for SAMPLE_TYPE
+            // if present in clinical data
+            if (sampleType != null && sampleType.isNormal()) {
+                return internalSampleId;
+            }
             String stablePatientId = getStablePatientId(sampleId, fields, columnAttrs);
             if (validPatientId(stablePatientId)) {
                 Patient patient = DaoPatient.getPatientByCancerStudyAndPatientId(cancerStudy.getInternalId(), stablePatientId);
@@ -492,9 +515,9 @@ public class ImportClinicalData extends ConsoleRunnable {
                     patient = DaoPatient.getPatientByCancerStudyAndPatientId(cancerStudy.getInternalId(), stablePatientId);
                 }
                 sampleId = StableIdUtil.getSampleId(sampleId);
-               	internalSampleId = DaoSample.addSample(new Sample(sampleId,
-                                                               patient.getInternalId(),
-                                                               cancerStudy.getTypeOfCancerId()));
+               	internalSampleId = DaoSample.addSample(new Sample(sampleId, patient.getInternalId(),
+                                                       cancerStudy.getTypeOfCancerId(),
+                                                       sampleTypeStr));
             }
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -31,19 +31,16 @@
 */
 package org.cbioportal.weblegacy;
 
-import java.util.List;
-import org.cbioportal.persistence.mybatis.CosmicCountMapper;
-import org.cbioportal.persistence.mybatis.MutationMapper;
 import org.cbioportal.service.CosmicCountService;
-import org.cbioportal.service.MutationService;
-import org.cbioportal.web.config.CustomObjectMapper;
 import org.mockito.Mockito;
 import org.mskcc.cbio.portal.persistence.CancerTypeMapperLegacy;
 import org.mskcc.cbio.portal.persistence.ClinicalDataMapperLegacy;
 import org.mskcc.cbio.portal.persistence.ClinicalFieldMapper;
+import org.mskcc.cbio.portal.persistence.CosmicCountMapperLegacy;
 import org.mskcc.cbio.portal.persistence.GeneAliasMapper;
 import org.mskcc.cbio.portal.persistence.GeneMapperLegacy;
 import org.mskcc.cbio.portal.persistence.GeneticProfileMapperLegacy;
+import org.mskcc.cbio.portal.persistence.MutationMapperLegacy;
 import org.mskcc.cbio.portal.persistence.PatientMapperLegacy;
 import org.mskcc.cbio.portal.persistence.ProfileDataMapper;
 import org.mskcc.cbio.portal.persistence.SampleListMapperLegacy;
@@ -52,8 +49,6 @@ import org.mskcc.cbio.portal.persistence.StudyMapperLegacy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
@@ -61,22 +56,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @EnableWebMvc
 @ComponentScan(basePackages = {"org.mskcc.cbio.portal.web.api", "org.mskcc.cbio.portal.persistence", "org.mskcc.cbio.portal.service"})
 public class ApiControllerConfig extends WebMvcConfigurerAdapter {
-    
+
     @Bean
     public CosmicCountService cosmicCountService() {
-	return Mockito.mock(CosmicCountService.class);
+        return Mockito.mock(CosmicCountService.class);
     }
     @Bean
-    public CosmicCountMapper cosmicCountMapper() {
-	return Mockito.mock(CosmicCountMapper.class);
+    public CosmicCountMapperLegacy cosmicCountMapper() {
+        return Mockito.mock(CosmicCountMapperLegacy.class);
     }
     @Bean
-    public MutationService mutationService() {
-        return Mockito.mock(MutationService.class);
-    }
-    @Bean
-    public MutationMapper mutationMapper() {
-        return Mockito.mock(MutationMapper.class);
+    public MutationMapperLegacy mutationMapper() {
+        return Mockito.mock(MutationMapperLegacy.class);
     }
     @Bean
     public CancerTypeMapperLegacy cancerTypeMapper() {

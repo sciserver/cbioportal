@@ -1,46 +1,68 @@
 package org.cbioportal.persistence;
 
 import org.cbioportal.model.Mutation;
-import org.cbioportal.model.MutationCount;
-import org.cbioportal.persistence.dto.AltCount;
-import org.cbioportal.persistence.dto.KeywordSampleCount;
-import org.cbioportal.persistence.dto.MutatedGeneSampleCount;
-import org.cbioportal.persistence.dto.SignificantlyMutatedGene;
+import org.cbioportal.model.MutationCountByPosition;
+import org.cbioportal.model.MutationCountByGene;
+import org.cbioportal.model.meta.MutationMeta;
+
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 
 public interface MutationRepository {
 
-    List<Mutation> getMutationsDetailed(List<String> geneticProfileStableIds, List<String> hugoGeneSymbols,
-                                        List<String> sampleStableIds, String sampleListStableId);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    List<Mutation> getMutationsInMolecularProfileBySampleListId(String molecularProfileId, String sampleListId,
+                                                                List<Integer> entrezGeneIds, Boolean snpOnly,
+                                                                String projection, Integer pageSize, Integer pageNumber,
+                                                                String sortBy, String direction);
 
-    List<Mutation> getMutations(List<Integer> sampleIds, List<Integer> entrezGeneIds, Integer geneticProfileId);
 
-    List<Mutation> getMutations(List<Integer> sampleIds, Integer entrezGeneId, Integer geneticProfileId);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    MutationMeta getMetaMutationsInMolecularProfileBySampleListId(String molecularProfileId, String sampleListId,
+                                                                  List<Integer> entrezGeneIds);
 
-    List<Mutation> getMutations(Integer entrezGeneId, Integer geneticProfileId);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    List<Mutation> getMutationsInMultipleMolecularProfiles(List<String> molecularProfileIds, List<String> sampleIds,
+                                                           List<Integer> entrezGeneIds, String projection,
+                                                           Integer pageSize, Integer pageNumber,
+                                                           String sortBy, String direction);
 
-    List<Mutation> getMutations(List<Integer> sampleIds, Integer geneticProfileId);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    MutationMeta getMetaMutationsInMultipleMolecularProfiles(List<String> molecularProfileIds, List<String> sampleIds,
+                                                             List<Integer> entrezGeneIds);
 
-    List<Mutation> getSimplifiedMutations(List<Integer> sampleIds, List<Integer> entrezGeneIds,
-                                          Integer geneticProfileId);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    List<Mutation> fetchMutationsInMolecularProfile(String molecularProfileId, List<String> sampleIds,
+                                                    List<Integer> entrezGeneIds, Boolean snpOnly, String projection,
+                                                    Integer pageSize, Integer pageNumber, String sortBy,
+                                                    String direction);
 
-    Boolean hasAlleleFrequencyData(Integer geneticProfileId, Integer sampleId);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    MutationMeta fetchMetaMutationsInMolecularProfile(String molecularProfileId, List<String> sampleIds,
+                                                      List<Integer> entrezGeneIds);
 
-    List<SignificantlyMutatedGene> getSignificantlyMutatedGenes(Integer geneticProfileId, List<Integer> entrezGeneIds,
-                                                                List<Integer> sampleIds, Integer thresholdRecurrence,
-                                                                Integer thresholdNumGenes);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    List<MutationCountByGene> getSampleCountByEntrezGeneIdsAndSampleIds(String molecularProfileId,
+                                                                        List<String> sampleIds,
+                                                                        List<Integer> entrezGeneIds);
 
-    List<MutationCount> countMutationEvents(Integer geneticProfileId, List<Integer> sampleIds);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    List<MutationCountByGene> getSampleCountInMultipleMolecularProfiles(List<String> molecularProfileIds,
+                                                                        List<String> sampleIds,
+                                                                        List<Integer> entrezGeneIds);
+    
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    List<MutationCountByGene> getSampleCountInMultipleMolecularProfilesForFusions(List<String> molecularProfileIds,
+                                                                        List<String> sampleIds,
+                                                                        List<Integer> entrezGeneIds);
 
-    List<MutatedGeneSampleCount> countSamplesWithMutatedGenes(Integer geneticProfileId, List<Integer> entrezGeneIds);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    List<MutationCountByGene> getPatientCountInMultipleMolecularProfiles(List<String> molecularProfileIds,
+                                                                         List<String> patientIds,
+                                                                         List<Integer> entrezGeneIds);
 
-    List<KeywordSampleCount> countSamplesWithKeywords(Integer geneticProfileId, List<String> keywords);
-
-    List<Integer> getGenesOfMutations(List<Integer> mutationEventIds);
-
-    List<String> getKeywordsOfMutations(List<Integer> mutationEventIds);
-
-    List<AltCount> getMutationsCounts(String type, String hugoGeneSymbol, Integer start, Integer end,
-                                      List<String> cancerStudyIdentifiers, Boolean perStudy);
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+    MutationCountByPosition getMutationCountByPosition(Integer entrezGeneId, Integer proteinPosStart, 
+                                                       Integer proteinPosEnd);
 }

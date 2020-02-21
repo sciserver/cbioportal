@@ -1,8 +1,11 @@
 package org.cbioportal.persistence;
 
 import java.util.List;
-import org.cbioportal.model.CosmicCount;
+import org.cbioportal.model.CosmicMutation;
+import org.springframework.cache.annotation.Cacheable;
 
 public interface CosmicCountRepository {
-	List<CosmicCount> getCOSMICCountsByKeywords(List<String> keywords);
+
+    @Cacheable(cacheNames = "GeneralRepositoryCache", condition = "@cacheEnabledConfig.getEnabled()")
+	List<CosmicMutation> fetchCosmicCountsByKeywords(List<String> keywords);
 }

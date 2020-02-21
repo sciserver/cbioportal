@@ -1,6 +1,7 @@
 package org.cbioportal.persistence.mybatis;
 
 import org.cbioportal.model.SampleList;
+import org.cbioportal.model.SampleListToSampleId;
 import org.cbioportal.model.meta.BaseMeta;
 import org.cbioportal.persistence.PersistenceConstants;
 import org.cbioportal.persistence.SampleListRepository;
@@ -39,6 +40,12 @@ public class SampleListMyBatisRepository implements SampleListRepository {
     }
 
     @Override
+    public List<SampleList> getSampleLists(List<String> sampleListIds, String projection) {
+
+        return sampleListMapper.getSampleLists(sampleListIds, projection);
+    }
+
+    @Override
     public List<SampleList> getAllSampleListsInStudy(String studyId, String projection, Integer pageSize,
                                                      Integer pageNumber, String sortBy, String direction) {
         
@@ -57,4 +64,10 @@ public class SampleListMyBatisRepository implements SampleListRepository {
         
         return sampleListMapper.getAllSampleIdsInSampleList(sampleListId);
     }
+
+    @Override
+	public List<SampleListToSampleId> getSampleListSampleIds(List<Integer> sampleListIds) {
+        
+        return sampleListMapper.getSampleListSampleIds(sampleListIds);
+	}
 }

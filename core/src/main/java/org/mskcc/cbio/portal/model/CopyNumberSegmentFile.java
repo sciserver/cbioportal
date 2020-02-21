@@ -37,7 +37,9 @@ public class CopyNumberSegmentFile
     public static enum ReferenceGenomeId
     {
         hg18("hg18"),
-        hg19("hg19");
+        hg19("hg19"),
+        hg38("hg38"),
+    	mm10("mm10");
 
         private String propertyName;
         

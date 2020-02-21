@@ -32,7 +32,7 @@
 
 package org.mskcc.cbio.portal.servlet;
 
-import org.cbioportal.persistence.MutationRepository;
+import org.mskcc.cbio.portal.repository.MutationRepositoryLegacy;
 import org.mskcc.cbio.portal.dao.*;
 import org.mskcc.cbio.portal.model.*;
 import org.mskcc.cbio.portal.model.converter.MutationModelConverter;
@@ -68,7 +68,7 @@ public class NetworkServlet extends HttpServlet {
     private static final String NODE_ATTR_PERCENT_MRNA_WAY_DOWN = "PERCENT_MRNA_WAY_DOWN";
 
     @Autowired
-    private MutationRepository mutationRepository;
+    private MutationRepositoryLegacy mutationRepositoryLegacy;
 
     @Autowired
     private MutationModelConverter mutationModelConverter;
@@ -131,8 +131,7 @@ public class NetworkServlet extends HttpServlet {
         try {
         	if (cancerStudyId != null) {
 				cancerStudy = DaoCancerStudy.getCancerStudyByStableId(cancerStudyId);
-				if (cancerStudy == null
-						|| accessControl.isAccessibleCancerStudy(cancerStudy.getCancerStudyStableId()).size() == 0) {
+				if (cancerStudy == null) {
 					return;
 				}
 			} else {
@@ -501,19 +500,24 @@ public class NetworkServlet extends HttpServlet {
 
     private Set<String> getSampleIds(HttpServletRequest req, String cancerStudyId)
             throws ServletException, DaoException {
-    	String sampleIdsKey = req.getParameter(QueryBuilder.CASE_IDS_KEY);
-    	String strSampleIds = SampleSetUtil.getSampleIds(sampleIdsKey);
 
+        String strSampleIds = req.getParameter(QueryBuilder.CASE_IDS);
+        
         if (strSampleIds==null || strSampleIds.length()==0) {
-            String sampleSetId = req.getParameter(QueryBuilder.CASE_SET_ID);
-                //  Get Patient Sets for Selected Cancer Type
-                ArrayList<SampleList> sampleSets = GetSampleLists.getSampleLists(cancerStudyId);
-                for (SampleList ss : sampleSets) {
-                    if (ss.getStableId().equals(sampleSetId)) {
-                        strSampleIds = ss.getSampleListAsString();
-                        break;
+            String sampleIdsKey = req.getParameter(QueryBuilder.CASE_IDS_KEY);
+            strSampleIds = SampleSetUtil.getSampleIds(sampleIdsKey);
+
+            if (strSampleIds==null || strSampleIds.length()==0) {
+                String sampleSetId = req.getParameter(QueryBuilder.CASE_SET_ID);
+                    //  Get Patient Sets for Selected Cancer Type
+                    ArrayList<SampleList> sampleSets = GetSampleLists.getSampleLists(cancerStudyId);
+                    for (SampleList ss : sampleSets) {
+                        if (ss.getStableId().equals(sampleSetId)) {
+                            strSampleIds = ss.getSampleListAsString();
+                            break;
+                        }
                     }
-                }
+            }
         }
         String[] sampleArray = strSampleIds.split("\\s+");
         Set<String> targetSampleIds = new HashSet<String>(sampleArray.length);
@@ -672,7 +676,7 @@ public class NetworkServlet extends HttpServlet {
             long entrezGeneId) throws DaoException {
         GeneticProfile geneticProfile = DaoGeneticProfile.getGeneticProfileById(geneticProfileId);
         List <ExtendedMutation> mutationList = mutationModelConverter.convert(
-                    mutationRepository.getMutations(internalSampleIds, (int) entrezGeneId, geneticProfileId));
+                    mutationRepositoryLegacy.getMutations(internalSampleIds, (int) entrezGeneId, geneticProfileId));
         Set<String> samples = new HashSet<String>();
         for (ExtendedMutation mutation : mutationList) {
             Sample sample = DaoSample.getSampleById(mutation.getSampleId());
@@ -808,8 +812,12 @@ public class NetworkServlet extends HttpServlet {
         String netSize = req.getParameter("netsize");
         String nLinker = req.getParameter("linkers");
         String strDiffusion = req.getParameter("diffusion");
+        
+        
+        String url = req.getRequestURL().toString();
+        String baseURL = url.substring(0, url.length() - req.getRequestURI().length()) + req.getContextPath();
 
-        String ret = "network.do?"+QueryBuilder.GENE_LIST+"="+geneListStr
+        String ret = baseURL + "/network.do?"+QueryBuilder.GENE_LIST+"="+geneListStr
                 +"&"+QueryBuilder.GENETIC_PROFILE_IDS+"="+geneticProfileIdsStr
                 +"&"+QueryBuilder.CANCER_STUDY_ID+"="+cancerStudyId
                 +"&"+QueryBuilder.CASE_SET_ID+"="+caseSetId

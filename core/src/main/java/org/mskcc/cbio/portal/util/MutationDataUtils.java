@@ -33,7 +33,7 @@
 package org.mskcc.cbio.portal.util;
 
 import org.apache.log4j.Logger;
-import org.cbioportal.persistence.MutationRepository;
+import org.mskcc.cbio.portal.repository.MutationRepositoryLegacy;
 import org.json.simple.JSONArray;
 import org.mskcc.cbio.maf.TabDelimitedFileUtil;
 import org.mskcc.cbio.portal.dao.*;
@@ -106,7 +106,7 @@ public class MutationDataUtils {
     public static final String OMA_LINK_NOT_AVAILABLE_VALUE = "NA";
 
     @Autowired
-    private MutationRepository mutationRepository;
+    private MutationRepositoryLegacy mutationRepositoryLegacy;
 
     @Autowired
     private MutationModelConverter mutationModelConverter;
@@ -140,7 +140,7 @@ public class MutationDataUtils {
         {
             internalSampleIds = InternalIdUtil.getInternalSampleIds(
                 geneticProfile.getCancerStudyId(), targetSampleList);
-            GetMutationData remoteCallMutation = new GetMutationData(mutationRepository, mutationModelConverter);
+            GetMutationData remoteCallMutation = new GetMutationData(mutationRepositoryLegacy, mutationModelConverter);
 
             mutationList = remoteCallMutation.getMutationData(geneticProfile,
                     targetGeneList,
@@ -227,7 +227,7 @@ public class MutationDataUtils {
         String typeOfCancer = DaoTypeOfCancer.getTypeOfCancerById(cancerStudy.getTypeOfCancerId()).getName();
         String cancerStudyStableId = cancerStudy.getCancerStudyStableId();
         Sample sample = DaoSample.getSampleById(mutation.getSampleId());
-        String linkToPatientView = GlobalProperties.getLinkToPatientView(sample.getStableId(), cancerStudyStableId);
+        String linkToPatientView = GlobalProperties.getLinkToSampleView(sample.getStableId(), cancerStudyStableId);
         List<String> mcgLinks;
         Boolean isHotspot;
         if (mutation.getMutationType().equalsIgnoreCase("Fusion")) {
@@ -265,6 +265,7 @@ public class MutationDataUtils {
         mutationData.put(MUTATION_STATUS, mutation.getMutationStatus());
         mutationData.put(VALIDATION_STATUS, mutation.getValidationStatus());
         mutationData.put(SEQUENCING_CENTER, this.getSequencingCenter(mutation));
+        mutationData.put(GlobalProperties.getNCBIBuild(), this.getNcbiBuild(mutation));
         mutationData.put(NCBI_BUILD_NO, this.getNcbiBuild(mutation));
         mutationData.put(CHR, this.getChromosome(mutation));
         mutationData.put(START_POS, mutation.getStartPosition());
@@ -347,7 +348,7 @@ public class MutationDataUtils {
 
         // retrieve count map
         counts = mutationModelConverter.convertMutationCountToMap(
-                mutationRepository.countMutationEvents(geneticProfileId, sampleIds));
+                mutationRepositoryLegacy.countMutationEvents(geneticProfileId, sampleIds));
 
         return counts;
     }
@@ -486,7 +487,7 @@ public class MutationDataUtils {
     {
         Integer count = mutation.getNormalAltCount();
 
-        if (count == TabDelimitedFileUtil.NA_INT)
+        if (count != null && count == TabDelimitedFileUtil.NA_INT)
         {
             count = null;
         }
@@ -498,7 +499,7 @@ public class MutationDataUtils {
     {
         Integer count = mutation.getNormalRefCount();
 
-        if (count == TabDelimitedFileUtil.NA_INT)
+        if (count != null && count == TabDelimitedFileUtil.NA_INT)
         {
             count = null;
         }
@@ -510,7 +511,7 @@ public class MutationDataUtils {
     {
         Integer count = mutation.getTumorAltCount();
 
-        if (count == TabDelimitedFileUtil.NA_INT)
+        if (count != null && count == TabDelimitedFileUtil.NA_INT)
         {
             count = null;
         }
@@ -522,7 +523,7 @@ public class MutationDataUtils {
     {
         Integer count = mutation.getTumorRefCount();
 
-        if (count == TabDelimitedFileUtil.NA_INT)
+        if (count != null && count == TabDelimitedFileUtil.NA_INT)
         {
             count = null;
         }

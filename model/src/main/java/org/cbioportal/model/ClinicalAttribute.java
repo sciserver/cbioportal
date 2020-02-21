@@ -1,17 +1,22 @@
 package org.cbioportal.model;
 
 import java.io.Serializable;
+import javax.validation.constraints.NotNull;
 
 public class ClinicalAttribute implements Serializable {
 
+    @NotNull
     private String attrId;
+    @NotNull
     private String displayName;
     private String description;
     private String datatype;
+    @NotNull
     private Boolean patientAttribute;
     private String priority;
     private Integer cancerStudyId;
-    private CancerStudy cancerStudy;
+    @NotNull
+    private String cancerStudyIdentifier;
 
     public String getAttrId() {
         return attrId;
@@ -69,11 +74,12 @@ public class ClinicalAttribute implements Serializable {
         this.cancerStudyId = cancerStudyId;
     }
 
-    public CancerStudy getCancerStudy() {
-        return cancerStudy;
+    public String getCancerStudyIdentifier() {
+        return cancerStudyIdentifier;
     }
 
-    public void setCancerStudy(CancerStudy cancerStudy) {
-        this.cancerStudy = cancerStudy;
+    public void setCancerStudyIdentifier(String cancerStudyIdentifier) {
+        this.cancerStudyIdentifier = cancerStudyIdentifier;
     }
+    
 }

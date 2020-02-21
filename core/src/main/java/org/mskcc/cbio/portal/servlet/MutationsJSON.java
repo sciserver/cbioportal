@@ -39,7 +39,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.*;
 import javax.servlet.ServletException;
 import org.apache.log4j.Logger;
-import org.cbioportal.persistence.MutationRepository;
+import org.mskcc.cbio.portal.repository.MutationRepositoryLegacy;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.mskcc.cbio.portal.dao.DaoCancerStudy;
 import org.mskcc.cbio.portal.dao.DaoCosmicData;
@@ -85,7 +85,7 @@ public class MutationsJSON extends HttpServlet {
     public static final String MUTATION_CONTEXT = "mutation_context";
 
     @Autowired
-    private MutationRepository mutationRepository;
+    private MutationRepositoryLegacy mutationRepositoryLegacy;
 
     @Autowired
     private MutationModelConverter mutationModelConverter;
@@ -155,7 +155,7 @@ public class MutationsJSON extends HttpServlet {
     	}
     }
     
-    private static int DEFAULT_THERSHOLD_NUM_SMGS = 500; // no limit if 0 or below
+    private static int DEFAULT_THRESHOLD_NUM_SMGS = 0; // no limit if 0 or below
     private void processGetSmgRequest(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -180,20 +180,7 @@ public class MutationsJSON extends HttpServlet {
                 
                 // get all recurrently mutation genes
                 smgs = mutationModelConverter.convertSignificantlyMutatedGeneToMap(
-                        mutationRepository.getSignificantlyMutatedGenes(profileId, null, selectedCaseList, 2, DEFAULT_THERSHOLD_NUM_SMGS));
-
-                // get all cbio cancer genes
-                Set<Long> cbioCancerGeneIds = daoGeneOptimized.getEntrezGeneIds(
-                        daoGeneOptimized.getCbioCancerGenes());
-                cbioCancerGeneIds.removeAll(smgs.keySet());
-                if (!cbioCancerGeneIds.isEmpty()) {
-                    List<Integer> intEntrezGeneIds = new ArrayList<>(cbioCancerGeneIds.size());
-                    for (Long entrezGeneId : cbioCancerGeneIds) {
-                        intEntrezGeneIds.add(entrezGeneId.intValue());
-                    }
-                    smgs.putAll(mutationModelConverter.convertSignificantlyMutatedGeneToMap(
-                            mutationRepository.getSignificantlyMutatedGenes(profileId, intEntrezGeneIds, selectedCaseList, -1, -1)));
-                }
+                        mutationRepositoryLegacy.getSignificantlyMutatedGenes(profileId, null, selectedCaseList, 2, DEFAULT_THRESHOLD_NUM_SMGS));
 
                 // added mutsig results
                 mutsig = getMutSig(mutationProfile.getCancerStudyId());
@@ -207,7 +194,7 @@ public class MutationsJSON extends HttpServlet {
                             intEntrezGeneIds.add(entrezGeneId.intValue());
                         }
                         smgs.putAll(mutationModelConverter.convertSignificantlyMutatedGeneToMap(
-                                mutationRepository.getSignificantlyMutatedGenes(profileId, intEntrezGeneIds, selectedCaseList, -1, -1)));
+                                mutationRepositoryLegacy.getSignificantlyMutatedGenes(profileId, intEntrezGeneIds, selectedCaseList, -1, -1)));
                     }
                 }
             }
@@ -224,14 +211,6 @@ public class MutationsJSON extends HttpServlet {
             
             String hugo = gene.getHugoGeneSymbolAllCaps();
             map.put("gene_symbol", hugo);
-            
-            String cytoband = gene.getCytoband();
-            map.put("cytoband", cytoband);
-            
-            int length = gene.getLength();
-            if (length>0) {
-                map.put("length", length);
-            }
             
             Integer count = Integer.parseInt(entry.getValue().get("count"));
             map.put("num_muts", count);
@@ -294,7 +273,7 @@ public class MutationsJSON extends HttpServlet {
             mutationProfile = DaoGeneticProfile.getGeneticProfileByStableId(mutationProfileId);
             if (mutationProfile!=null) {
                 cancerStudy = DaoCancerStudy.getCancerStudyByInternalId(mutationProfile.getCancerStudyId());
-                mutations = mutationModelConverter.convert(mutationRepository.getMutations(
+                mutations = mutationModelConverter.convert(mutationRepositoryLegacy.getMutations(
                         InternalIdUtil.getInternalSampleIds(cancerStudy.getInternalId(), Arrays.asList(samples)),
                         mutationProfile.getGeneticProfileId()));
                 if (!mutations.isEmpty()) {
@@ -409,7 +388,7 @@ public class MutationsJSON extends HttpServlet {
         }
         if (mutationProfile!=null) {
             count = convertMapSampleKeys(mutationModelConverter.convertMutationCountToMap(
-                    mutationRepository.countMutationEvents(mutationProfile.getGeneticProfileId(), sampleIds)));
+                    mutationRepositoryLegacy.countMutationEvents(mutationProfile.getGeneticProfileId(), sampleIds)));
         }
 
         response.setContentType("application/json");
@@ -455,7 +434,7 @@ public class MutationsJSON extends HttpServlet {
             intEventIds.add(Integer.parseInt(eventId));
         }
 
-        List<Integer> result = mutationRepository.getGenesOfMutations(intEventIds);
+        List<Integer> result = mutationRepositoryLegacy.getGenesOfMutations(intEventIds);
 
         Set<Long> genes = new HashSet<>();
         for (Integer eventId : result) {
@@ -581,10 +560,10 @@ public class MutationsJSON extends HttpServlet {
         for (String eventId : eventIds.split(",")) {
             intEventIds.add(Integer.parseInt(eventId));
         }
-        List<Integer> genes = mutationRepository.getGenesOfMutations(intEventIds);
+        List<Integer> genes = mutationRepositoryLegacy.getGenesOfMutations(intEventIds);
 
         Map<Long, Integer> map = mutationModelConverter.convertMutatedGeneSampleCountToMap(
-                mutationRepository.countSamplesWithMutatedGenes(profileId, genes));
+                mutationRepositoryLegacy.countSamplesWithMutatedGenes(profileId, genes));
         Map<String, Integer> ret = new HashMap<String, Integer>(map.size());
         for (Map.Entry<Long, Integer> entry : map.entrySet()) {
             ret.put(daoGeneOptimized.getGene(entry.getKey())
@@ -599,9 +578,9 @@ public class MutationsJSON extends HttpServlet {
         for (String eventId : eventIds.split(",")) {
             intEventIds.add(Integer.parseInt(eventId));
         }
-        Set<String> genes = new HashSet<>(mutationRepository.getKeywordsOfMutations(intEventIds));
+        Set<String> genes = new HashSet<>(mutationRepositoryLegacy.getKeywordsOfMutations(intEventIds));
         return mutationModelConverter.convertKeywordSampleCountToMap(
-                mutationRepository.countSamplesWithKeywords(profileId, new ArrayList<>(genes)));
+                mutationRepositoryLegacy.countSamplesWithKeywords(profileId, new ArrayList<>(genes)));
     }
     
     private Map<String,List> initMap() {
@@ -716,15 +695,13 @@ public class MutationsJSON extends HttpServlet {
         
         // sanger & cbio cancer gene
         boolean isSangerGene = false;
-        boolean isCbioCancerGene = false;
         try {
             isSangerGene = DaoSangerCensus.getInstance().getCancerGeneSet().containsKey(symbol);
-            isCbioCancerGene = daoGeneOptimized.isCbioCancerGene(mutation.getGene());
         } catch (DaoException ex) {
             throw new ServletException(ex);
         }
         data.get("sanger").add(isSangerGene);
-        data.get("cancer-gene").add(isCbioCancerGene);
+        data.get("cancer-gene").add(false);
         
         // drug
         data.get("drug").add(drugs);

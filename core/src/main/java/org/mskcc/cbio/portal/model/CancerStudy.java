@@ -35,6 +35,7 @@ package org.mskcc.cbio.portal.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import org.mskcc.cbio.portal.dao.*;
@@ -64,6 +65,8 @@ public class CancerStudy {
     private String citation;
     private Set<String> groups;
     private String shortName;
+    private Date importDate;
+    private String referenceGenome;
     
 
     /**
@@ -188,6 +191,12 @@ public class CancerStudy {
 
     public void setCitation(String citation) {
         this.citation = citation;
+    }
+    
+    public String getReferenceGenome() { return referenceGenome; }
+    
+    public void setReferenceGenome(String referenceGenome) {
+        this.referenceGenome = referenceGenome;
     }
 
     /**
@@ -438,6 +447,23 @@ public class CancerStudy {
                     attrs.contains(ClinicalAttribute.DFS_STATUS);
     }
 
+    /**
+     * Check if study has fusion data 
+     * @return true if has fusion data, false when it's not
+     */
+    public boolean hasFusionData() {
+        ArrayList<GeneticProfile> geneticProfiles = DaoGeneticProfile.getAllGeneticProfiles(studyID);
+        boolean hasFusionData = false;
+        for (GeneticProfile geneticProfile : geneticProfiles) {
+            if (geneticProfile.getDatatype().equals("SV")) { // check if genetic profiles contains Structural Variant
+                                                             // data type
+                hasFusionData = true;
+                break;
+            }
+        }
+        return hasFusionData;
+    }
+
     public String getShortName() {
         if (shortName==null || shortName.length()==0) {
             return cancerStudyIdentifier;
@@ -451,5 +477,19 @@ public class CancerStudy {
     
     public String getTypeOfCancer() throws DaoException {
         return DaoTypeOfCancer.getTypeOfCancerById(this.typeOfCancerId).getName();
+    }
+
+    /**
+     * @return the importDate
+     */
+    public Date getImportDate() {
+        return importDate;
+    }
+
+    /**
+     * @param importDate the importDate to set
+     */
+    public void setImportDate(Date importDate) {
+        this.importDate = importDate;
     }
 }

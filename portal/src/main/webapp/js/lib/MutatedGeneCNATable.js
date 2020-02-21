@@ -5,68 +5,74 @@ window.EnhancedFixedDataTableSpecial = (function() {
   var FileGrabber = React.createClass({displayName: "FileGrabber",
     // Saves table content to a text file
     saveFile: function() {
-      var formatData = this.state.formatData || this.props.content();
-      this.state.formatData = formatData;
+      var _self = this;
+      _self.setState({saving: true});
 
-      var blob = new Blob([formatData], {type: 'text/plain'});
-      var fileName = this.props.downloadFileName ? this.props.downloadFileName : "data.txt";
+      setTimeout(function() {
+        var formatData = _self.props.content();
 
-      var downloadLink = document.createElement("a");
-      downloadLink.download = fileName;
-      downloadLink.innerHTML = "Download File";
-      if (window.webkitURL) {
-        // Chrome allows the link to be clicked
-        // without actually adding it to the DOM.
-        downloadLink.href = window.webkitURL.createObjectURL(blob);
-      }
-      else {
-        // Firefox requires the link to be added to the DOM
-        // before it can be clicked.
-        downloadLink.href = window.URL.createObjectURL(blob);
-        downloadLink.onclick = function(event) {
-          document.body.removeChild(event.target);
-        };
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-      }
+        var blob = new Blob([formatData], {type: 'text/plain'});
+        var fileName = _self.props.downloadFileName ? _self.props.downloadFileName : "data.txt";
 
-      downloadLink.click();
+        var downloadLink = document.createElement("a");
+        downloadLink.download = fileName;
+        downloadLink.innerHTML = "Download File";
+        if (window.webkitURL) {
+          // Chrome allows the link to be clicked
+          // without actually adding it to the DOM.
+          downloadLink.href = window.webkitURL.createObjectURL(blob);
+        }
+        else {
+          // Firefox requires the link to be added to the DOM
+          // before it can be clicked.
+          downloadLink.href = window.URL.createObjectURL(blob);
+          downloadLink.onclick = function(event) {
+            document.body.removeChild(event.target);
+          };
+          downloadLink.style.display = "none";
+          document.body.appendChild(downloadLink);
+        }
+
+        downloadLink.click();
+        _self.setState({saving: false});
+      }, 0);
     },
 
     getInitialState: function() {
       return {
-        formatData: ''
-      };
+        saving: false
+      }
     },
 
     render: function() {
       return (
-        React.createElement("button", {className: "btn btn-default", onClick: this.saveFile},
-          "DATA")
+        React.createElement("button", {className: "btn btn-default", onClick: this.saveFile}, 
+          this.state.saving ? React.createElement("i", {className: "fa fa-spinner fa-spin"}) :
+            React.createElement("span", null, "DATA")
+        )
       );
     }
   });
 
 // Copy button component
   var ClipboardGrabber = React.createClass({displayName: "ClipboardGrabber",
-    click: function() {
-      if (!this.state.formatData) {
-        var client = new ZeroClipboard($("#copy-button")), content = this.props.content();
-        this.state.formatData = content;
-        client.on("ready", function(readyEvent) {
-          client.on("copy", function(event) {
-            event.clipboardData.setData('text/plain', content);
-          });
-        });
-      }
-      this.notify();
-    },
+    notify: function(opts) {
+      // Default settings for Copied.
+      var _message = 'Copied.';
+      var _type = 'success';
 
-    notify: function() {
+      if (_.isObject(opts)) {
+        if (!_.isUndefined(opts.message)) {
+          _message = opts.message;
+        }
+        if (opts.type) {
+          _type = opts.type;
+        }
+      }
       $.notify({
-        message: 'Copied.'
+        message: _message
       }, {
-        type: 'success',
+        type: _type,
         animate: {
           enter: 'animated fadeInDown',
           exit: 'animated fadeOutUp'
@@ -75,17 +81,57 @@ window.EnhancedFixedDataTableSpecial = (function() {
       });
     },
 
+    componentDidMount: function() {
+      var self = this;
+      var clipboard = new ClipboardJS('#copy-button', {
+        text: function(trigger) {
+          return self.props.content();
+        }
+      });
+      clipboard.on("success", function(event) {
+        self.notify();
+      });
+      clipboard.on("error", function(event) {
+        // Error happened, disable Copy button notify the user.
+        clipboard.destroy();
+        self.notify({
+          message: 'Copy button is not available at this moment.',
+          type: 'danger'
+        });
+        self.setState({show: false});
+      });
+    },
+
     getInitialState: function() {
+      var _show = true;
+
+      // Only do precise calculation if the table matrix smaller than 100000
+      // This number is just an estimation
+      if (this.props.matrix < 100000) {
+        var _content = this.props.content();
+
+        // The current not official limitation is 1,000,000
+        // https://github.com/zeroclipboard/zeroclipboard/issues/529
+        if (!_.isString(_content) || _content.length > 1000000) {
+          _show = false;
+        }
+      } else {
+        _show = false;
+      }
+
       return {
+        show: _show,
         formatData: ''
       };
     },
 
     render: function() {
       return (
-        React.createElement("button", {className: "btn btn-default", id: "copy-button",
-            onClick: this.click},
-          "COPY")
+        React.createElement("div", null, 
+          this.state.show ?
+            React.createElement("button", {className: "btn btn-default", id: "copy-button"}, 
+              "COPY") : ''
+        )
       );
     }
   });
@@ -94,7 +140,13 @@ window.EnhancedFixedDataTableSpecial = (function() {
   var DataGrabber = React.createClass({displayName: "DataGrabber",
     // Prepares table content data for download or copy button
     prepareContent: function() {
-      var content = [], cols = this.props.cols, rows = this.props.rows;
+      var content = [], cols = $.extend(true, [], this.props.cols),
+        rows = this.props.rows;
+
+      // List fixed columns first
+      cols = cols.sort(function(x, y) {
+        return (x.fixed === y.fixed) ? 0 : x.fixed ? -1 : 1;
+      });
 
       _.each(cols, function(e) {
         content.push((e.displayName || 'Unknown'), '\t');
@@ -118,21 +170,27 @@ window.EnhancedFixedDataTableSpecial = (function() {
       }
 
       var content = this.prepareContent;
+      var numCols = _.isArray(this.props.cols) ? this.props.cols.length : 0;
+      var numRows = _.isArray(this.props.rows) ? this.props.rows.length : 0;
+
+      var matrix = numCols * numRows;
 
       return (
-        React.createElement("div", null,
-          React.createElement("div", {className: "EFDT-download-btn EFDT-top-btn"},
-
-            getData != "COPY" ? React.createElement(FileGrabber, {content: content,
-              downloadFileName: this.props.downloadFileName}) :
-              React.createElement("div", null)
-
-          ),
-          React.createElement("div", {className: "EFDT-download-btn EFDT-top-btn"},
-
-            getData != "DOWNLOAD" ? React.createElement(ClipboardGrabber, {content: content}) :
-              React.createElement("div", null)
-
+        React.createElement("div", null, 
+          React.createElement("div", {className: "EFDT-download-btn EFDT-top-btn"}, 
+            
+              getData != "COPY" ? React.createElement(FileGrabber, {content: content, 
+                                               downloadFileName: this.props.downloadFileName}) :
+                React.createElement("div", null)
+            
+          ), 
+          React.createElement("div", {className: "EFDT-download-btn EFDT-top-btn"}, 
+            
+              getData != "DOWNLOAD" ? React.createElement(ClipboardGrabber, {
+                  matrix: matrix, 
+                  content: content}) :
+                React.createElement("div", null)
+            
           )
         )
       );
@@ -154,20 +212,20 @@ window.EnhancedFixedDataTableSpecial = (function() {
         qtipFlag = true;
       }
       return (
-        React.createElement("span", {className: className + (qtipFlag?" hasQtip " : '') +
-          ((field === 'altType' && ['mutatedGene', 'cna'].indexOf(tableType) !== -1) ? (label === 'AMP' ? ' alt-type-red' : ' alt-type-blue') : ''),
-            "data-qtip": label},
-
-          (field === 'name' && tableType === 'pieLabel') ? (
-            React.createElement("svg", {width: "15", height: "10"},
-              React.createElement("g", null,
-                React.createElement("rect", {height: "10", width: "10", fill: color})
+        React.createElement("span", {className: className + (qtipFlag ? " hasQtip " : '') +
+        ((field === 'alttype' && ['mutatedGene', 'cna'].indexOf(tableType) !== -1) ? (label === 'AMP' ? ' alt-type-red' : ' alt-type-blue') : ''), 
+              "data-qtip": label}, 
+          
+            (field === 'name' && tableType === 'pieLabel') ? (
+              React.createElement("svg", {width: "15", height: "10"}, 
+                React.createElement("g", null, 
+                  React.createElement("rect", {height: "10", width: "10", fill: color})
+                )
               )
-            )
-          ) : '',
-
+            ) : '', 
+          
           shortLabel
-        )
+      )
       );
     }
   });
@@ -218,6 +276,14 @@ window.EnhancedFixedDataTableSpecial = (function() {
           var list = ($("#hide_column_checklist").dropdownCheckbox("items"));
           hideColumns(list);
         });
+      // add title attributes to unlabeled inputs generated by
+      // .dropdownCheckbox() for accessibility, until
+      // https://github.com/Nelrohd/bootstrap-dropdown-checkbox/issues/33 is
+      // fixed upstream
+      $('#hide_column_checklist input[type="checkbox"].checkbox-all')
+        .attr('title', 'Select all');
+      $('#hide_column_checklist input[type="text"].search')
+        .attr('title', 'Search');
     },
 
     render: function() {
@@ -270,6 +336,14 @@ window.EnhancedFixedDataTableSpecial = (function() {
           var list = ($("#pin_column_checklist").dropdownCheckbox("items"));
           pinColumns(list);
         });
+      // add title attributes to unlabeled inputs generated by
+      // .dropdownCheckbox() for accessibility, until
+      // https://github.com/Nelrohd/bootstrap-dropdown-checkbox/issues/33 is
+      // fixed upstream
+      $('#pin_column_checklist input[type="checkbox"].checkbox-all')
+        .attr('title', 'Select all');
+      $('#pin_column_checklist input[type="text"].search')
+        .attr('title', 'Search');
     },
 
     render: function() {
@@ -283,7 +357,8 @@ window.EnhancedFixedDataTableSpecial = (function() {
   var ColumnScroller = React.createClass({displayName: "ColumnScroller",
     // Scrolls to user selected column
     scrollToColumn: function(e) {
-      var name = e.target.value, cols = this.props.cols, index, colsL = cols.length;
+      var name = e.target.value, cols = this.props.cols, index,
+        colsL = cols.length;
       for (var i = 0; i < colsL; i++) {
         if (name === cols[i].name) {
           index = i;
@@ -295,17 +370,17 @@ window.EnhancedFixedDataTableSpecial = (function() {
 
     render: function() {
       return (
-        React.createElement(Chosen, {"data-placeholder": "Column Scroller",
-            onChange: this.scrollToColumn},
-
-          this.props.cols.map(function(col) {
-            return (
-              React.createElement("option", {title: col.displayName, value: col.name},
-                React.createElement(QtipWrapper, {label: col.displayName})
-              )
-            );
-          })
-
+        React.createElement(Chosen, {"data-placeholder": "Column Scroller", 
+                onChange: this.scrollToColumn}, 
+          
+            this.props.cols.map(function(col) {
+              return (
+                React.createElement("option", {title: col.displayName, value: col.name}, 
+                  React.createElement(QtipWrapper, {label: col.displayName})
+                )
+              );
+            })
+          
         )
       );
     }
@@ -330,23 +405,30 @@ window.EnhancedFixedDataTableSpecial = (function() {
     },
     render: function() {
       if (this.props.type === "NUMBER" || this.props.type === "PERCENTAGE") {
+        // explicitly set anchors without href for the handles, as
+        // jQuery UI 1.10 otherwise adds href="#" which may confuse
+        // assistive technologies
         return (
-          React.createElement("div", {className: "EFDT-header-filters"},
-            React.createElement("span", {id: "range-"+this.props.name}),
+          React.createElement("div", {className: "EFDT-header-filters"}, 
+            React.createElement("span", {id: "range-" + this.props.name}), 
 
-            React.createElement("div", {className: "rangeSlider", "data-max": this.props.max,
-              "data-min": this.props.min, "data-column": this.props.name,
-              "data-type": this.props.type})
+            React.createElement("div", {className: "rangeSlider", "data-max": this.props.max, 
+                 "data-min": this.props.min, "data-column": this.props.name, 
+                 "data-type": this.props.type}, 
+              React.createElement("a", {className: "ui-slider-handle", tabIndex: "0"}), 
+              React.createElement("a", {className: "ui-slider-handle", tabIndex: "0"})
+            )
           )
         );
       } else {
         return (
-          React.createElement("div", {className: "EFDT-header-filters"},
-            React.createElement("input", {className: "form-control",
-              placeholder: this.props.hasOwnProperty('placeholder')?this.props.placeholder:"Search...",
-              "data-column": this.props.name,
-              value: this.state.key,
-              onChange: this.handleChange})
+          React.createElement("div", {className: "EFDT-header-filters"}, 
+            React.createElement("input", {className: "form-control", 
+                   placeholder: this.props.hasOwnProperty('placeholder') ? this.props.placeholder : "Search...", 
+                   "data-column": this.props.name, 
+                   value: this.state.key, 
+                   onChange: this.handleChange, 
+                   title: "Input a keyword"})
           )
         );
       }
@@ -358,50 +440,50 @@ window.EnhancedFixedDataTableSpecial = (function() {
   var TablePrefix = React.createClass({displayName: "TablePrefix",
     render: function() {
       return (
-        React.createElement("div", null,
-          React.createElement("div", null,
-
-            this.props.hider ?
-              React.createElement("div", {className: "EFDT-show-hide"},
-                React.createElement(ColumnHider, {cols: this.props.cols,
-                  filters: this.props.filters,
-                  hideFilter: this.props.hideFilter,
-                  updateCols: this.props.updateCols})
-              ) :
-              "",
-
-
-            this.props.fixedChoose ?
-              React.createElement("div", {className: "EFDT-fixed-choose"},
-                React.createElement(PinColumns, {cols: this.props.cols,
-                  filters: this.props.filters,
-                  updateCols: this.props.updateCols})
-              ) :
-              "",
-
-            React.createElement("div", {className: "EFDT-download"},
-              React.createElement(DataGrabber, {cols: this.props.cols, rows: this.props.rows,
-                downloadFileName: this.props.downloadFileName,
-                getData: this.props.getData})
-            ),
-
-            this.props.resultInfo ?
-              React.createElement("div", {className: "EFDT-result-info"},
-                React.createElement("span", {className: "EFDT-result-info-content"},
-                  "Showing ", this.props.filteredRowsSize, " cases",
-
-                  this.props.filteredRowsSize !== this.props.rowsSize ?
-                    React.createElement("span", null, ' (filtered from ' + this.props.rowsSize + ') ',
-                      React.createElement("span", {className: "EFDT-header-filters-reset",
-                        onClick: this.props.onResetFilters}, "Reset")
-                    )
-                    : ''
-
+        React.createElement("div", null, 
+          React.createElement("div", null, 
+            
+              this.props.hider ?
+                React.createElement("div", {className: "EFDT-show-hide"}, 
+                  React.createElement(ColumnHider, {cols: this.props.cols, 
+                               filters: this.props.filters, 
+                               hideFilter: this.props.hideFilter, 
+                               updateCols: this.props.updateCols})
+                ) :
+                "", 
+            
+            
+              this.props.fixedChoose ?
+                React.createElement("div", {className: "EFDT-fixed-choose"}, 
+                  React.createElement(PinColumns, {cols: this.props.cols, 
+                              filters: this.props.filters, 
+                              updateCols: this.props.updateCols})
+                ) :
+                "", 
+            
+            React.createElement("div", {className: "EFDT-download"}, 
+              React.createElement(DataGrabber, {cols: this.props.cols, rows: this.props.rows, 
+                           downloadFileName: this.props.downloadFileName, 
+                           getData: this.props.getData})
+            ), 
+            
+              this.props.resultInfo ?
+                React.createElement("div", {className: "EFDT-result-info"}, 
+                React.createElement("span", {className: "EFDT-result-info-content"}, 
+                  "Showing ", this.props.filteredRowsSize, " samples", 
+                  
+                    this.props.filteredRowsSize !== this.props.rowsSize ?
+                      React.createElement("span", null, ' (filtered from ' + this.props.rowsSize + ') ', 
+                        React.createElement("span", {className: "EFDT-header-filters-reset", 
+                              onClick: this.props.onResetFilters}, "Reset")
+                      )
+                      : ''
+                  
                 )
-              ) :
-              ""
-
-          ),
+                ) :
+                ""
+            
+          ), 
           React.createElement("div", null
           )
         )
@@ -414,13 +496,14 @@ window.EnhancedFixedDataTableSpecial = (function() {
     render: function() {
       var columnData = this.props.columnData;
       var shortLabel = this.props.shortLabel;
+      var label = shortLabel === columnData.displayName ? (columnData.description ? columnData.description : '') : (columnData.displayName + (columnData.description ? ('<br/>' + columnData.description) : ''));
       return (
-        React.createElement("div", {className: "EFDT-header"},
-          React.createElement("span", {className: "EFDT-header-sort", href: "#",
-              onClick: this.props.sortNSet.bind(null, this.props.cellDataKey)},
-            React.createElement(QtipWrapper, {label: columnData.displayName,
-              shortLabel: shortLabel,
-              className: 'EFDT-header-sort-content'}),
+        React.createElement("div", {className: "EFDT-header"}, 
+          React.createElement("span", {className: "EFDT-header-sort", href: "#", 
+                onClick: this.props.sortNSet.bind(null, this.props.cellDataKey)}, 
+            React.createElement(QtipWrapper, {label: label, 
+                         shortLabel: shortLabel, 
+                         className: 'EFDT-header-sort-content'}), 
             columnData.sortFlag ?
               React.createElement("div", {
                 className: columnData.sortDirArrow + ' EFDT-header-sort-icon'})
@@ -446,7 +529,8 @@ window.EnhancedFixedDataTableSpecial = (function() {
     },
     render: function() {
       var Cell = FixedDataTable.Cell;
-      var rowIndex = this.props.rowIndex, data = this.props.data, field = this.props.field, filterAll = this.props.filterAll;
+      var rowIndex = this.props.rowIndex, data = this.props.data,
+        field = this.props.field, filterAll = this.props.filterAll;
       var flag = (data[rowIndex][field] && filterAll.length > 0) ?
         (data[rowIndex][field].toLowerCase().indexOf(filterAll.toLowerCase()) >= 0) : false;
       var shortLabels = this.props.shortLabels;
@@ -454,41 +538,43 @@ window.EnhancedFixedDataTableSpecial = (function() {
       var confirmedRowsIndex = this.props.confirmedRowsIndex;
       return (
         React.createElement(Cell, {onFocus: this.onFocus, className: 'EFDT-cell EFDT-cell-full' +
-          (this.props.selectedRowIndex.indexOf(data[rowIndex].index) != -1 ? ' row-selected' : ''),
-            },
-          React.createElement("span", {style: flag ? {backgroundColor:'yellow'} : {},
-              onClick: field === 'gene' ? this.selectGene.bind(this, data[rowIndex].index) : '',
-              onMouseEnter: (tableType === 'pieLabel' && _.isFunction(this.props.pieLabelMouseEnterFunc) && field === 'name') ? this.enterPieLabel.bind(this, data[rowIndex].row) : '',
-              onMouseLeave: (tableType === 'pieLabel' && _.isFunction(this.props.pieLabelMouseLeaveFunc) && field === 'name') ? this.leavePieLabel.bind(this, data[rowIndex].row) : '',
-              "data-qtip": field === 'gene' ? ('Click ' + data[rowIndex].row[field] + ' to ' + ( this.props.selectedGeneRowIndex.indexOf(data[rowIndex].index) === -1 ? 'add to ' : ' remove from ' ) + 'your query') : '',
+        (this.props.selectedRowIndex.indexOf(data[rowIndex].index) != -1 ? ' row-selected' : ''), 
+              columnKey: field}, 
+        React.createElement("span", {style: flag ? {backgroundColor: 'yellow'} : {}, 
+              onClick: field === 'gene' ? this.selectGene.bind(this, data[rowIndex].index) : '', 
+              onMouseEnter: (tableType === 'pieLabel' && _.isFunction(this.props.pieLabelMouseEnterFunc) && field === 'name') ? this.enterPieLabel.bind(this, data[rowIndex].row) : '', 
+              onMouseLeave: (tableType === 'pieLabel' && _.isFunction(this.props.pieLabelMouseLeaveFunc) && field === 'name') ? this.leavePieLabel.bind(this, data[rowIndex].row) : '', 
+              "data-qtip": field === 'gene' ? ('Click ' + data[rowIndex].row[field] + ' to ' + ( this.props.selectedGeneRowIndex.indexOf(data[rowIndex].index) === -1 ? 'add to ' : ' remove from ' ) + 'your query') : '', 
               className: (field === 'gene' ? 'gene hasQtip' : '') +
-              ((field === 'gene' && this.props.selectedGeneRowIndex.indexOf(data[rowIndex].index) != -1) ? ' gene-selected' : '')},
-            React.createElement(QtipWrapper, {label: data[rowIndex].row[field],
-              shortLabel: shortLabels[data[rowIndex].index][field],
-              field: field,
-              tableType: tableType,
-              color: data[rowIndex].row.color})
-          ),
-
-          field === 'gene' && data[rowIndex].row.qval ?
-            (tableType === 'mutatedGene' ?
-              React.createElement("img", {src: "images/mutsig.png", className: "hasQtip qval-icon",
-                "data-qtip": '<b>MutSig</b><br/><i>Q-value</i>: ' + data[rowIndex].row.qval}) :
-              React.createElement("img", {src: "images/gistic.png", className: "hasQtip qval-icon",
-                "data-qtip": '<b>Gistic</b><br/><i>Q-value</i>: ' + data[rowIndex].row.qval})) : '',
-
-
-          field === 'cases' ?
-            React.createElement("input", {type: "checkbox", style: {float: 'right'},
-              title: 'Select ' + data[rowIndex].row[field]
-              + ' sample' + (Number(data[rowIndex].row[field]) > 1 ? 's':'')
-              + (tableType === 'mutatedGene' ? (' with ' + data[rowIndex].row.gene + ' mutation') :
-                (tableType === 'cna' ? (' with ' + data[rowIndex].row.gene + ' ' + data[rowIndex].row.altType) :
-                  (tableType === 'pieLabel' ? (' in ' + data[rowIndex].row.name)  : ''))),
-              checked: this.props.selectedRowIndex.indexOf(data[rowIndex].index) != -1,
-              disabled: this.props.confirmedRowsIndex.indexOf(data[rowIndex].index) !== -1,
-              onChange: this.selectRow.bind(this, data[rowIndex].index)}) : ''
-
+              ((field === 'gene' && this.props.selectedGeneRowIndex.indexOf(data[rowIndex].index) != -1) ? ' gene-selected' : '')}, 
+            React.createElement(QtipWrapper, {label: data[rowIndex].row[field], 
+                         shortLabel: shortLabels[data[rowIndex].index][field], 
+                         field: field, 
+                         tableType: tableType, 
+                         color: data[rowIndex].row.color})
+        ), 
+          
+            field === 'gene' && data[rowIndex].row.qval ?
+              (tableType === 'mutatedGene' ?
+                React.createElement("img", {src: "images/mutsig.png", className: "hasQtip qval-icon", 
+                      "data-qtip": '<b>MutSig</b><br/><i>Q-value</i>: ' + data[rowIndex].row.qval, 
+                      alt: "MutSig"}) :
+                React.createElement("img", {src: "images/gistic.png", className: "hasQtip qval-icon", 
+                      "data-qtip": '<b>Gistic</b><br/><i>Q-value</i>: ' + data[rowIndex].row.qval, 
+                      alt: "Gistic"})) : '', 
+          
+          
+            field === 'cases' ?
+              React.createElement("input", {type: "checkbox", style: {float: 'right'}, 
+                     title: 'Select ' + data[rowIndex].row[field]
+                     + ' sample' + (Number(data[rowIndex].row[field]) > 1 ? 's' : '')
+                     + (tableType === 'mutatedGene' ? (' with ' + data[rowIndex].row.gene + ' mutation') :
+                       (tableType === 'cna' ? (' with ' + data[rowIndex].row.gene + ' ' + data[rowIndex].row.alttype) :
+                         (tableType === 'pieLabel' ? (' in ' + data[rowIndex].row.name) : ''))), 
+                     checked: this.props.selectedRowIndex.indexOf(data[rowIndex].index) != -1, 
+                     disabled: this.props.confirmedRowsIndex.indexOf(data[rowIndex].index) !== -1, 
+                     onChange: this.selectRow.bind(this, data[rowIndex].index)}) : ''
+          
         )
       );
     }
@@ -499,12 +585,16 @@ window.EnhancedFixedDataTableSpecial = (function() {
   var TableMainPart = React.createClass({displayName: "TableMainPart",
     // Creates Qtip
     createQtip: function() {
-      $('.EFDT-table .hasQtip').one('mouseenter', function() {
+      var self = this;
+      $((self.props.elementId ? ('#' + self.props.elementId) : '') + '.EFDT-table .hasQtip').one('mouseenter', function() {
         $(this).qtip({
           content: {text: $(this).attr('data-qtip')},
           hide: {fixed: true, delay: 100},
           show: {ready: true},
-          style: {classes: 'qtip-light qtip-rounded qtip-shadow', tip: true},
+          style: {
+            classes: 'qtip-light qtip-rounded qtip-shadow ' + self.props.elementId,
+            tip: true
+          },
           position: {my: 'center left', at: 'center right', viewport: $(window)}
         });
       });
@@ -522,16 +612,17 @@ window.EnhancedFixedDataTableSpecial = (function() {
 
     // Creates Qtip after page scrolling
     onScrollEnd: function() {
-      $(".qtip").remove();
+      var qtipId = '.qtip';
+      if (this.props.elementId) {
+        qtipId = '.' + this.props.elementId + '-qtip ' + qtipId;
+      }
+      $(qtipId).remove();
       this.createQtip();
     },
 
     // Destroys Qtip before update rendering
     componentWillUpdate: function() {
-      //console.log('number of elments which has "hasQtip" as class name: ', $('.hasQtip').size());
-      //console.log('number of elments which has "hasQtip" as class name under class EFDT: ', $('.EFDT-table .hasQtip').size());
-
-      $('.EFDT-table .hasQtip')
+      $((this.props.elementId ? ('#' + this.props.elementId) : '') + '.EFDT-table .hasQtip')
         .each(function() {
           $(this).qtip('destroy', true);
         });
@@ -611,108 +702,126 @@ window.EnhancedFixedDataTableSpecial = (function() {
     render: function() {
       var Table = FixedDataTable.Table, Column = FixedDataTable.Column,
         ColumnGroup = FixedDataTable.ColumnGroup, props = this.props,
-        rows = this.props.filteredRows, columnWidths = this.props.columnWidths,
+        rows = this.props.filteredRows, columnsWidth = this.props.columnsWidth,
         cellShortLabels = this.props.shortLabels.cell,
         headerShortLabels = this.props.shortLabels.header,
-        confirmedRowsIndex=this.props.confirmedRowsIndex,
+        confirmedRowsIndex = this.props.confirmedRowsIndex,
         selectedRowIndex = this.state.selectedRowIndex,
         selectedGeneRowIndex = this.state.selectedGeneRowIndex,
         self = this;
 
       return (
-        React.createElement("div", null,
+        React.createElement("div", null, 
           React.createElement(Table, {
-              rowHeight: props.rowHeight?props.rowHeight:30,
-              rowGetter: this.rowGetter,
-              onScrollEnd: this.onScrollEnd,
-              rowsCount: props.filteredRows.length,
-              width: props.tableWidth?props.tableWidth:1230,
-              maxHeight: props.maxHeight?props.maxHeight:500,
-              headerHeight: props.headerHeight?props.headerHeight:30,
-              groupHeaderHeight: props.groupHeaderHeight?props.groupHeaderHeight:50,
-              scrollToColumn: props.goToColumn,
-              isColumnResizing: false,
-              onColumnResizeEndCallback: props.onColumnResizeEndCallback
-            },
+            rowHeight: props.rowHeight ? props.rowHeight : 30, 
+            rowGetter: this.rowGetter, 
+            onScrollEnd: this.onScrollEnd, 
+            rowsCount: props.filteredRows.length, 
+            width: props.tableWidth ? props.tableWidth : 1230, 
+            maxHeight: props.maxHeight ? props.maxHeight : 500, 
+            headerHeight: props.headerHeight ? props.headerHeight : 30, 
+            groupHeaderHeight: props.groupHeaderHeight ? props.groupHeaderHeight : 50, 
+            scrollToColumn: props.goToColumn, 
+            isColumnResizing: false, 
+            onColumnResizeEndCallback: props.onColumnResizeEndCallback
+          }, 
+            
+              props.cols.map(function(col, index) {
+                var column;
+                var width = col.show ? (col.width ? col.width :
+                  (columnsWidth[col.name] ? columnsWidth[col.name] : 200)) : 0;
 
-            props.cols.map(function(col, index) {
-              var column;
-              var width = col.show ? (col.width ? col.width :
-                (columnWidths[col.name] ? columnWidths[col.name] : 200)) : 0;
-
-              if (props.groupHeader) {
-                column = React.createElement(ColumnGroup, {
-                    header:
-                      React.createElement(Filter, {type: props.filters[col.name].type, name: col.name,
-                        max: col.max, min: col.min, filter: props.filters[col.name],
-                        placeholder: "Filter column",
-                        onFilterKeywordChange: props.onFilterKeywordChange}
-                      ),
-
-                    key: col.name,
-                    fixed: col.fixed,
+                if (props.groupHeader) {
+                  column = React.createElement(ColumnGroup, {
+                    header: 
+                      React.createElement(Filter, {type: props.filters[col.name].type, 
+                              name: col.name, 
+                              max: col.max, min: col.min, 
+                              filter: props.filters[col.name], 
+                              placeholder: "Filter column", 
+                              onFilterKeywordChange: props.onFilterKeywordChange, 
+                              title: "Filter column"}
+                      ), 
+                    
+                    key: col.name, 
+                    fixed: col.fixed, 
                     align: "center"
-                  },
-                  React.createElement(Column, {
-                    header:
-                      React.createElement(HeaderWrapper, {cellDataKey: col.name, columnData: {displayName:col.displayName,sortFlag:props.sortBy === col.name,
-                        sortDirArrow:props.sortDirArrow,filterAll:props.filterAll,type:props.filters[col.name].type},
-                        sortNSet: props.sortNSet, filter: props.filters[col.name],
-                        shortLabel: headerShortLabels[col.name]}
-                      ),
-
-                    cell: React.createElement(CustomizeCell, {data: rows, field: col.name,
-                      filterAll: props.filterAll, shortLabels: cellShortLabels,
-                      tableType: props.tableType,
-                      selectRow: self.selectRow,
-                      selectGene: self.selectGene,
-                      selectedRowIndex: selectedRowIndex,
-                      selectedGeneRowIndex: selectedGeneRowIndex,
-                      pieLabelMouseEnterFunc: props.pieLabelMouseEnterFunc,
-                      pieLabelMouseLeaveFunc: props.pieLabelMouseLeaveFunc}
-                    ),
-                    width: width,
-                    fixed: col.fixed,
-                    allowCellsRecycling: true,
-                    isResizable: props.isResizable,
-                    columnKey: col.name,
-                    key: col.name}
+                  }, 
+                    React.createElement(Column, {
+                      header: 
+                        React.createElement(HeaderWrapper, {cellDataKey: col.name, columnData: {
+                          displayName: col.displayName,
+                          description: col.description,
+                          sortFlag: props.sortBy === col.name,
+                          sortDirArrow: props.sortDirArrow,
+                          filterAll: props.filterAll,
+                          type: props.filters[col.name].type
+                        }, 
+                                       sortNSet: props.sortNSet, 
+                                       filter: props.filters[col.name], 
+                                       shortLabel: headerShortLabels[col.name]}
+                        ), 
+                      
+                      cell: React.createElement(CustomizeCell, {data: rows, field: col.name, 
+                                           filterAll: props.filterAll, 
+                                           shortLabels: cellShortLabels, 
+                                           tableType: props.tableType, 
+                                           selectRow: self.selectRow, 
+                                           selectGene: self.selectGene, 
+                                           selectedRowIndex: selectedRowIndex, 
+                                           selectedGeneRowIndex: selectedGeneRowIndex, 
+                                           pieLabelMouseEnterFunc: props.pieLabelMouseEnterFunc, 
+                                           pieLabelMouseLeaveFunc: props.pieLabelMouseLeaveFunc}
+                      ), 
+                      width: width, 
+                      fixed: col.fixed, 
+                      allowCellsRecycling: true, 
+                      isResizable: props.isResizable, 
+                      columnKey: col.name, 
+                      key: col.name}
+                    )
                   )
-                )
-              } else {
-                column = React.createElement(Column, {
-                  header:
-                    React.createElement(HeaderWrapper, {cellDataKey: col.name, columnData: {displayName:col.displayName,sortFlag:props.sortBy === col.name,
-                      sortDirArrow:props.sortDirArrow,filterAll:props.filterAll,type:props.filters[col.name].type},
-                      sortNSet: props.sortNSet, filter: props.filters[col.name],
-                      shortLabel: headerShortLabels[col.name]}
-                    ),
-
-                  cell: React.createElement(CustomizeCell, {data: rows, field: col.name,
-                    filterAll: props.filterAll,
-                    shortLabels: cellShortLabels,
-                    tableType: props.tableType,
-                    selectRow: self.selectRow,
-                    selectGene: self.selectGene,
-                    selectedRowIndex: selectedRowIndex,
-                    selectedGeneRowIndex: selectedGeneRowIndex,
-                    confirmedRowsIndex: confirmedRowsIndex,
-                    pieLabelMouseEnterFunc: props.pieLabelMouseEnterFunc,
-                    pieLabelMouseLeaveFunc: props.pieLabelMouseLeaveFunc}
-                  ),
-                  width: width,
-                  fixed: col.fixed,
-                  allowCellsRecycling: true,
-                  columnKey: col.name,
-                  key: col.name,
-                  isResizable: props.isResizable}
-                )
-              }
-              return (
-                column
-              );
-            })
-
+                } else {
+                  column = React.createElement(Column, {
+                    header: 
+                      React.createElement(HeaderWrapper, {cellDataKey: col.name, columnData: {
+                        displayName: col.displayName,
+                        description: col.description,
+                        sortFlag: props.sortBy === col.name,
+                        sortDirArrow: props.sortDirArrow,
+                        filterAll: props.filterAll,
+                        type: props.filters[col.name].type
+                      }, 
+                                     sortNSet: props.sortNSet, 
+                                     filter: props.filters[col.name], 
+                                     shortLabel: headerShortLabels[col.name]}
+                      ), 
+                    
+                    cell: React.createElement(CustomizeCell, {data: rows, field: col.name, 
+                                         filterAll: props.filterAll, 
+                                         shortLabels: cellShortLabels, 
+                                         tableType: props.tableType, 
+                                         selectRow: self.selectRow, 
+                                         selectGene: self.selectGene, 
+                                         selectedRowIndex: selectedRowIndex, 
+                                         selectedGeneRowIndex: selectedGeneRowIndex, 
+                                         confirmedRowsIndex: confirmedRowsIndex, 
+                                         pieLabelMouseEnterFunc: props.pieLabelMouseEnterFunc, 
+                                         pieLabelMouseLeaveFunc: props.pieLabelMouseLeaveFunc}
+                    ), 
+                    width: width, 
+                    fixed: col.fixed, 
+                    allowCellsRecycling: true, 
+                    columnKey: col.name, 
+                    key: col.name, 
+                    isResizable: props.isResizable}
+                  )
+                }
+                return (
+                  column
+                );
+              })
+            
           )
         )
       );
@@ -728,77 +837,45 @@ window.EnhancedFixedDataTableSpecial = (function() {
 
     rows: null,
 
-    getColumnWidth: function(cols, rows, measureMethod, columnMinWidth) {
-      var columnWidth = {};
-      var self = this;
-      if (self.props.autoColumnWidth) {
-        var rulerWidth = 0;
-        _.each(rows, function(row) {
-          _.each(row, function(data, attr) {
-            if (data) {
-              data = data.toString();
-              if (!columnWidth.hasOwnProperty(attr)) {
-                columnWidth[attr] = 0;
-              }
-              switch (measureMethod) {
-                case 'jquery':
-                  var ruler = $("#ruler");
-                  ruler.css('font-size', '14px');
-                  ruler.text(data);
-                  rulerWidth = ruler.outerWidth();
-                  break;
-                default:
-                  var upperCaseLength = data.replace(/[^A-Z]/g, "").length;
-                  var dataLength = data.length;
-                  rulerWidth = upperCaseLength * 10 + (dataLength - upperCaseLength) * 8 + 15;
-                  break;
-              }
+    getRulerWidth: function(str, measureMethod, fontSize) {
+      var rulerWidth = 0;
 
-              columnWidth[attr] = columnWidth[attr] < rulerWidth ? rulerWidth : columnWidth[attr];
-            }
-          });
-        });
-
-        //20px is the padding.
-        columnWidth = _.object(_.map(columnWidth, function(length, attr) {
-          return [attr, length > self.props.columnMaxWidth ?
-            self.props.columnMaxWidth :
-            ( (length + 20) < columnMinWidth ?
-              columnMinWidth : (length + 20))];
-        }));
-      } else {
-        _.each(cols, function(col, attr) {
-          columnWidth[col.name] = col.width ? col.width : 200;
-        });
+      //TODO: what about 0
+      if (!str) {
+        return 0;
       }
-      return columnWidth;
+
+      str = str.toString();
+      switch (measureMethod) {
+      case 'jquery':
+        var ruler = $("#ruler");
+        ruler.css('font-size', fontSize);
+        ruler.text(str);
+        rulerWidth = ruler.outerWidth();
+        break;
+      default:
+        var upperCaseLength = str.replace(/[^A-Z]/g, "").length;
+        var dataLength = str.length;
+        rulerWidth = upperCaseLength * (fontSize - 4) + (dataLength - upperCaseLength) * (fontSize - 6) + 15;
+        break;
+      }
+      return rulerWidth;
     },
 
+    //TODO: need to find way shorten this time. One possible solution is to calculate the categories for each column, and only detect the width for these categories.
     getShortLabels: function(rows, cols, columnWidth, measureMethod) {
       var cellShortLabels = [];
       var headerShortLabels = {};
-
+      var self = this;
       _.each(rows, function(row) {
         var rowWidthObj = {};
         _.each(row, function(content, attr) {
           var _label = content;
           var _labelShort = _label;
-          var _labelWidth;
           if (_label) {
             _label = _label.toString();
-            switch (measureMethod) {
-              case 'jquery':
-                var ruler = $('#ruler');
-                ruler.text(_label);
-                ruler.css('font-size', '14px');
-                _labelWidth = ruler.outerWidth();
-                break;
-              default:
-                var upperCaseLength = _label.replace(/[^A-Z]/g, "").length;
-                var dataLength = _label.length;
-                _labelWidth = upperCaseLength * 10 + (dataLength - upperCaseLength) * 8 + 15;
-                break;
-            }
+            var _labelWidth = self.getRulerWidth(_label, measureMethod, 14);
+
             if (_labelWidth > columnWidth[attr]) {
               var end = Math.floor(_label.length * columnWidth[attr] / _labelWidth) - 3;
               _labelShort = _label.substring(0, end) + '...';
@@ -813,31 +890,14 @@ window.EnhancedFixedDataTableSpecial = (function() {
 
       _.each(cols, function(col) {
         if (!col.hasOwnProperty('show') || col.show) {
-          var _label = col.displayName;
-          var _shortLabel = '';
-          var _labelWidth = _label.toString().length * 8 + 20;
+          var _shortLabel = col.displayName;
 
-          if (_label) {
-            _label = _label.toString();
-            switch (measureMethod) {
-              case 'jquery':
-                var ruler = $('#ruler');
-                ruler.text(_label);
-                ruler.css('font-size', '14px');
-                ruler.css('font-weight', 'bold');
-                _labelWidth = ruler.outerWidth() + 20;
-                break;
-              default:
-                var upperCaseLength = _label.replace(/[^A-Z]/g, "").length;
-                var dataLength = _label.length;
-                _labelWidth = upperCaseLength * 10 + (dataLength - upperCaseLength) * 8 + 20;
-                break;
-            }
+          if (_shortLabel) {
+            _shortLabel = _shortLabel.toString();
+            var _labelWidth = self.getRulerWidth(_shortLabel, measureMethod, 15);
             if (_labelWidth > columnWidth[col.name]) {
-              var end = Math.floor(_label.length * columnWidth[col.name] / _labelWidth) - 3;
-              _shortLabel = _label.substring(0, end) + '...';
-            } else {
-              _shortLabel = _label;
+              var end = Math.floor((_shortLabel.length) * columnWidth[col.name] / _labelWidth) - 3;
+              _shortLabel = _shortLabel.substring(0, end) + '...';
             }
           }
           headerShortLabels[col.name] = _shortLabel;
@@ -858,7 +918,7 @@ window.EnhancedFixedDataTableSpecial = (function() {
         var allFlag = false; // Current row contains the global keyword
         for (var col in filters) {
           if (!filters[col].hide) {
-            if (filters[col].type == "STRING") {
+            if (filters[col].type === "STRING") {
               if (!row[col] && hasGroupHeader) {
                 if (filters[col].key.length > 0) {
                   return false;
@@ -871,14 +931,15 @@ window.EnhancedFixedDataTableSpecial = (function() {
                   allFlag = true;
                 }
               }
-            } else if (filters[col].type === "NUMBER" || filters[col].type == 'PERCENTAGE') {
-              var cell = _.isUndefined(row[col]) ? row[col] : Number(row[col].toString().replace('%', ''));
+            } else if (filters[col].type === "NUMBER" || filters[col].type === 'PERCENTAGE') {
+              var cell = filters[col].type === 'PERCENTAGE' ? Number(row[col].toString().replace('%', '')) : row[col];
+
               if (!isNaN(cell)) {
                 if (hasGroupHeader) {
-                  if (filters[col].min !== filters[col]._min && Number(cell) < filters[col].min) {
+                  if (filters[col].min !== filters[col]._min && cell < filters[col].min) {
                     return false;
                   }
-                  if (filters[col].max !== filters[col]._max && Number(cell) > filters[col].max) {
+                  if (filters[col].max !== filters[col]._max && cell > filters[col].max) {
                     return false;
                   }
                 }
@@ -905,42 +966,47 @@ window.EnhancedFixedDataTableSpecial = (function() {
     },
 
     // Sorts rows by selected column
-    sortRowsBy: function(filters, filteredRows, sortBy, switchDir) {
+    sortRowsBy: function(filters, filteredRows, sortBy, switchDir, confirmedRows) {
       var type = filters[sortBy].type, sortDir = this.state.sortDir,
-        SortTypes = this.SortTypes, confirmedRowsIndex = this.getSelectedRowIndex(this.state.confirmedRows);
+        SortTypes = this.SortTypes, confirmedRowsIndex = this.getSelectedRowIndex(confirmedRows);
       if (switchDir) {
         if (sortBy === this.state.sortBy) {
           sortDir = this.state.sortDir === SortTypes.ASC ? SortTypes.DESC : SortTypes.ASC;
         } else {
-          sortDir = SortTypes.DESC;
+          sortDir = SortTypes.ASC;
         }
       }
 
       filteredRows.sort(function(a, b) {
         var sortVal = 0, aVal = a.row[sortBy], bVal = b.row[sortBy];
 
-        if(confirmedRowsIndex.indexOf(a.index) !== -1 && confirmedRowsIndex.indexOf(b.index) === -1) {
+        if (confirmedRowsIndex.indexOf(a.index) !== -1 && confirmedRowsIndex.indexOf(b.index) === -1) {
           return -1;
         }
 
-        if(confirmedRowsIndex.indexOf(a.index) === -1 && confirmedRowsIndex.indexOf(b.index) !== -1) {
+        if (confirmedRowsIndex.indexOf(a.index) === -1 && confirmedRowsIndex.indexOf(b.index) !== -1) {
           return 1;
         }
 
         if (sortBy === 'cytoband' && window.hasOwnProperty('StudyViewUtil')) {
           var _sortResult = window.StudyViewUtil.cytobanBaseSort(aVal, bVal);
-          sortVal = sortDir === SortTypes.ASC ? -_sortResult : _sortResult;
+          sortVal = sortDir === SortTypes.ASC ? _sortResult : -_sortResult;
         } else {
-
-          if (type == "NUMBER") {
+          if (_.isUndefined(aVal)) {
+            aVal = '';
+          }
+          if (_.isUndefined(bVal)) {
+            bVal = '';
+          }
+          if (type === "NUMBER") {
             aVal = (aVal && !isNaN(aVal)) ? Number(aVal) : aVal;
             bVal = (bVal && !isNaN(bVal)) ? Number(bVal) : bVal;
           }
-          if (type == 'PERCENTAGE') {
+          if (type === 'PERCENTAGE') {
             aVal = aVal ? Number(aVal.replace('%', '')) : aVal;
             bVal = bVal ? Number(bVal.replace('%', '')) : bVal;
           }
-          if (typeof aVal != "undefined" && !isNaN(aVal) && typeof bVal != "undefined" && !isNaN(bVal)) {
+          if (!isNaN(aVal) && !isNaN(bVal)) {
             if (aVal > bVal) {
               sortVal = 1;
             }
@@ -948,16 +1014,15 @@ window.EnhancedFixedDataTableSpecial = (function() {
               sortVal = -1;
             }
 
-            if (sortDir === SortTypes.ASC) {
+            if (sortDir === SortTypes.DESC) {
               sortVal = sortVal * -1;
             }
-          } else if (typeof aVal != "undefined" && typeof bVal != "undefined") {
-            if (!isNaN(aVal)) {
+          } else {
+            if (!isNaN(aVal) && aVal != '') {
               sortVal = -1;
-            } else if (!isNaN(bVal)) {
+            } else if (!isNaN(bVal) && bVal != '') {
               sortVal = 1;
-            }
-            else {
+            } else {
               if (aVal > bVal) {
                 sortVal = 1;
               }
@@ -965,18 +1030,13 @@ window.EnhancedFixedDataTableSpecial = (function() {
                 sortVal = -1;
               }
 
-              if (sortDir === SortTypes.ASC) {
+              if (sortDir === SortTypes.DESC) {
                 sortVal = sortVal * -1;
               }
             }
-          } else if (aVal) {
-            sortVal = -1;
-          }
-          else {
-            sortVal = 1;
           }
         }
-        return -sortVal;
+        return sortVal;
       });
 
       return {filteredRows: filteredRows, sortDir: sortDir};
@@ -984,7 +1044,7 @@ window.EnhancedFixedDataTableSpecial = (function() {
 
     // Sorts and sets state
     sortNSet: function(sortBy) {
-      var result = this.sortRowsBy(this.state.filters, this.state.filteredRows, sortBy, true);
+      var result = this.sortRowsBy(this.state.filters, this.state.filteredRows, sortBy, true, this.state.confirmedRows);
       this.setState({
         filteredRows: result.filteredRows,
         sortBy: sortBy,
@@ -995,7 +1055,7 @@ window.EnhancedFixedDataTableSpecial = (function() {
     // Filters, sorts and sets state
     filterSortNSet: function(filterAll, filters, sortBy) {
       var filteredRows = this.filterRowsBy(filterAll, filters);
-      var result = this.sortRowsBy(filters, filteredRows, sortBy, false);
+      var result = this.sortRowsBy(filters, filteredRows, sortBy, false, this.state.confirmedRows);
       this.setState({
         filteredRows: result.filteredRows,
         sortBy: sortBy,
@@ -1015,7 +1075,7 @@ window.EnhancedFixedDataTableSpecial = (function() {
       var self = this;
       var id = setTimeout(function() {
         var filterAll = self.state.filterAll, filters = self.state.filters;
-        if (e.target.getAttribute("data-column") == "all") {
+        if (e.target.getAttribute("data-column") === "all") {
           filterAll = e.target.value;
         } else {
           filters[e.target.getAttribute("data-column")].key = e.target.value;
@@ -1072,7 +1132,7 @@ window.EnhancedFixedDataTableSpecial = (function() {
 
     updateCols: function(cols, filters) {
       var filteredRows = this.filterRowsBy(this.state.filterAll, filters);
-      var result = this.sortRowsBy(filters, filteredRows, this.state.sortBy, false);
+      var result = this.sortRowsBy(filters, filteredRows, this.state.sortBy, false, this.state.confirmedRows);
       this.setState({
         cols: cols,
         filteredRows: result.filteredRows,
@@ -1093,7 +1153,8 @@ window.EnhancedFixedDataTableSpecial = (function() {
       var onFilterRangeChange = this.onFilterRangeChange;
       $('.rangeSlider')
         .each(function() {
-          var min = Math.floor(Number($(this).attr('data-min')) * 100) / 100, max = (Math.ceil(Number($(this).attr('data-max')) * 100)) / 100,
+          var min = Math.floor(Number($(this).attr('data-min')) * 100) / 100,
+            max = (Math.ceil(Number($(this).attr('data-max')) * 100)) / 100,
             column = $(this).attr('data-column'), diff = max - min, step = 1;
           var type = $(this).attr('data-type');
 
@@ -1131,7 +1192,7 @@ window.EnhancedFixedDataTableSpecial = (function() {
       state.confirmedRows = ['mutatedGene', 'cna'].indexOf(this.props.tableType) !== -1 ? state.selectedRows : [];
       state.filteredRows = null;
       state.filterAll = "";
-      state.sortBy = this.props.sortBy || 'cases';
+      state.sortBy = this.props.sortBy ? this.props.sortBy.toLowerCase() : 'cases';
       state.goToColumn = null;
       state.filterTimer = 0;
       state.sortDir = this.props.sortDir || this.SortTypes.DESC;
@@ -1141,13 +1202,13 @@ window.EnhancedFixedDataTableSpecial = (function() {
     },
 
     rowClickCallback: function(selectedRows, isSelected, allSelectedRows) {
-      var uniqueId = this.props.uniqueId;
+      var uniqueId = this.state.uniqueId;
       this.setState({
         selectedRows: allSelectedRows.map(function(item) {
           return item[uniqueId];
         })
       });
-      if(_.isFunction(this.props.rowClickFunc)) {
+      if (_.isFunction(this.props.rowClickFunc)) {
         this.props.rowClickFunc(selectedRows, isSelected, allSelectedRows);
       }
     },
@@ -1157,14 +1218,14 @@ window.EnhancedFixedDataTableSpecial = (function() {
       this.setState({
         confirmedRows: selectedRows
       });
-      if(_.isFunction(this.props.selectButtonClickCallback)) {
+      if (_.isFunction(this.props.selectButtonClickCallback)) {
         this.props.selectButtonClickCallback();
       }
     },
 
     getSelectedRowIndex: function(selectedRows) {
       var selectedRowIndex = [];
-      var uniqueId = this.props.uniqueId;
+      var uniqueId = this.state.uniqueId;
       _.each(this.rows, function(row, index) {
         if (selectedRows.indexOf(row[uniqueId]) !== -1) {
           selectedRowIndex.push(index);
@@ -1183,26 +1244,28 @@ window.EnhancedFixedDataTableSpecial = (function() {
       return selectedGeneRowIndex;
     },
 
-    // Initializes filteredRows before first rendering
-    componentWillMount: function() {
-      this.filterSortNSet(this.state.filterAll, this.state.filters, this.state.sortBy);
-    },
-
     parseInputData: function(input, uniqueId, selectedRows, groupHeader, columnSorting) {
-      var cols = [], rows = [], rowsDict = {}, attributes = input.attributes,
-        data = input.data, dataLength = data.length, col, cell, i, filters = {},
+      var cols = [], rows = [], rowsDict = {},
+        attributes = input.attributes,
+        data = input.data, dataLength = data.length, col, cell, i,
+        filters = {},
         uniqueId = uniqueId || 'id', newCol,
         selectedRows = selectedRows || [],
         measureMethod = (dataLength > 100000 || !this.props.autoColumnWidth) ? 'charNum' : 'jquery',
-        columnMinWidth = groupHeader ? 130 : 50; //The minimum width to at least fit in number slider.
+        autoColumnWidth = this.props.autoColumnWidth,
+        columnMinWidth = this.props.groupHeader ? 130 : 50; //The minimum width to at least fit in number slider.
+
       var selectedRowIndex = [];
+      var columnsWidth = {}, self = this;
 
       // Gets column info from input
       var colsDict = {};
       for (i = 0; i < attributes.length; i++) {
         col = attributes[i];
+        col.attr_id = col.attr_id.toLowerCase();
         newCol = {
           displayName: col.display_name,
+          description: col.description,
           name: col.attr_id,
           type: col.datatype,
           fixed: false,
@@ -1222,22 +1285,66 @@ window.EnhancedFixedDataTableSpecial = (function() {
         }
 
         cols.push(newCol);
-        colsDict[col.attr_id] = i;
+        colsDict[col.attr_id] = newCol;
+        columnsWidth[col.attr_id] = 0;
       }
 
       // Gets data rows from input
       for (i = 0; i < dataLength; i++) {
         cell = data[i];
+        cell.attr_id = cell.attr_id.toLowerCase();
+
+        if (!colsDict.hasOwnProperty(cell.attr_id)) {
+          continue;
+        }
+
         if (!rowsDict[cell[uniqueId]]) {
           rowsDict[cell[uniqueId]] = {};
         }
-        rowsDict[cell[uniqueId]][cell.attr_id] = cell.attr_val;
+
+        //Clean up the input data
+        if (_.isUndefined(cell.attr_val) || cell.attr_val === null) {
+          cell.attr_val = '';
+        }
+
+        if (colsDict[cell.attr_id].type === 'NUMBER') {
+          rowsDict[cell[uniqueId]][cell.attr_id] = cell.attr_val !== '' ? Number(cell.attr_val) : NaN;
+        } else if (colsDict[cell.attr_id].type === 'STRING') {
+          rowsDict[cell[uniqueId]][cell.attr_id] = cell.attr_val.toString();
+        } else if (colsDict[cell.attr_id].type === 'PERCENTAGE') {
+          rowsDict[cell[uniqueId]][cell.attr_id] = cell.attr_val.toString();
+        } else {
+          rowsDict[cell[uniqueId]][cell.attr_id] = cell.attr_val;
+        }
+
+        if (autoColumnWidth) {
+          var val = rowsDict[cell[uniqueId]][cell.attr_id];
+          var rulerWidth = 0;
+          if (val !== 0) {
+            rulerWidth = val ? this.getRulerWidth(val, measureMethod, 14) : 0;
+          }
+          columnsWidth[cell.attr_id] = columnsWidth[cell.attr_id] < rulerWidth ? rulerWidth : columnsWidth[cell.attr_id];
+        }
+      }
+
+      if (!autoColumnWidth) {
+        _.each(cols, function(_col, attr) {
+          columnsWidth[_col.name] = _col.width ? _col.width : 200;
+        });
+      } else {
+        columnsWidth = _.object(_.map(columnsWidth, function(length, attr) {
+          return [attr, length > self.props.columnMaxWidth ?
+            self.props.columnMaxWidth :
+            ( (length + 20) < columnMinWidth ?
+              columnMinWidth : (length + 20))];
+        }));
       }
 
       var index = 0;
-      _.each(rowsDict, function(item, i) {
-        rowsDict[i][uniqueId] = i;
-        rows.push(rowsDict[i]);
+      var _uniqueId = uniqueId.toLowerCase();
+      _.each(rowsDict, function(_item, _i) {
+        rowsDict[_i][_uniqueId] = _i;
+        rows.push(rowsDict[_i]);
         if (selectedRows.indexOf(i) !== -1) {
           selectedRowIndex.push(index);
         }
@@ -1252,12 +1359,11 @@ window.EnhancedFixedDataTableSpecial = (function() {
           hide: !col.show
         };
 
-        if (col.type == "NUMBER" || col.type == "PERCENTAGE") {
+        if (col.type === "NUMBER" || col.type === "PERCENTAGE") {
           var min = Number.MAX_VALUE, max = -Number.MAX_VALUE;
           for (var j = 0; j < rows.length; j++) {
-            cell = _.isUndefined(rows[j][col.name]) ? rows[j][col.name] : rows[j][col.name].toString().replace('%');
-            if (typeof cell != "undefined" && !isNaN(cell)) {
-              cell = Number(cell);
+            cell = col.type === "PERCENTAGE" ? Number(rows[j][col.name].replace('%')) : rows[j][col.name];
+            if (!isNaN(cell)) {
               max = cell > max ? cell : max;
               min = cell < min ? cell : min;
             }
@@ -1291,20 +1397,20 @@ window.EnhancedFixedDataTableSpecial = (function() {
       }
       this.rows = rows;
 
-      var columnWidths = this.getColumnWidth(cols, rows, measureMethod, columnMinWidth);
-      var shortLabels = this.getShortLabels(rows, cols, columnWidths, measureMethod);
+      var shortLabels = this.getShortLabels(rows, cols, columnsWidth, measureMethod);
 
       return {
         cols: cols,
         rowsSize: rows.length,
         filters: filters,
         shortLabels: shortLabels,
-        columnWidths: columnWidths,
+        columnsWidth: columnsWidth,
         columnMinWidth: columnMinWidth,
         selectedRowIndex: selectedRowIndex,
         selectedRows: selectedRows,
         dataSize: dataLength,
-        measureMethod: measureMethod
+        measureMethod: measureMethod,
+        uniqueId: _uniqueId
       };
     },
     // If properties changed
@@ -1314,16 +1420,42 @@ window.EnhancedFixedDataTableSpecial = (function() {
       state.confirmedRows = ['mutatedGene', 'cna'].indexOf(newProps.tableType) !== -1 ? state.selectedRows : [];
       state.filteredRows = null;
       state.filterAll = this.state.filterAll || '';
-      state.sortBy = this.props.sortBy || 'cases';
-      state.sortDir = this.props.sortDir || this.SortTypes.DESC;
+      if (newProps.sortBy && newProps.sortBy.toLowerCase() !== this.state.sortBy) {
+        state.sortBy = newProps.sortBy.toLowerCase();
+      } else {
+        state.sortBy = this.state.sortBy || 'cases';
+      }
+      if (newProps.sortDir && newProps.sortDir.toLowerCase() !== this.state.sortDir) {
+        state.sortDir = newProps.sortDir;
+      } else {
+        state.sortDir = this.state.sortDir || this.SortTypes.DESC;
+      }
       state.goToColumn = null;
       state.filterTimer = 0;
 
       var filteredRows = this.filterRowsBy(state.filterAll, state.filters);
-      var result = this.sortRowsBy(state.filters, filteredRows, state.sortBy, false);
+      var result = this.sortRowsBy(state.filters, filteredRows, state.sortBy, false, state.confirmedRows);
       state.filteredRows = result.filteredRows;
 
       this.setState(state);
+    },
+
+    // Initializes filteredRows before first rendering
+    componentWillMount: function() {
+      var rows = this.rows.map(function(item, index) {
+        return {
+          row: item,
+          index: index
+        }
+      });
+      var result = this.sortRowsBy(this.state.filters, rows, this.state.sortBy, false, this.state.confirmedRows);
+      this.setState({
+        filteredRows: result.filteredRows,
+        sortBy: this.state.sortBy,
+        sortDir: result.sortDir,
+        filterAll: this.state.filterAll,
+        filters: this.state.filters
+      });
     },
 
     //Will be triggered if the column width has been changed
@@ -1338,11 +1470,11 @@ window.EnhancedFixedDataTableSpecial = (function() {
         }
       });
       if (foundMatch) {
-        var columnWidths = this.state.columnWidths;
-        columnWidths[key] = width;
-        var shortLabels = this.getShortLabels(this.rows, cols, columnWidths, this.state.measureMethod);
+        var columnsWidth = this.state.columnsWidth;
+        columnsWidth[key] = width;
+        var shortLabels = this.getShortLabels(this.rows, cols, columnsWidth, this.state.measureMethod);
         this.setState({
-          columnWidths: columnWidths,
+          columnsWidth: columnsWidth,
           shortLabels: shortLabels,
           cols: cols
         });
@@ -1354,6 +1486,14 @@ window.EnhancedFixedDataTableSpecial = (function() {
       if (this.props.groupHeader) {
         this.registerSliders();
       }
+    },
+
+    // Expose the current sorting settings
+    getCurrentSort: function() {
+      return {
+        sortBy: this.state.sortBy,
+        sortDir: this.state.sortDir
+      };
     },
 
     // Sets default properties
@@ -1375,6 +1515,7 @@ window.EnhancedFixedDataTableSpecial = (function() {
         selectedGene: [],
         sortBy: 'cases',
         sortDir: 'DESC',
+        elementId: 'EFDT',
         isResizable: false
       };
     },
@@ -1385,72 +1526,75 @@ window.EnhancedFixedDataTableSpecial = (function() {
       var selectedRowIndex = this.getSelectedRowIndex(this.state.selectedRows);
       var confirmedRowsIndex = this.getSelectedRowIndex(this.state.confirmedRows);
       return (
-        React.createElement("div", {className: "EFDT-table"},
-          React.createElement("div", {className: "EFDT-table-prefix"},
-            React.createElement(TablePrefix, {cols: this.state.cols, rows: this.rows,
-              onFilterKeywordChange: this.onFilterKeywordChange,
-              onResetFilters: this.onResetFilters,
-              filters: this.state.filters,
-              updateCols: this.updateCols,
-              updateGoToColumn: this.updateGoToColumn,
-              scroller: this.props.scroller,
-              filter: this.props.filter,
-              hideFilter: this.props.hideFilter,
-              getData: this.props.download,
-              downloadFileName: this.props.downloadFileName,
-              hider: this.props.showHide,
-              fixedChoose: this.props.fixedChoose,
-              resultInfo: this.props.resultInfo,
-              rowsSize: this.state.rowsSize,
-              filteredRowsSize: this.state.filteredRows.length}
+        React.createElement("div", {className: "EFDT-table", id: this.props.elementId}, 
+          React.createElement("div", {className: "EFDT-table-prefix"}, 
+            React.createElement(TablePrefix, {cols: this.state.cols, rows: this.rows, 
+                         onFilterKeywordChange: this.onFilterKeywordChange, 
+                         onResetFilters: this.onResetFilters, 
+                         filters: this.state.filters, 
+                         updateCols: this.updateCols, 
+                         updateGoToColumn: this.updateGoToColumn, 
+                         scroller: this.props.scroller, 
+                         filter: this.props.filter, 
+                         hideFilter: this.props.hideFilter, 
+                         getData: this.props.download, 
+                         downloadFileName: this.props.downloadFileName, 
+                         hider: this.props.showHide, 
+                         fixedChoose: this.props.fixedChoose, 
+                         resultInfo: this.props.resultInfo, 
+                         rowsSize: this.state.rowsSize, 
+                         filteredRowsSize: this.state.filteredRows.length}
             )
-          ),
-          React.createElement("div", {className: "EFDT-tableMain"},
-            React.createElement(TableMainPart, {cols: this.state.cols,
-              rows: this.rows,
-              filteredRows: this.state.filteredRows,
-              filters: this.state.filters,
-              sortNSet: this.sortNSet,
-              onFilterKeywordChange: this.onFilterKeywordChange,
-              goToColumn: this.state.goToColumn,
-              sortBy: this.state.sortBy,
-              sortDirArrow: sortDirArrow,
-              filterAll: this.state.filterAll,
-              filter: this.props.filter,
-              rowHeight: this.props.rowHeight,
-              tableWidth: this.props.tableWidth,
-              maxHeight: this.props.maxHeight,
-              headerHeight: this.props.headerHeight,
-              groupHeaderHeight: this.props.groupHeaderHeight,
-              groupHeader: this.props.groupHeader,
-              tableType: this.props.tableType,
-              confirmedRowsIndex: confirmedRowsIndex,
-              shortLabels: this.state.shortLabels,
-              columnWidths: this.state.columnWidths,
-              rowClickFunc: this.state.rowClickFunc,
-              geneClickFunc: this.props.geneClickFunc,
-              selectButtonClickCallback: this.state.selectButtonClickCallback,
-              pieLabelMouseEnterFunc: this.props.pieLabelMouseEnterFunc,
-              pieLabelMouseLeaveFunc: this.props.pieLabelMouseLeaveFunc,
-              selectedRowIndex: selectedRowIndex,
-              selectedGeneRowIndex: selectedGeneRowIndex,
-              isResizable: this.props.isResizable,
-              onColumnResizeEndCallback: this.onColumnResizeEndCallback}
+          ), 
+          React.createElement("div", {className: "EFDT-tableMain"}, 
+            React.createElement(TableMainPart, {cols: this.state.cols, 
+                           rows: this.rows, 
+                           filteredRows: this.state.filteredRows, 
+                           filters: this.state.filters, 
+                           sortNSet: this.sortNSet, 
+                           onFilterKeywordChange: this.onFilterKeywordChange, 
+                           goToColumn: this.state.goToColumn, 
+                           sortBy: this.state.sortBy, 
+                           sortDirArrow: sortDirArrow, 
+                           filterAll: this.state.filterAll, 
+                           filter: this.props.filter, 
+                           rowHeight: this.props.rowHeight, 
+                           tableWidth: this.props.tableWidth, 
+                           maxHeight: this.props.maxHeight, 
+                           headerHeight: this.props.headerHeight, 
+                           groupHeaderHeight: this.props.groupHeaderHeight, 
+                           groupHeader: this.props.groupHeader, 
+                           tableType: this.props.tableType, 
+                           confirmedRowsIndex: confirmedRowsIndex, 
+                           shortLabels: this.state.shortLabels, 
+                           elementId: this.props.elementId, 
+                           columnsWidth: this.state.columnsWidth, 
+                           rowClickFunc: this.state.rowClickFunc, 
+                           geneClickFunc: this.props.geneClickFunc, 
+                           selectButtonClickCallback: this.state.selectButtonClickCallback, 
+                           pieLabelMouseEnterFunc: this.props.pieLabelMouseEnterFunc, 
+                           pieLabelMouseLeaveFunc: this.props.pieLabelMouseLeaveFunc, 
+                           selectedRowIndex: selectedRowIndex, 
+                           selectedGeneRowIndex: selectedGeneRowIndex, 
+                           isResizable: this.props.isResizable, 
+                           onColumnResizeEndCallback: this.onColumnResizeEndCallback}
             )
-          ),
-          React.createElement("div", {className: "EFDT-filter"},
-
-            (this.props.filter === "ALL" || this.props.filter === "GLOBAL") ?
-              React.createElement(Filter, {type: "STRING", name: "all",
-                onFilterKeywordChange: this.onFilterKeywordChange}) :
-              React.createElement("div", null)
-
-          ),
-          React.createElement("div", {className: "EFDT-finish-selection-button"},
-
-            (['mutatedGene', 'cna'].indexOf(this.props.tableType) !== -1 && this.state.selectedRows.length > 0 && this.state.confirmedRows.length !== this.state.selectedRows.length ) ?
-              React.createElement("button", {className: "btn btn-default btn-xs", onClick: this.state.selectButtonClickCallback}, "Select Samples") : ''
-
+          ), 
+          React.createElement("div", {className: "EFDT-filter"}, 
+            
+              (this.props.filter === "ALL" || this.props.filter === "GLOBAL") ?
+                React.createElement(Filter, {type: "STRING", name: "all", 
+                        onFilterKeywordChange: this.onFilterKeywordChange}) :
+                React.createElement("div", null)
+            
+          ), 
+          React.createElement("div", {className: "EFDT-finish-selection-button"}, 
+            
+              (['mutatedGene', 'cna'].indexOf(this.props.tableType) !== -1 && this.state.selectedRows.length > 0 && this.state.confirmedRows.length !== this.state.selectedRows.length ) ?
+                React.createElement("button", {className: "btn btn-default btn-xs", 
+                        onClick: this.state.selectButtonClickCallback}, "Select" + ' ' +
+                  "Samples") : ''
+            
           )
         )
       );

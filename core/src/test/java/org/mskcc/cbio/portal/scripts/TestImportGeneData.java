@@ -32,17 +32,18 @@
 
 package org.mskcc.cbio.portal.scripts;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.net.URL;
 
 import org.mskcc.cbio.portal.dao.DaoGeneOptimized;
+import org.mskcc.cbio.portal.dao.DaoReferenceGenomeGene;
 import org.mskcc.cbio.portal.model.CanonicalGene;
+import org.mskcc.cbio.portal.model.ReferenceGenome;
+import org.mskcc.cbio.portal.model.ReferenceGenomeGene;
 import org.mskcc.cbio.portal.util.ProgressMonitor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -58,46 +59,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class TestImportGeneData {
 
-    //private String geneDataFilename = null;
-    //private String suppGeneDataFilename = null;
-    private URL geneDataFilePath;
-    private URL suppGeneDataFilePath;
-    
-    @Before
-    public void setUp() {
-
-        //Old implementation, hardcoding file path into a string
-        //geneDataFilename = home + File.separator + "core/target/test-classes/genes_test.txt";
-        //suppGeneDataFilename = home + File.separator + "core/target/test-classes/supp-genes.txt";
-        geneDataFilePath = this.getClass().getResource("/genes_test.txt");
-        suppGeneDataFilePath = this.getClass().getResource("/supp-genes.txt");
-
-    }
-
     @Test
+    /*
+     * Checks that ImportGeneData works by calculating the length from three genes 
+     * in genes_test.txt. The file genes_test.txt contains real data.
+     */
     public void testImportGeneData() throws Exception {
         DaoGeneOptimized daoGene = DaoGeneOptimized.getInstance();
         ProgressMonitor.setConsoleMode(false);
-		// TBD: change this to use getResourceAsStream()
-        if (suppGeneDataFilePath!=null) {
-            File file = new File(suppGeneDataFilePath.getFile());
-            ImportGeneData.importSuppGeneData(file);
-        }
         
-        if (geneDataFilePath != null) {
-            File file = new File(geneDataFilePath.getFile());
-            ImportGeneData.importData(file);
+        File file = new File("src/test/resources/genes_test.txt");
+        ImportGeneData.importData(file, "GRCh37");
 
-            CanonicalGene gene = daoGene.getGene(10);
-            assertEquals("NAT2", gene.getHugoGeneSymbolAllCaps());
-            gene = daoGene.getGene(15);
-            assertEquals("AANAT", gene.getHugoGeneSymbolAllCaps());
+        CanonicalGene gene = daoGene.getGene(10);
+        assertEquals("NAT2", gene.getHugoGeneSymbolAllCaps());
+        gene = daoGene.getGene(15);
+        assertEquals("AANAT", gene.getHugoGeneSymbolAllCaps());
 
-            gene = daoGene.getGene("ABCA3");
-            assertEquals(21, gene.getEntrezGeneId());
-        }
-        else {
-            throw new IllegalArgumentException("Cannot find test gene file, is PORTAL_HOME set?");
-        }
+        gene = daoGene.getGene("ABCA3");
+        assertEquals(21, gene.getEntrezGeneId());
     }
 }
