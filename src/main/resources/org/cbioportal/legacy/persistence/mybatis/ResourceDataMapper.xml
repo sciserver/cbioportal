@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.cbioportal.legacy.persistence.mybatis.ResourceDataMapper">
+
+    <sql id="selectSampleResource">
+        sample.stable_id AS "${prefix}sampleId",
+        patient.stable_id AS "${prefix}patientId",
+        resource_sample.resource_id AS "${prefix}resourceId",
+        cancer_study.cancer_study_identifier AS "${prefix}studyId"
+        <if test="projection == 'SUMMARY' || projection == 'DETAILED'">
+            , resource_sample.url AS "${prefix}url"
+        </if>
+        <if test="projection == 'DETAILED'">
+            ,
+            <include refid="org.cbioportal.legacy.persistence.mybatis.ResourceDefinitionMapper.select">
+                <property name="prefix" value="${prefix}resourceDefinition."/>
+            </include>
+        </if>
+    </sql>
+
+    <sql id="selectPatientResource">
+        patient.stable_id AS "${prefix}patientId",
+        resource_patient.resource_id AS "${prefix}resourceId",
+        cancer_study.cancer_study_identifier AS "${prefix}studyId"
+        <if test="projection == 'SUMMARY' || projection == 'DETAILED'">
+            , resource_patient.url AS "${prefix}url"
+        </if>
+        <if test="projection == 'DETAILED'">
+            ,
+            <include refid="org.cbioportal.legacy.persistence.mybatis.ResourceDefinitionMapper.select">
+                <property name="prefix" value="${prefix}resourceDefinition."/>
+            </include>
+        </if>
+    </sql>
+
+    <sql id="selectStudyResource">
+        resource_study.resource_id AS "${prefix}resourceId",
+        cancer_study.cancer_study_identifier AS "${prefix}studyId"
+        <if test="projection == 'SUMMARY' || projection == 'DETAILED'">
+            , resource_study.url AS "${prefix}url"
+        </if>
+        <if test="projection == 'DETAILED'">
+            ,
+            <include refid="org.cbioportal.legacy.persistence.mybatis.ResourceDefinitionMapper.select">
+                <property name="prefix" value="${prefix}resourceDefinition."/>
+            </include>
+        </if>
+    </sql>
+
+    <!--
+        Sourced from the unified resource table, which the importer now writes in place of
+        resource_sample/resource_patient/resource_study. resource stores stable IDs, so the
+        joins onto sample/patient go through stable_id; those are unique only within a study, so
+        every join is scoped by cancer_study_id.
+    -->
+    <sql id="fromSample">
+        FROM (SELECT resource_id, cancer_study_id, sample_id, url
+              FROM resource
+              WHERE resource_scope = 'SAMPLE' AND sample_id IS NOT NULL) AS resource_sample
+        INNER JOIN cancer_study ON resource_sample.cancer_study_id = cancer_study.cancer_study_id
+        INNER JOIN sample ON sample.stable_id = resource_sample.sample_id
+        INNER JOIN patient ON sample.patient_id = patient.internal_id
+                          AND patient.cancer_study_id = resource_sample.cancer_study_id
+    </sql>
+
+    <sql id="fromPatient">
+        FROM (SELECT resource_id, cancer_study_id, patient_id, url
+              FROM resource
+              WHERE resource_scope = 'PATIENT' AND patient_id IS NOT NULL) AS resource_patient
+        INNER JOIN cancer_study ON resource_patient.cancer_study_id = cancer_study.cancer_study_id
+        INNER JOIN patient ON patient.stable_id = resource_patient.patient_id
+                          AND patient.cancer_study_id = resource_patient.cancer_study_id
+    </sql>
+
+    <sql id="fromStudy">
+        FROM (SELECT resource_id, cancer_study_id, url
+              FROM resource
+              WHERE resource_scope = 'STUDY') AS resource_study
+        INNER JOIN cancer_study ON resource_study.cancer_study_id = cancer_study.cancer_study_id
+    </sql>
+
+    <sql id="whereSample">
+        <where>
+            <if test="sampleId == null">
+                cancer_study.cancer_study_identifier = #{studyId}
+            </if>
+            <if test="sampleId != null">
+                 cancer_study.cancer_study_identifier = #{studyId} AND
+                 sample.stable_id = #{sampleId}
+            </if>
+            <if test="resourceId != null">
+                AND resource_sample.resource_id = #{resourceId}
+            </if>
+        </where>
+    </sql>
+
+    <sql id="wherePatient">
+        <where>
+            <if test="patientId == null">
+                cancer_study.cancer_study_identifier = #{studyId}
+            </if>
+            <if test="patientId != null">
+                 cancer_study.cancer_study_identifier = #{studyId} AND
+                 patient.stable_id = #{patientId}
+            </if>
+            <if test="resourceId != null">
+                AND resource_patient.resource_id = #{resourceId}
+            </if>
+        </where>
+    </sql>
+
+    <sql id="whereStudy">
+        <where>
+            cancer_study.cancer_study_identifier = #{studyId}
+            <if test="resourceId != null">
+                AND resource_study.resource_id = #{resourceId}
+            </if>
+        </where>
+    </sql>
+
+    <select id="getResourceDataOfSampleInStudy" resultType="org.cbioportal.legacy.model.ResourceData">
+        SELECT
+        <include refid="selectSampleResource">
+            <property name="prefix" value=""/>
+        </include>
+        <include refid="fromSample"/>
+        <if test="projection == 'DETAILED'">
+            INNER JOIN resource_definition ON resource_sample.resource_id = resource_definition.resource_id
+            AND cancer_study.cancer_study_id = resource_definition.cancer_study_id
+        </if>
+        <include refid="whereSample"/>
+        <choose>    
+            <when test="sortBy != null and projection != 'ID'">
+                ORDER BY "${sortBy}" ${direction}
+            </when>
+            <otherwise>
+                ORDER BY resource_sample.resource_id ASC
+            </otherwise>
+        </choose>
+        <if test="limit != null and limit != 0">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <select id="getResourceDataOfPatientInStudy" resultType="org.cbioportal.legacy.model.ResourceData">
+        SELECT
+        <include refid="selectPatientResource">
+            <property name="prefix" value=""/>
+        </include>
+        <include refid="fromPatient"/>
+        <if test="projection == 'DETAILED'">
+            INNER JOIN resource_definition ON resource_patient.resource_id = resource_definition.resource_id
+            AND cancer_study.cancer_study_id = resource_definition.cancer_study_id
+        </if>
+        <include refid="wherePatient"/>
+        <choose>
+            <when test="sortBy != null and projection != 'ID'">
+                ORDER BY "${sortBy}" ${direction}
+            </when>
+            <otherwise>
+                ORDER BY resource_patient.resource_id ASC
+            </otherwise>
+        </choose>
+        <if test="limit != null and limit != 0">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <select id="getResourceDataForStudy" resultType="org.cbioportal.legacy.model.ResourceData">
+        SELECT
+        <include refid="selectStudyResource">
+            <property name="prefix" value=""/>
+        </include>
+        <include refid="fromStudy"/>
+        <if test="projection == 'DETAILED'">
+            INNER JOIN resource_definition ON resource_study.resource_id = resource_definition.resource_id
+            AND cancer_study.cancer_study_id = resource_definition.cancer_study_id
+        </if>
+        <include refid="whereStudy"/>
+        <choose>
+            <when test="sortBy != null and projection != 'ID'">
+                ORDER BY "${sortBy}" ${direction}
+            </when>
+            <otherwise>
+                ORDER BY resource_study.resource_id ASC
+            </otherwise>
+        </choose>
+        <if test="limit != null and limit != 0">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+</mapper>

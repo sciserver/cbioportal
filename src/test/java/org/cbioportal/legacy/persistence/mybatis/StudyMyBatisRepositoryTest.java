@@ -1,0 +1,385 @@
+package org.cbioportal.legacy.persistence.mybatis;
+
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import org.cbioportal.application.rest.availability.UnavailableStudyIdentifiers;
+import org.cbioportal.legacy.AbstractLegacyTestcontainers;
+import org.cbioportal.legacy.model.CancerStudy;
+import org.cbioportal.legacy.model.CancerStudyTags;
+import org.cbioportal.legacy.model.ResourceCount;
+import org.cbioportal.legacy.model.TypeOfCancer;
+import org.cbioportal.legacy.model.meta.BaseMeta;
+import org.cbioportal.legacy.persistence.config.MyBatisLegacyConfig;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@Import({MyBatisLegacyConfig.class, StudyMyBatisRepository.class})
+@DataJpaTest
+@DirtiesContext
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ContextConfiguration(initializers = AbstractLegacyTestcontainers.Initializer.class)
+public class StudyMyBatisRepositoryTest {
+
+  @Autowired private StudyMyBatisRepository studyMyBatisRepository;
+
+  @Autowired private StudyMapper studyMapper;
+
+  @Test
+  public void getAllStudiesIdProjection() throws Exception {
+
+    List<CancerStudy> result =
+        studyMyBatisRepository.getAllStudies(null, "ID", null, null, null, null);
+
+    Assert.assertEquals(2, result.size());
+    CancerStudy cancerStudy = result.get(0);
+    Assert.assertEquals((Integer) 2, cancerStudy.getCancerStudyId());
+    Assert.assertEquals("acc_tcga", cancerStudy.getCancerStudyIdentifier());
+    Assert.assertNull(cancerStudy.getTypeOfCancer());
+  }
+
+  @Test
+  public void getAllStudiesSummaryProjection() throws Exception {
+
+    List<CancerStudy> result =
+        studyMyBatisRepository.getAllStudies(
+            null, "SUMMARY", null, null, "cancerStudyIdentifier", "ASC");
+
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+    Assert.assertEquals(2, result.size());
+    CancerStudy cancerStudy = result.get(1);
+    Assert.assertEquals((Integer) 1, cancerStudy.getCancerStudyId());
+    Assert.assertEquals("study_tcga_pub", cancerStudy.getCancerStudyIdentifier());
+    Assert.assertEquals("brca", cancerStudy.getTypeOfCancerId());
+    Assert.assertEquals("Breast Invasive Carcinoma (TCGA, Nature 2012)", cancerStudy.getName());
+    Assert.assertEquals(
+        "<a href=\"http://cancergenome.nih.gov/\">The Cancer Genome Atlas (TCGA)</a> Breast"
+            + " Invasive Carcinoma project. 825 cases.<br><i>Nature 2012.</i> <a href=\"http://tcga-data.nci."
+            + "nih.gov/tcga/\">Raw data via the TCGA Data Portal</a>.",
+        cancerStudy.getDescription());
+    Assert.assertEquals(true, cancerStudy.getPublicStudy());
+    Assert.assertEquals("23000897,26451490", cancerStudy.getPmid());
+    Assert.assertEquals("TCGA, Nature 2012, ...", cancerStudy.getCitation());
+    Assert.assertEquals("SU2C-PI3K;PUBLIC;GDAC", cancerStudy.getGroups());
+    Assert.assertEquals((Integer) 0, cancerStudy.getStatus());
+    Assert.assertEquals(
+        simpleDateFormat.parse("2011-12-18 13:17:17+00:00"), cancerStudy.getImportDate());
+    // this is due to "1 AS allSampleCount" in the SQL which we can ignore because the mapper is
+    // already defunct
+    Assert.assertNull(cancerStudy.getTypeOfCancer());
+  }
+
+  @Test
+  public void getAllStudiesDetailedProjection() throws Exception {
+
+    List<CancerStudy> result =
+        studyMyBatisRepository.getAllStudies(
+            null, "DETAILED", null, null, "cancerStudyIdentifier", "ASC");
+
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+    Assert.assertEquals(2, result.size());
+    CancerStudy cancerStudy = result.get(1);
+    Assert.assertEquals((Integer) 1, cancerStudy.getCancerStudyId());
+    Assert.assertEquals("study_tcga_pub", cancerStudy.getCancerStudyIdentifier());
+    Assert.assertEquals("brca", cancerStudy.getTypeOfCancerId());
+    Assert.assertEquals("Breast Invasive Carcinoma (TCGA, Nature 2012)", cancerStudy.getName());
+    Assert.assertEquals(
+        "<a href=\"http://cancergenome.nih.gov/\">The Cancer Genome Atlas (TCGA)</a> Breast"
+            + " Invasive Carcinoma project. 825 cases.<br><i>Nature 2012.</i> <a href=\"http://tcga-data.nci."
+            + "nih.gov/tcga/\">Raw data via the TCGA Data Portal</a>.",
+        cancerStudy.getDescription());
+    Assert.assertEquals(true, cancerStudy.getPublicStudy());
+    Assert.assertEquals("23000897,26451490", cancerStudy.getPmid());
+    Assert.assertEquals("TCGA, Nature 2012, ...", cancerStudy.getCitation());
+    Assert.assertEquals("SU2C-PI3K;PUBLIC;GDAC", cancerStudy.getGroups());
+    Assert.assertEquals((Integer) 0, cancerStudy.getStatus());
+    Assert.assertEquals(simpleDateFormat.parse("2011-12-18 13:17:17"), cancerStudy.getImportDate());
+    // this is due to "1 AS allSampleCount" in the SQL which we can ignore because the mapper is
+    // already defunct
+    Assert.assertEquals((Integer) 7, cancerStudy.getCnaSampleCount());
+    Assert.assertEquals((Integer) 7, cancerStudy.getCompleteSampleCount());
+    Assert.assertEquals((Integer) 1, cancerStudy.getMethylationHm27SampleCount());
+    Assert.assertEquals((Integer) 0, cancerStudy.getMiRnaSampleCount());
+    Assert.assertEquals((Integer) 8, cancerStudy.getMrnaMicroarraySampleCount());
+    Assert.assertEquals((Integer) 0, cancerStudy.getMrnaRnaSeqSampleCount());
+    Assert.assertEquals((Integer) 7, cancerStudy.getMrnaRnaSeqV2SampleCount());
+    Assert.assertEquals((Integer) 0, cancerStudy.getRppaSampleCount());
+    Assert.assertEquals((Integer) 7, cancerStudy.getSequencedSampleCount());
+    TypeOfCancer typeOfCancer = cancerStudy.getTypeOfCancer();
+    Assert.assertEquals("brca", typeOfCancer.getTypeOfCancerId());
+    Assert.assertEquals("Breast Invasive Carcinoma", typeOfCancer.getName());
+    Assert.assertEquals("HotPink", typeOfCancer.getDedicatedColor());
+    Assert.assertEquals("Breast", typeOfCancer.getShortName());
+    Assert.assertEquals("tissue", typeOfCancer.getParent());
+  }
+
+  @Test
+  public void getAllStudiesSummaryProjection1PageSize() throws Exception {
+
+    List<CancerStudy> result =
+        studyMyBatisRepository.getAllStudies(null, "SUMMARY", 1, 0, null, null);
+
+    Assert.assertEquals(1, result.size());
+  }
+
+  @Test
+  public void getAllStudiesSummaryProjectionCancerStudyIdentifierSort() throws Exception {
+
+    List<CancerStudy> result =
+        studyMyBatisRepository.getAllStudies(
+            null, "SUMMARY", null, null, "cancerStudyIdentifier", "ASC");
+
+    Assert.assertEquals(2, result.size());
+    Assert.assertEquals("acc_tcga", result.get(0).getCancerStudyIdentifier());
+    Assert.assertEquals("study_tcga_pub", result.get(1).getCancerStudyIdentifier());
+  }
+
+  @Test
+  public void getStudyPermissions() {
+
+    List<CancerStudy> result =
+        studyMyBatisRepository.getStudyPermissions().stream()
+            .sorted(Comparator.comparing(CancerStudy::getCancerStudyIdentifier))
+            .toList();
+
+    Assert.assertEquals(2, result.size());
+
+    CancerStudy accTcga = result.get(0);
+    Assert.assertEquals((Integer) 2, accTcga.getCancerStudyId());
+    Assert.assertEquals("acc_tcga", accTcga.getCancerStudyIdentifier());
+    Assert.assertEquals("SU2C-PI3K;PUBLIC;GDAC", accTcga.getGroups());
+    // this projection intentionally omits everything not needed for permission checks
+    Assert.assertNull(accTcga.getName());
+    Assert.assertNull(accTcga.getTypeOfCancerId());
+    Assert.assertNull(accTcga.getPublicStudy());
+
+    CancerStudy studyTcgaPub = result.get(1);
+    Assert.assertEquals((Integer) 1, studyTcgaPub.getCancerStudyId());
+    Assert.assertEquals("study_tcga_pub", studyTcgaPub.getCancerStudyIdentifier());
+    Assert.assertEquals("SU2C-PI3K;PUBLIC;GDAC", studyTcgaPub.getGroups());
+  }
+
+  @Test
+  public void getMetaStudies() throws Exception {
+
+    BaseMeta result = studyMyBatisRepository.getMetaStudies(null);
+
+    Assert.assertEquals((Integer) 2, result.getTotalCount());
+  }
+
+  @Test
+  public void getStudyNullResult() throws Exception {
+
+    CancerStudy result = studyMyBatisRepository.getStudy("invalid_study", "DETAILED");
+
+    Assert.assertNull(result);
+  }
+
+  @Test
+  public void getStudy() throws Exception {
+
+    CancerStudy result = studyMyBatisRepository.getStudy("study_tcga_pub", "DETAILED");
+
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+    Assert.assertEquals((Integer) 1, result.getCancerStudyId());
+    Assert.assertEquals("study_tcga_pub", result.getCancerStudyIdentifier());
+    Assert.assertEquals("brca", result.getTypeOfCancerId());
+    Assert.assertEquals("Breast Invasive Carcinoma (TCGA, Nature 2012)", result.getName());
+    Assert.assertEquals(
+        "<a href=\"http://cancergenome.nih.gov/\">The Cancer Genome Atlas (TCGA)</a> Breast"
+            + " Invasive Carcinoma project. 825 cases.<br><i>Nature 2012.</i> <a href=\"http://tcga-data.nci."
+            + "nih.gov/tcga/\">Raw data via the TCGA Data Portal</a>.",
+        result.getDescription());
+    Assert.assertEquals(true, result.getPublicStudy());
+    Assert.assertEquals("23000897,26451490", result.getPmid());
+    Assert.assertEquals("TCGA, Nature 2012, ...", result.getCitation());
+    Assert.assertEquals("SU2C-PI3K;PUBLIC;GDAC", result.getGroups());
+    Assert.assertEquals((Integer) 0, result.getStatus());
+    Assert.assertEquals(simpleDateFormat.parse("2011-12-18 13:17:17"), result.getImportDate());
+    // this is due to "1 AS allSampleCount" in the SQL which we can ignore because the mapper is
+    // already defunct
+    Assert.assertEquals((Integer) 7, result.getCnaSampleCount());
+    Assert.assertEquals((Integer) 7, result.getCompleteSampleCount());
+    Assert.assertEquals((Integer) 1, result.getMethylationHm27SampleCount());
+    Assert.assertEquals((Integer) 0, result.getMiRnaSampleCount());
+    Assert.assertEquals((Integer) 8, result.getMrnaMicroarraySampleCount());
+    Assert.assertEquals((Integer) 0, result.getMrnaRnaSeqSampleCount());
+    Assert.assertEquals((Integer) 7, result.getMrnaRnaSeqV2SampleCount());
+    Assert.assertEquals((Integer) 0, result.getRppaSampleCount());
+    Assert.assertEquals((Integer) 7, result.getSequencedSampleCount());
+    TypeOfCancer typeOfCancer = result.getTypeOfCancer();
+    Assert.assertEquals("brca", typeOfCancer.getTypeOfCancerId());
+    Assert.assertEquals("Breast Invasive Carcinoma", typeOfCancer.getName());
+    Assert.assertEquals("HotPink", typeOfCancer.getDedicatedColor());
+    Assert.assertEquals("Breast", typeOfCancer.getShortName());
+    Assert.assertEquals("tissue", typeOfCancer.getParent());
+  }
+
+  @Test
+  public void fetchStudies() throws Exception {
+
+    List<CancerStudy> result =
+        studyMyBatisRepository.fetchStudies(Arrays.asList("study_tcga_pub", "acc_tcga"), "SUMMARY");
+    result = sortedResult(result);
+
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+    Assert.assertEquals(2, result.size());
+    CancerStudy cancerStudy = result.get(1);
+    Assert.assertEquals((Integer) 1, cancerStudy.getCancerStudyId());
+    Assert.assertEquals("study_tcga_pub", cancerStudy.getCancerStudyIdentifier());
+    Assert.assertEquals("brca", cancerStudy.getTypeOfCancerId());
+    Assert.assertEquals("Breast Invasive Carcinoma (TCGA, Nature 2012)", cancerStudy.getName());
+    Assert.assertEquals(
+        "<a href=\"http://cancergenome.nih.gov/\">The Cancer Genome Atlas (TCGA)</a> Breast"
+            + " Invasive Carcinoma project. 825 cases.<br><i>Nature 2012.</i> <a href=\"http://tcga-data.nci."
+            + "nih.gov/tcga/\">Raw data via the TCGA Data Portal</a>.",
+        cancerStudy.getDescription());
+    Assert.assertEquals(true, cancerStudy.getPublicStudy());
+    Assert.assertEquals("23000897,26451490", cancerStudy.getPmid());
+    Assert.assertEquals("TCGA, Nature 2012, ...", cancerStudy.getCitation());
+    Assert.assertEquals("SU2C-PI3K;PUBLIC;GDAC", cancerStudy.getGroups());
+    Assert.assertEquals((Integer) 0, cancerStudy.getStatus());
+    Assert.assertEquals(simpleDateFormat.parse("2011-12-18 13:17:17"), cancerStudy.getImportDate());
+    // this is due to "1 AS allSampleCount" in the SQL which we can ignore because the mapper is
+    // already defunct
+    Assert.assertNull(cancerStudy.getTypeOfCancer());
+  }
+
+  @Test
+  public void fetchMetaStudies() throws Exception {
+
+    BaseMeta result =
+        studyMyBatisRepository.fetchMetaStudies(Arrays.asList("study_tcga_pub", "acc_tcga"));
+
+    Assert.assertEquals((Integer) 2, result.getTotalCount());
+  }
+
+  @Test
+  public void getTags() throws Exception {
+
+    CancerStudyTags result = studyMyBatisRepository.getTags("study_tcga_pub");
+
+    Assert.assertEquals(
+        "{\"Analyst\": {\"Name\": \"Jack\", \"Email\": \"jack@something.com\"}, \"Load id\": 35}",
+        result.getTags());
+  }
+
+  @Test
+  public void getMultipleTags() throws Exception {
+
+    List<CancerStudyTags> result =
+        studyMyBatisRepository.getTagsForMultipleStudies(
+            Arrays.asList("study_tcga_pub", "acc_tcga"));
+    result = sortedTagResult(result);
+
+    Assert.assertEquals(2, result.size());
+    CancerStudyTags cancerStudyTags1 = result.get(0);
+    Assert.assertEquals((Integer) 1, cancerStudyTags1.getCancerStudyId());
+    Assert.assertEquals("study_tcga_pub", cancerStudyTags1.getStudyId());
+    Assert.assertEquals(
+        "{\"Analyst\": {\"Name\": \"Jack\", \"Email\": \"jack@something.com\"}, \"Load id\": 35}",
+        cancerStudyTags1.getTags());
+    CancerStudyTags cancerStudyTags2 = result.get(1);
+    Assert.assertEquals((Integer) 2, cancerStudyTags2.getCancerStudyId());
+    Assert.assertEquals("acc_tcga", cancerStudyTags2.getStudyId());
+    Assert.assertEquals("{\"Load id\": 36}", cancerStudyTags2.getTags());
+  }
+
+  private List<CancerStudy> sortedResult(List<CancerStudy> result) {
+    return result.stream()
+        .sorted(Comparator.comparing(CancerStudy::getCancerStudyIdentifier))
+        .toList();
+  }
+
+  private List<CancerStudyTags> sortedTagResult(List<CancerStudyTags> result) {
+    return result.stream().sorted(Comparator.comparing(CancerStudyTags::getTags)).toList();
+  }
+
+  @Test
+  public void getUnavailableStudyIdentifiers() {
+    // Both seeded studies have status 0, i.e. are unavailable.
+    Map<String, String> studyIdByIdentifier = new UnavailableStudyIdentifiers(studyMapper).get();
+
+    Assert.assertEquals("study_tcga_pub", studyIdByIdentifier.get("study_tcga_pub"));
+    Assert.assertEquals("study_tcga_pub", studyIdByIdentifier.get("study_tcga_pub_gistic"));
+    Assert.assertEquals("study_tcga_pub", studyIdByIdentifier.get("study_tcga_pub_all"));
+    Assert.assertEquals("acc_tcga", studyIdByIdentifier.get("acc_tcga"));
+  }
+
+  // ---- Resource counts, sourced from the unified resource table ----
+
+  @Test
+  public void getResourceCounts_countsSampleLevelResources() {
+    // HE is SAMPLE-level over 7 samples belonging to 6 distinct patients
+    // (TCGA-A1-A0SB contributes two samples).
+    ResourceCount he = resourceCountFor("study_tcga_pub", "HE");
+
+    Assert.assertEquals("H&E Slide", he.getDisplayName());
+    Assert.assertEquals((Integer) 7, he.getSampleCount());
+    Assert.assertEquals((Integer) 6, he.getPatientCount());
+  }
+
+  @Test
+  public void getResourceCounts_patientLevelResourceCountsThatPatientsSamples() {
+    // IDC_OHIF_V2 is PATIENT-level over 6 patients; sampleCount is the samples those
+    // patients have, which is 7 because TCGA-A1-A0SB has two.
+    ResourceCount ct = resourceCountFor("study_tcga_pub", "IDC_OHIF_V2");
+
+    Assert.assertEquals((Integer) 6, ct.getPatientCount());
+    Assert.assertEquals((Integer) 7, ct.getSampleCount());
+  }
+
+  @Test
+  public void getResourceCounts_excludesStudyLevelResources() {
+    // FIGURES is STUDY-level: it belongs to neither the sample nor the patient half.
+    List<ResourceCount> counts =
+        studyMyBatisRepository.getResourceCounts(Arrays.asList("acc_tcga"));
+
+    Assert.assertTrue(counts.stream().noneMatch(c -> "FIGURES".equals(c.getResourceId())));
+  }
+
+  @Test
+  public void getResourceCounts_filtersByStudy() {
+    List<ResourceCount> counts =
+        studyMyBatisRepository.getResourceCounts(Arrays.asList("study_tcga_pub"));
+
+    Assert.assertFalse(counts.isEmpty());
+    Assert.assertTrue(
+        counts.stream().allMatch(c -> "study_tcga_pub".equals(c.getCancerStudyIdentifier())));
+  }
+
+  @Test
+  public void getResourceCountsForAllStudies_returnsTheSameResources() {
+    List<ResourceCount> all = studyMyBatisRepository.getResourceCountsForAllStudies();
+
+    Assert.assertTrue(all.stream().anyMatch(c -> "HE".equals(c.getResourceId())));
+    Assert.assertTrue(all.stream().anyMatch(c -> "IDC_OHIF_V2".equals(c.getResourceId())));
+  }
+
+  private ResourceCount resourceCountFor(String studyId, String resourceId) {
+    return studyMyBatisRepository.getResourceCounts(Arrays.asList(studyId)).stream()
+        .filter(c -> resourceId.equals(c.getResourceId()))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("no resource count for " + resourceId));
+  }
+}

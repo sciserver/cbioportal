@@ -1,0 +1,42 @@
+package org.cbioportal.application.rest.response;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Map;
+
+@Schema(name = "Mutation", description = "Represents a mutation")
+public record MutationDTO(
+    String uniqueSampleKey,
+    String uniquePatientKey,
+    String molecularProfileId,
+    String sampleId,
+    String patientId,
+    Integer entrezGeneId,
+    GeneDTO gene,
+    String studyId,
+    String driverFilter,
+    String driverFilterAnnotation,
+    String driverTiersFilter,
+    String driverTiersFilterAnnotation,
+    String center,
+    String mutationStatus,
+    String validationStatus,
+    Integer tumorAltCount,
+    Integer tumorRefCount,
+    Integer normalAltCount,
+    Integer normalRefCount,
+    String aminoAcidChange,
+    String chr,
+    Long startPosition,
+    Long endPosition,
+    String referenceAllele,
+    String variantAllele,
+    String proteinChange,
+    String mutationType,
+    String ncbiBuild,
+    String variantType,
+    String refseqMrnaId,
+    Integer proteinPosStart,
+    Integer proteinPosEnd,
+    String keyword,
+    AlleleSpecificCopyNumberDTO alleleSpecificCopyNumber,
+    Map<String, Object> namespaceColumns) {}

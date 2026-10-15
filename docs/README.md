@@ -1,63 +1,69 @@
-# cBioPortal Documentation
+# Welcome to the documentation for cBioPortal!
 
-Welcome to the documentation for cBioPortal! Below you can find an index of all available documentation to help you to deploy and maintain a local instance of cBioPortal, as well as information on how to upload data. Specific pages are also available for developers. For details on contributing code changes and pull-requests to cBioPortal, please see our [CONTRIBUTING Doc](https://github.com/cBioPortal/cbioportal/blob/master/CONTRIBUTING.md).
+We've organized this site by the different roles in the cBioPortal community.
 
-We also maintain an active [list of RFCs (Requests for Comments)](RFC-List.md) where we describe new features and solicit community feedback.
+<div class="homeList">
+            
+            <div>
+                <a href="user-guide/">
+                <img src="images/user-guide.png" width="125" height="125" alt="User guide  free icon" title="User guide free icon">
+                </a>
+                <a href="user-guide/">Portal User</a>
+            </div>
+        
+            <div>
+            <a href="web-api-and-clients/">
+            <img src="images/api.png" width="125" height="125" alt="User guide  free icon" title="User guide free icon">
+            </a> 
+            <a href="web-api-and-clients/">API User</a>
+            </div>
+       
+            <div>
+            <a href="deployment/">
+            <img src="images/deployment.png" width="125" height="125" alt="User guide  free icon" title="User guide free icon">
+            </a>
+            <a href="deployment/">Instance Maintainer</a>
+            </div>
+        
+            <div>
+            <a href="development/">
+            <img src="images/develop.png" width="125" height="125" alt="User guide  free icon" title="User guide free icon">
+            </a>
+            <a href="development/">Developer</a>
+            </div>
 
 
-## 1. General
-* [News](News.md)
-* [Frequently Asked Questions](FAQ.md)
-* [About Us](About-Us.md)
-* [List of RFCs](RFC-List.md)
+</div>
 
-## 2. cBioPortal Deployment
-### 2.1 Deployment
-* [Hardware and Software Requirements](System-Requirements.md)
-* [Pre-Build Steps](Pre-Build-Steps.md)
-* [Building from Source](Build-from-Source.md)
-* [Importing the Seed Database](Import-the-Seed-Database.md)
-* [Loading a Sample Study](Load-Sample-Cancer-Study.md)  
-* [Deploying the Web Application](Deploying.md)
 
-### 2.2 Authorization and Authentication
-* [User Authorization](User-Authorization.md)
-* [Authenticating Users via SAML](Authenticating-Users-via-SAML.md)
-* [Authenticating Users via LDAP](Authenticating-Users-via-LDAP.md)
+<div id="feedback">
+<h3><strong>Feedback? Questions?</strong></h3>
+<br />
 
-### 2.3 Customization 
-* [Customizing your cBioPortal Instance via portal.properties](Customizing-your-instance-of-cBioPortal.md)
-* [More portal.properties Settings](portal.properties-Reference.md)
+[!button cBioPortal Google Group](https://groups.google.com/g/cbioportal)
 
-### 2.4 Docker
-* [Introduction to Docker](Docker-Introduction.md)
-* [Deploying cBioPortal in Docker](Build-from-Docker.md)
+<hr />
 
-## 3. cBioPortal Maintenance
-* [Updating your cBioPortal Database Scheme](Updating-your-cBioPortal-installation.md)
+:::rfclist
+We maintain an active [list of RFCs (Requests for Comments)](RFC-List.md) where we describe new features and solicit community feedback.
+:::
 
-## 4. Development      
-* [cBioPortal Entity-relationship Diagram](cBioPortal-ER-Diagram.md)
-* [Using the Data Manager to Get Data and Set Session Parameters](Data-Manager.md)
-* [Accessing Services via the Web-API](cBioPortal-Web-API.md)
-   * [API and API Client](The-API-and-API-Client-[Beta].md)
-* [Providing cBioPortal Parameters](providing-cBioPortal-parameters.md)
+</div>
 
-## 5. Data Loading
-### 5.1 Data Loading
-* [Data Loading Overview](Data-Loading.md)
-   * [Using the Dataset Validator](Using-the-dataset-validator.md)
-   * [Using the metaImport Script](Using-the-metaImport-script.md)
-   * [Development, Debugging and Maintenance Using cbioportalImporter](Development,-debugging-and-maintenance-mode-using-cbioportalImporter.md)
-   * [File Formats](File-Formats.md)
-       * [Z-Score Normalization](Z-Score-normalization-script.md)
-   * [Data Loading: How the loader deals with Hugo Symbols](Data-Loading-How-the-loader-deals-with-Hugo-symbols.md) (TODO)    
-   * [Data Loading: What You Need To Change](Data-Loading-What-You-Need-To-Change.md)
-   * [Data Loading: Tips and Best Practices](Data-Loading-Tips-and-Best-Practices.md)
-   * [Importer Tool](Importer-Tool.md) (deprecated)
+<hr />
 
-### 5.2 Datasets
-* [Downloads](Downloads.md)
-* [Data Examples](Data-Examples.md)
-* [Public Datasets](Public-datasets.md)
+<h3>Quick Links</h3>
+
+- [FAQ](user-guide/faq.md)
+- [Tutorials](https://www.cbioportal.org/tutorials)
+- [API documentation](web-API-and-Clients.md)
+
+
+<script>
+setTimeout(function(){
+    document.querySelectorAll("#docs-sidebar-right .simplebar-content")[0].appendChild(document.getElementById("feedback"));
+},500);
+</script>
+
+
 

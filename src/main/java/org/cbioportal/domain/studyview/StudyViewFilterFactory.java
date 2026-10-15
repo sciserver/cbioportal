@@ -1,0 +1,114 @@
+package org.cbioportal.domain.studyview;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.cbioportal.legacy.model.MolecularProfile;
+import org.cbioportal.legacy.persistence.enums.DataSource;
+import org.cbioportal.legacy.web.columnar.util.CustomDataFilterUtil;
+import org.cbioportal.legacy.web.parameter.CategorizedGenericAssayDataCountFilter;
+import org.cbioportal.legacy.web.parameter.ClinicalDataFilter;
+import org.cbioportal.legacy.web.parameter.CustomSampleIdentifier;
+import org.cbioportal.legacy.web.parameter.GenericAssayDataFilter;
+import org.cbioportal.legacy.web.parameter.GenomicDataFilter;
+import org.cbioportal.legacy.web.parameter.StudyViewFilter;
+import org.cbioportal.shared.DataFilterUtil;
+
+public abstract class StudyViewFilterFactory {
+  private StudyViewFilterFactory() {}
+
+  public static StudyViewFilterContext make(
+      StudyViewFilter base,
+      CustomDataFilterUtil customDataFilterUtil,
+      Map<DataSource, List<MolecularProfile>> genericAssayProfilesMap) {
+    List<CustomSampleIdentifier> customSampleIdentifiers =
+        customDataFilterUtil.extractCustomDataSamples(base);
+    List<String> involvedCancerStudies = customDataFilterUtil.extractInvolvedCancerStudies(base);
+    // Filter out genericAssayDataFilters with null or empty values to prevent SQL errors
+    if (base.getGenericAssayDataFilters() != null) {
+      base.setGenericAssayDataFilters(
+          base.getGenericAssayDataFilters().stream()
+              .filter(f -> f.getValues() != null && !f.getValues().isEmpty())
+              .collect(Collectors.toList()));
+    }
+    CategorizedGenericAssayDataCountFilter categorizedGenericAssayDataCountFilter =
+        CategorizedGenericAssayDataCountFilter.getBuilder(genericAssayProfilesMap, base).build();
+
+    // Merge data filters
+    if (base.getGenomicDataFilters() != null && !base.getGenomicDataFilters().isEmpty()) {
+      List<GenomicDataFilter> mergedGenomicDataFilters =
+          DataFilterUtil.mergeDataFilters(base.getGenomicDataFilters());
+      base.setGenomicDataFilters(mergedGenomicDataFilters);
+    }
+    if (base.getClinicalDataFilters() != null && !base.getClinicalDataFilters().isEmpty()) {
+      List<ClinicalDataFilter> mergedClinicalDataFilters =
+          DataFilterUtil.mergeDataFilters(base.getClinicalDataFilters());
+      base.setClinicalDataFilters(mergedClinicalDataFilters);
+    }
+    if (base.getGenericAssayDataFilters() != null && !base.getGenericAssayDataFilters().isEmpty()) {
+      List<GenericAssayDataFilter> mergedGenericAssayDataFilters =
+          DataFilterUtil.mergeDataFilters(base.getGenericAssayDataFilters());
+      base.setGenericAssayDataFilters(mergedGenericAssayDataFilters);
+    }
+
+    return make(
+        base,
+        customSampleIdentifiers,
+        involvedCancerStudies,
+        categorizedGenericAssayDataCountFilter);
+  }
+
+  public static StudyViewFilterContext make(
+      StudyViewFilter base,
+      List<CustomSampleIdentifier> customSampleIdentifiers,
+      List<String> involvedCancerStudies,
+      CategorizedGenericAssayDataCountFilter categorizedGenericAssayDataCountFilter) {
+    // Filter out genomicDataFilters with null or empty values to prevent SQL errors
+    List<GenomicDataFilter> validGenomicDataFilters =
+        base.getGenomicDataFilters() == null
+            ? null
+            : base.getGenomicDataFilters().stream()
+                .filter(f -> f.getValues() != null && !f.getValues().isEmpty())
+                .collect(Collectors.toList());
+    // Filter out genericAssayDataFilters with null or empty values to prevent SQL errors.
+    // Applied here too (not just in the overload above) since this overload is also called
+    // directly, bypassing that pre-filtering step.
+    List<GenericAssayDataFilter> validGenericAssayDataFilters =
+        base.getGenericAssayDataFilters() == null
+            ? null
+            : base.getGenericAssayDataFilters().stream()
+                .filter(f -> f.getValues() != null && !f.getValues().isEmpty())
+                .collect(Collectors.toList());
+    // Filter out clinicalDataFilters with null or empty values to prevent SQL errors
+    List<ClinicalDataFilter> validClinicalDataFilters =
+        base.getClinicalDataFilters() == null
+            ? null
+            : base.getClinicalDataFilters().stream()
+                .filter(f -> f.getValues() != null && !f.getValues().isEmpty())
+                .collect(Collectors.toList());
+    return new StudyViewFilterContext(
+        base.getSampleIdentifiers(),
+        base.getStudyIds(),
+        validClinicalDataFilters,
+        base.getGeneFilters(),
+        base.getStructuralVariantFilters(),
+        base.getSampleTreatmentFilters(),
+        base.getSampleTreatmentGroupFilters(),
+        base.getSampleTreatmentTargetFilters(),
+        base.getPatientTreatmentFilters(),
+        base.getPatientTreatmentGroupFilters(),
+        base.getPatientTreatmentTargetFilters(),
+        base.getGenomicProfiles(),
+        validGenomicDataFilters,
+        validGenericAssayDataFilters,
+        base.getGenericAssaySelectionFilters(),
+        base.getCaseLists(),
+        base.getCustomDataFilters(),
+        base.getAlterationFilter(),
+        base.getClinicalEventFilters(),
+        base.getMutationDataFilters(),
+        customSampleIdentifiers,
+        involvedCancerStudies,
+        categorizedGenericAssayDataCountFilter);
+  }
+}
